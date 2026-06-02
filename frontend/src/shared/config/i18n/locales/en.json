@@ -1,0 +1,87 @@
+{
+  "app": {
+    "name": "Tracker",
+    "versionFull": "Tracker v0.1.0",
+    "versionShort": "v0.1"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "statistics": "Statistics",
+    "settings": "Settings"
+  },
+  "sidebar": {
+    "toggle": "Toggle sidebar",
+    "close": "Close sidebar",
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar"
+  },
+  "theme": {
+    "toLight": "Switch to light theme",
+    "toDark": "Switch to dark theme"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account and preferences here.",
+    "accent": {
+      "title": "Accent color",
+      "description": "Choose the accent palette used across the app."
+    },
+    "language": {
+      "title": "Language",
+      "description": "Choose the interface language."
+    }
+  },
+  "accents": {
+    "violet": "Violet",
+    "emerald": "Emerald",
+    "blue": "Blue",
+    "orange": "Orange"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to your planner."
+  },
+  "common": {
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "habits": {
+    "columnTitle": "Habit",
+    "add": "Add habit",
+    "emptyTitle": "No habits yet",
+    "empty": "Add your first habit to start tracking.",
+    "menu": {
+      "label": "Habit options",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "form": {
+      "addTitle": "New habit",
+      "editTitle": "Edit habit",
+      "subtitle": "Name it — the icon is picked automatically.",
+      "name": "Name",
+      "namePlaceholder": "e.g. Read 20 pages",
+      "nameRequired": "Enter a habit name.",
+      "preview": "Preview",
+      "color": "Color",
+      "customColor": "Custom color",
+      "icon": "Icon",
+      "noIcon": "No icon (use initial)",
+      "proHint": "Color and icon are set automatically. Upgrade to Pro to customize them."
+    },
+    "delete": {
+      "title": "Delete habit?",
+      "description": "Delete \"{{name}}\" and all its check-ins? This can't be undone."
+    }
+  },
+  "statistics": {
+    "title": "Statistics",
+    "placeholder": "Your productivity stats will appear here."
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register"
+  }
+}

@@ -1,0 +1,197 @@
+import { useEffect, useState } from "react";
+import { Dialog } from "radix-ui";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useAppDispatch } from "@/app/store/hooks";
+import {
+  addHabit,
+  HabitGlyph,
+  randomHabitColor,
+  renameHabit,
+  resolveHabitIcon,
+  setHabitColor,
+  setHabitIcon,
+  type Habit,
+} from "@/entities/habit";
+import { Button, IconButton } from "@/shared/ui";
+import { cn, useEntitlement } from "@/shared/lib";
+import { habitFormSchema, type HabitFormValues } from "../model/schema";
+import { ColorPicker } from "./ColorPicker";
+import { IconPicker } from "./IconPicker";
+
+interface HabitDialogProps {
+  mode: "create" | "edit";
+  habit?: Habit;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const inputClass = cn(
+  "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none",
+  "placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring",
+);
+
+function HabitForm({
+  mode,
+  habit,
+  onDone,
+}: {
+  mode: "create" | "edit";
+  habit?: Habit;
+  onDone: () => void;
+}) {
+  const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const canCustomize = useEntitlement("customization");
+
+  const { register, handleSubmit, control, setValue, formState } =
+    useForm<HabitFormValues>({
+      resolver: zodResolver(habitFormSchema),
+      defaultValues:
+        mode === "edit" && habit
+          ? { name: habit.name, color: habit.color, icon: habit.icon ?? null }
+          : { name: "", color: randomHabitColor(), icon: null },
+    });
+
+  // Pro: чи перевизначив користувач іконку вручну. На edit вважаємо встановленою.
+  const [iconTouched, setIconTouched] = useState(mode === "edit");
+
+  const name = useWatch({ control, name: "name" });
+  const color = useWatch({ control, name: "color" });
+  const icon = useWatch({ control, name: "icon" });
+
+  // Auto-suggest: Free — завжди похідна від назви; Pro — поки не перевизначено.
+  useEffect(() => {
+    if (!canCustomize || !iconTouched) {
+      setValue("icon", resolveHabitIcon(name));
+    }
+  }, [name, canCustomize, iconTouched, setValue]);
+
+  const onSubmit = handleSubmit((values) => {
+    if (mode === "create") {
+      dispatch(
+        addHabit({ name: values.name, color: values.color, icon: values.icon }),
+      );
+    } else if (habit) {
+      dispatch(renameHabit({ id: habit.id, name: values.name }));
+      dispatch(setHabitColor({ id: habit.id, color: values.color }));
+      dispatch(setHabitIcon({ id: habit.id, icon: values.icon }));
+    }
+    onDone();
+  });
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <label htmlFor="habit-name" className="text-sm font-medium">
+          {t("habits.form.name")}
+        </label>
+        <input
+          id="habit-name"
+          autoFocus
+          placeholder={t("habits.form.namePlaceholder")}
+          className={inputClass}
+          {...register("name")}
+        />
+        {formState.errors.name && (
+          <p className="text-xs text-destructive">
+            {t("habits.form.nameRequired")}
+          </p>
+        )}
+      </div>
+
+      {/* Живий прев'ю чіпа навички */}
+      <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+        <HabitGlyph
+          name={name || "?"}
+          color={color}
+          icon={icon}
+          className="h-10 w-10"
+          iconClassName="h-5 w-5"
+        />
+        <span className="truncate text-sm font-medium">
+          {name || t("habits.form.preview")}
+        </span>
+      </div>
+
+      {canCustomize ? (
+        <>
+          <ColorPicker value={color} onChange={(c) => setValue("color", c)} />
+          <IconPicker
+            value={icon}
+            onChange={(i) => {
+              setIconTouched(true);
+              setValue("icon", i);
+            }}
+          />
+        </>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          {t("habits.form.proHint")}
+        </p>
+      )}
+
+      <div className="flex justify-end gap-2 pt-2">
+        <Dialog.Close asChild>
+          <Button variant="outline">{t("common.cancel")}</Button>
+        </Dialog.Close>
+        <Button type="submit">
+          {t(mode === "create" ? "common.add" : "common.save")}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/** Add/Edit навички. Free: лише назва (авто-колір + авто-іконка/монограма).
+ * Pro: colorpicker + icon picker з auto-suggest як стартовим пресетом. */
+export function HabitDialog({
+  mode,
+  habit,
+  open,
+  onOpenChange,
+}: HabitDialogProps) {
+  const { t } = useTranslation();
+
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+        <Dialog.Content
+          className={cn(
+            "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2",
+            "rounded-xl border border-border bg-card p-6 text-card-foreground shadow-card",
+          )}
+        >
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <Dialog.Title className="text-lg font-semibold">
+                {t(
+                  mode === "create"
+                    ? "habits.form.addTitle"
+                    : "habits.form.editTitle",
+                )}
+              </Dialog.Title>
+              <Dialog.Description className="text-sm text-muted-foreground">
+                {t("habits.form.subtitle")}
+              </Dialog.Description>
+            </div>
+            <Dialog.Close asChild>
+              <IconButton aria-label={t("common.close")}>
+                <X className="h-4 w-4" />
+              </IconButton>
+            </Dialog.Close>
+          </div>
+
+          <HabitForm
+            mode={mode}
+            habit={habit}
+            onDone={() => onOpenChange(false)}
+          />
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}

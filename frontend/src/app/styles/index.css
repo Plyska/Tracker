@@ -1,0 +1,210 @@
+@import "tailwindcss";
+
+/* Class-based dark mode: активується класом .dark на <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design-токени (конвенція shadcn/ui): семантичні пари `*` / `*-foreground` —
+ * фон поверхні + колір тексту/іконок поверх неї. Компоненти НЕ хардкодять hex,
+ * лише ці токени через утиліти Tailwind (bg-card, text-muted-foreground, …).
+ * Базис поверхонь — slate; акцент — violet/indigo.
+ */
+:root {
+  /* Полотно */
+  --background: #ffffff;
+  --foreground: #0f172a; /* slate-900 */
+
+  /* Поверхні */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  /* Головна дія / активний стан */
+  --primary: #6d28d9; /* violet-700 */
+  --primary-foreground: #ffffff;
+
+  /* Вторинне */
+  --secondary: #f1f5f9; /* slate-100 */
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b; /* slate-500 */
+
+  /* Hover-підсвітка (легкий фіолетовий тон) */
+  --accent: #f5f3ff; /* violet-50 */
+  --accent-foreground: #6d28d9; /* violet-700 */
+
+  /* Небезпечні дії */
+  --destructive: #dc2626; /* red-600 */
+  --destructive-foreground: #ffffff;
+
+  /* Лінії, рамки інпутів, focus-ring */
+  --border: #e2e8f0; /* slate-200 */
+  --input: #e2e8f0;
+  --ring: #6d28d9; /* primary */
+
+  /* Радіус (база) */
+  --radius: 0.625rem; /* 10px */
+
+  /* Тінь для піднятих поверхонь (картки, попапи) */
+  --shadow-card:
+    0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.08);
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #f8fafc; /* slate-50 */
+
+  --card: #131316;
+  --card-foreground: #f8fafc;
+  --popover: #131316;
+  --popover-foreground: #f8fafc;
+
+  --primary: #8b5cf6; /* violet-500 — світліший для контрасту на темному */
+  --primary-foreground: #ffffff;
+
+  --secondary: #1e1e24;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e1e24;
+  --muted-foreground: #94a3b8; /* slate-400 */
+
+  --accent: #1f1b2e; /* приглушений фіолетовий */
+  --accent-foreground: #c4b5fd; /* violet-300 */
+
+  --destructive: #ef4444; /* red-500 */
+  --destructive-foreground: #ffffff;
+
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #8b5cf6;
+
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+}
+
+/*
+ * === Акцентні палітри (вибір у Settings) ===
+ * Перевизначають ЛИШЕ акцентні токени (primary / accent / ring); нейтральні
+ * поверхні (background, card, border, muted…) спільні для всіх палітр.
+ * `violet` — дефолт, уже заданий у :root / .dark вище (окремий блок не потрібен).
+ * Селектори мусять іти ПІСЛЯ :root і .dark — однакова специфічність, перемагає
+ * порядок у коді. `.dark[data-accent]` має вищу специфічність → коректний dark.
+ */
+[data-accent="emerald"] {
+  --primary: #059669; /* emerald-600 */
+  --primary-foreground: #ffffff;
+  --accent: #ecfdf5; /* emerald-50 */
+  --accent-foreground: #047857; /* emerald-700 */
+  --ring: #059669;
+}
+.dark[data-accent="emerald"] {
+  --primary: #10b981; /* emerald-500 */
+  --primary-foreground: #ffffff;
+  --accent: #0c1f1a;
+  --accent-foreground: #6ee7b7; /* emerald-300 */
+  --ring: #10b981;
+}
+
+[data-accent="blue"] {
+  --primary: #2563eb; /* blue-600 */
+  --primary-foreground: #ffffff;
+  --accent: #eff6ff; /* blue-50 */
+  --accent-foreground: #1d4ed8; /* blue-700 */
+  --ring: #2563eb;
+}
+.dark[data-accent="blue"] {
+  --primary: #3b82f6; /* blue-500 */
+  --primary-foreground: #ffffff;
+  --accent: #11203b;
+  --accent-foreground: #93c5fd; /* blue-300 */
+  --ring: #3b82f6;
+}
+
+[data-accent="orange"] {
+  --primary: #ea580c; /* orange-600 */
+  --primary-foreground: #ffffff;
+  --accent: #fff7ed; /* orange-50 */
+  --accent-foreground: #c2410c; /* orange-700 */
+  --ring: #ea580c;
+}
+.dark[data-accent="orange"] {
+  --primary: #f97316; /* orange-500 */
+  --primary-foreground: #ffffff;
+  --accent: #2a1a0f;
+  --accent-foreground: #fdba74; /* orange-300 */
+  --ring: #f97316;
+}
+
+/*
+ * Прокидаємо токени в Tailwind. Дають утиліти:
+ *   bg-background / text-foreground / bg-card / bg-primary / text-primary-foreground
+ *   border-border / ring-ring / bg-muted / text-muted-foreground / bg-accent / …
+ *   rounded-sm|md|lg|xl (з --radius) / shadow-card
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-card: var(--shadow-card);
+}
+
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  line-height: 1.5;
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/*
+ * Узгоджений перехід кольорів при зміні теми.
+ * Транзишн лише на ПОВЕРХНЯХ (фон/бордери) — вони перемикаються плавно й синхронно.
+ *
+ * Свідомо НЕ анімуємо color/fill/stroke: текст та svg-іконки живуть всередині
+ * sidebar (motion.aside з inline-transform → окремий GPU-шар). Транзишн кольору
+ * на кожній гліфі/контурі в цьому шарі змушує його перерастеризовуватись —
+ * звідси «блимання» тексту й іконок при зміні теми. Миттєва зміна кольору
+ * тексту непомітна й не блимає.
+ */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}

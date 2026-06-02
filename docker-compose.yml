@@ -1,0 +1,29 @@
+# Docker-оркестрація монорепо Tracker.
+# Зараз піднімається лише frontend (Vite dev-server).
+# backend додамо пізніше окремим сервісом.
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tracker-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      # код монтуємо для hot-reload...
+      - ./frontend:/app
+      # ...але node_modules лишаємо з образу (anonymous volume), щоб не перетирати хостовими
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    restart: unless-stopped
+
+  # backend:
+  #   build:
+  #     context: ./backend
+  #   container_name: tracker-backend
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - db

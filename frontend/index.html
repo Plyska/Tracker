@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tracker</title>
+    <script>
+      // Виставляємо тему до першого рендеру, щоб уникнути спалаху світлої теми (FOUC).
+      // Читаємо той самий ключ/формат, що зберігає zustand persist (stores/theme.ts).
+      (function () {
+        try {
+          var stored = localStorage.getItem('tracker-theme');
+          var theme = stored ? JSON.parse(stored).state.theme : null;
+          if (theme !== 'light' && theme !== 'dark') {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.classList.toggle('dark', theme === 'dark');
+        } catch (e) {
+          /* localStorage недоступний — лишаємо світлу тему */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
