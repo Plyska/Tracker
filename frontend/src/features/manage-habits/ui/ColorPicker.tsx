@@ -16,7 +16,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
   );
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-3">
       <span className="text-sm font-medium">{t("habits.form.color")}</span>
       <div className="flex flex-wrap items-center gap-2">
         {PRESET_HABIT_COLORS.map((color) => (

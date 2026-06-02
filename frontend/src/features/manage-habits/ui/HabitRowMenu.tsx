@@ -25,7 +25,7 @@ export function HabitRowMenu({ habit }: { habit: Habit }) {
           <IconButton
             size="sm"
             aria-label={t("habits.menu.label")}
-            className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+            className="-mr-2 -ml-1 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 md:mr-0 md:ml-0"
           >
             <MoreVertical className="h-4 w-4" />
           </IconButton>

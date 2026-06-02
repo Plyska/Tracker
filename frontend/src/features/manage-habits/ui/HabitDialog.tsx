@@ -84,7 +84,7 @@ function HabitForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <div className="space-y-1.5">
+      <div className="flex flex-col gap-3">
         <label htmlFor="habit-name" className="text-sm font-medium">
           {t("habits.form.name")}
         </label>

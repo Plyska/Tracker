@@ -1,30 +1,62 @@
 import { Menu } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useMatches } from "react-router-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ThemeToggle } from "@/features/theme";
 import { IconButton } from "@/shared/ui";
 import { cn } from "@/shared/lib/cn";
 import type { HeaderProps } from "../model/types";
 
+/** Заголовок поточної сторінки беремо з `handle.titleKey` найглибшого роуту. */
+function usePageTitle(): string | null {
+  const { t } = useTranslation();
+  const matches = useMatches();
+  let titleKey: string | undefined;
+  for (const m of matches) {
+    const handle = m.handle as { titleKey?: string } | null;
+    if (handle?.titleKey) titleKey = handle.titleKey;
+  }
+  return titleKey ? t(titleKey) : null;
+}
+
 export function Header({ onMenuClick }: HeaderProps) {
   const { t } = useTranslation();
+  const title = usePageTitle();
+  const reduceMotion = useReducedMotion();
+
   return (
     <header
       className={cn(
-        "flex h-16 items-center justify-between px-4 sm:px-6",
+        "flex h-16 items-center justify-between gap-4 px-4 sm:px-6",
         "border-b border-border bg-card text-card-foreground",
       )}
     >
-      <IconButton
-        variant="outline"
-        size="lg"
-        onClick={onMenuClick}
-        aria-label={t("sidebar.toggle")}
-        className="md:hidden"
-      >
-        <Menu className="h-5 w-5" />
-      </IconButton>
+      <div className="flex min-w-0 items-center gap-3">
+        <IconButton
+          variant="outline"
+          size="lg"
+          onClick={onMenuClick}
+          aria-label={t("sidebar.toggle")}
+          className="md:hidden"
+        >
+          <Menu className="h-5 w-5" />
+        </IconButton>
 
-      <div className="flex-1" />
+        <AnimatePresence mode="wait" initial={false}>
+          {title && (
+            <motion.h1
+              key={title}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="truncate text-lg font-semibold tracking-tight sm:text-xl"
+            >
+              {title}
+            </motion.h1>
+          )}
+        </AnimatePresence>
+      </div>
 
       <ThemeToggle />
     </header>

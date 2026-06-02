@@ -21,7 +21,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
     );
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-3">
       <span className="text-sm font-medium">{t("habits.form.icon")}</span>
       <div className="grid grid-cols-8 gap-2">
         <button

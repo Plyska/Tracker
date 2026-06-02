@@ -25,9 +25,21 @@ export const router = createBrowserRouter([
   {
     element: <MainLayout />,
     children: [
-      { path: "dashboard", element: <DashboardPage /> },
-      { path: "statistics", element: <StatisticsPage /> },
-      { path: "settings", element: <SettingsPage /> },
+      {
+        path: "dashboard",
+        element: <DashboardPage />,
+        handle: { titleKey: "nav.dashboard" },
+      },
+      {
+        path: "statistics",
+        element: <StatisticsPage />,
+        handle: { titleKey: "nav.statistics" },
+      },
+      {
+        path: "settings",
+        element: <SettingsPage />,
+        handle: { titleKey: "nav.settings" },
+      },
     ],
   },
   {

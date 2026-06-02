@@ -29,10 +29,10 @@ export function MainLayout() {
         onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
       />
 
-      <div className="flex w-full flex-col">
+      <div className="flex w-full min-w-0 flex-col">
         <Header onMenuClick={() => setSidebarOpen((prev) => !prev)} />
 
-        <main className="flex-1 overflow-auto p-6">
+        <main className="min-w-0 flex-1 overflow-auto p-6">
           {/* Анімований перехід між сторінками; оболонка (sidebar/header) стабільна. */}
           <AnimatePresence mode="wait" initial={false}>
             <motion.div

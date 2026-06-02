@@ -49,6 +49,7 @@
   },
   "habits": {
     "columnTitle": "Habit",
+    "resizeColumn": "Resize the Habit column (drag, or double-click to reset)",
     "add": "Add habit",
     "emptyTitle": "No habits yet",
     "empty": "Add your first habit to start tracking.",

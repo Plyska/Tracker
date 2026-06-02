@@ -8,10 +8,7 @@ function SettingsPage() {
 
   return (
     <section className="mx-auto max-w-2xl space-y-8">
-      <header>
-        <h2 className="text-2xl font-bold">{t("settings.title")}</h2>
-        <p className="text-muted-foreground">{t("settings.subtitle")}</p>
-      </header>
+      <p className="text-muted-foreground">{t("settings.subtitle")}</p>
 
       <Card>
         <AccentPicker />

@@ -17,6 +17,9 @@ dist-ssr
 **/.claude/settings.local.json
 CLAUDE.md
 
+# Project documentation (локально, поки не версіонуємо)
+/docs/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

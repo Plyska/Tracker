@@ -6,6 +6,7 @@ import {
   type AccentKey,
 } from "@/features/accent";
 import { localeReducer } from "@/features/locale";
+import { uiPrefsReducer } from "@/features/ui-prefs";
 import { habitsReducer } from "@/entities/habit";
 import { entriesReducer } from "@/entities/habit-entry";
 import {
@@ -16,11 +17,13 @@ import {
 
 const THEME_KEY = "tracker-theme";
 const ACCENT_KEY = "tracker-accent";
+const HABIT_COL_WIDTH_KEY = "tracker-habit-col-width";
 
 type PersistedState = {
   theme: { value: Theme };
   accent: { value: AccentKey };
   locale: { value: Locale };
+  uiPrefs: { habitColWidth: number | null };
 };
 
 function read<T>(key: string, fallback: T): T {
@@ -39,6 +42,7 @@ function loadPersistedState(): PersistedState | undefined {
     theme: { value: read<Theme>(THEME_KEY, getSystemTheme()) },
     accent: { value: read<AccentKey>(ACCENT_KEY, DEFAULT_ACCENT) },
     locale: { value: getStoredLocale() },
+    uiPrefs: { habitColWidth: read<number | null>(HABIT_COL_WIDTH_KEY, null) },
   };
 }
 
@@ -47,6 +51,7 @@ export const store = configureStore({
     theme: themeReducer,
     accent: accentReducer,
     locale: localeReducer,
+    uiPrefs: uiPrefsReducer,
     // Мок серверного стану (session-only). На Фазі 9 переїде в RTK Query.
     habits: habitsReducer,
     entries: entriesReducer,
@@ -62,6 +67,10 @@ store.subscribe(() => {
     localStorage.setItem(
       LOCALE_STORAGE_KEY,
       JSON.stringify(state.locale.value),
+    );
+    localStorage.setItem(
+      HABIT_COL_WIDTH_KEY,
+      JSON.stringify(state.uiPrefs.habitColWidth),
     );
   } catch {
     // ignore (private mode / quota)

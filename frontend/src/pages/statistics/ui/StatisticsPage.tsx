@@ -5,8 +5,7 @@ function StatisticsPage() {
 
   return (
     <section>
-      <h2>{t("statistics.title")}</h2>
-      <p>{t("statistics.placeholder")}</p>
+      <p className="text-muted-foreground">{t("statistics.placeholder")}</p>
     </section>
   );
 }
