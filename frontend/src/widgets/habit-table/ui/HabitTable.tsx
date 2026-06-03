@@ -13,14 +13,20 @@ import {
 import {
   cn,
   entryKey,
+  fromISODate,
   getDateFnsLocale,
+  getMonthDays,
   getWeekDays,
   isFutureDay,
   isToday,
   toISODate,
 } from "@/shared/lib";
 import { CheckboxCell } from "./CheckboxCell";
+import { RowsGrid } from "./RowsGrid";
+import { BOUND_HEIGHT_CLASS } from "./styles";
 
+// Адаптивний дефолт для ТИЖНЯ (7 колонок). Місяць/ручна ширина — через inline-style
+// з динамічним repeat(days.length), бо кількість колонок змінна.
 const GRID_COLS =
   "grid-cols-[minmax(160px,1.6fr)_repeat(7,minmax(46px,1fr))] " +
   "md:grid-cols-[minmax(184px,1.84fr)_repeat(7,minmax(46px,1fr))]";
@@ -31,11 +37,20 @@ export function HabitTable() {
   const byKey = useAppSelector((s) => s.entries.byKey);
   // Ручна ширина колонки назви (персиститься). null → адаптивний дефолт (GRID_COLS).
   const colWidth = useAppSelector((s) => s.uiPrefs.habitColWidth);
+  // Опорна дата + масштаб — спільні з тулбаром (features/period-navigation).
+  const anchor = useAppSelector((s) => s.period.anchor);
+  const scale = useAppSelector((s) => s.period.scale);
+  // Орієнтація таблиці (columns/rows) — персиститься в ui-prefs, спільна для week/month.
+  const tableLayout = useAppSelector((s) => s.uiPrefs.tableLayout);
   const dispatch = useAppDispatch();
 
   const dateLocale = getDateFnsLocale(i18n.language);
-  // Поточний тиждень. Навігація по періодах — Фаза 5.
-  const week = useMemo(() => getWeekDays(new Date()), []);
+  const days = useMemo(() => {
+    const date = fromISODate(anchor);
+    return scale === "month" ? getMonthDays(date) : getWeekDays(date);
+  }, [anchor, scale]);
+  // Тижневий дефолт (без ручної ширини) → адаптивний клас GRID_COLS; інакше inline-style.
+  const useDefaultGrid = colWidth === null && scale === "week";
 
   const headerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startX: number; startW: number } | null>(null);
@@ -76,16 +91,39 @@ export function HabitTable() {
     );
   }
 
+  // Місяць → таблиця отримує власну висоту й скролиться всередині (а не вся сторінка).
+  const boundHeight = scale === "month";
+
+  // Rows-орієнтація (тиждень або місяць) — транспонована сітка (дні в рядках).
+  if (tableLayout === "rows") {
+    return (
+      <RowsGrid
+        habits={habits}
+        days={days}
+        byKey={byKey}
+        dateLocale={dateLocale}
+        boundHeight={boundHeight}
+      />
+    );
+  }
+
   return (
-    <div className="overflow-auto rounded-xl border border-border bg-card shadow-card">
+    <div
+      className={cn(
+        "overflow-auto rounded-xl border border-border bg-card shadow-card",
+        boundHeight && BOUND_HEIGHT_CLASS,
+      )}
+    >
       <div
-        className={cn("grid w-full", colWidth === null && GRID_COLS)}
+        className={cn("grid w-max min-w-full", useDefaultGrid && GRID_COLS)}
         style={
-          colWidth !== null
-            ? {
-                gridTemplateColumns: `${colWidth}px repeat(7, minmax(46px, 1fr))`,
+          useDefaultGrid
+            ? undefined
+            : {
+                gridTemplateColumns: `${
+                  colWidth !== null ? `${colWidth}px` : "minmax(160px, 1.6fr)"
+                } repeat(${days.length}, minmax(46px, 1fr))`,
               }
-            : undefined
         }
       >
         {/* --- Рядок заголовка --- */}
@@ -115,7 +153,7 @@ export function HabitTable() {
             <span className="pointer-events-none absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-primary opacity-0 transition-opacity group-hover:opacity-60 group-focus-visible:opacity-100" />
           </div>
         </div>
-        {week.map((day) => {
+        {days.map((day) => {
           const today = isToday(day);
           return (
             <div
@@ -156,7 +194,7 @@ export function HabitTable() {
               </span>
               <HabitRowMenu habit={habit} />
             </div>
-            {week.map((day) => {
+            {days.map((day) => {
               const date = toISODate(day);
               const done = byKey[entryKey(habit.id, date)]?.done ?? false;
               return (

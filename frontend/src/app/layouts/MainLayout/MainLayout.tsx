@@ -32,7 +32,7 @@ export function MainLayout() {
       <div className="flex w-full min-w-0 flex-col">
         <Header onMenuClick={() => setSidebarOpen((prev) => !prev)} />
 
-        <main className="min-w-0 flex-1 overflow-auto p-6">
+        <main className="min-w-0 flex-1 overflow-auto p-6 pt-8">
           {/* Анімований перехід між сторінками; оболонка (sidebar/header) стабільна. */}
           <AnimatePresence mode="wait" initial={false}>
             <motion.div

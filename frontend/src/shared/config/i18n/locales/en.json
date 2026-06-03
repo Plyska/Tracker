@@ -29,6 +29,13 @@
     "language": {
       "title": "Language",
       "description": "Choose the interface language."
+    },
+    "tableLayout": {
+      "title": "Table layout",
+      "description": "How the habit table is arranged (week and month).",
+      "columns": "Days in columns",
+      "rows": "Days in rows",
+      "rowsHint": "Looks better on phones"
     }
   },
   "accents": {
@@ -40,6 +47,14 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome to your planner."
+  },
+  "toolbar": {
+    "prevPeriod": "Previous period",
+    "nextPeriod": "Next period",
+    "today": "Today",
+    "scale": "Table scale",
+    "week": "Week",
+    "month": "Month"
   },
   "common": {
     "add": "Add",

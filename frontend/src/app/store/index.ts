@@ -6,9 +6,11 @@ import {
   type AccentKey,
 } from "@/features/accent";
 import { localeReducer } from "@/features/locale";
-import { uiPrefsReducer } from "@/features/ui-prefs";
+import { uiPrefsReducer, type TableLayout } from "@/features/ui-prefs";
+import { periodReducer, type Scale } from "@/features/period-navigation";
 import { habitsReducer } from "@/entities/habit";
 import { entriesReducer } from "@/entities/habit-entry";
+import { todayISODate } from "@/shared/lib";
 import {
   getStoredLocale,
   LOCALE_STORAGE_KEY,
@@ -18,12 +20,16 @@ import {
 const THEME_KEY = "tracker-theme";
 const ACCENT_KEY = "tracker-accent";
 const HABIT_COL_WIDTH_KEY = "tracker-habit-col-width";
+const TABLE_LAYOUT_KEY = "tracker-table-layout";
+const PERIOD_SCALE_KEY = "tracker-period-scale";
 
 type PersistedState = {
   theme: { value: Theme };
   accent: { value: AccentKey };
   locale: { value: Locale };
-  uiPrefs: { habitColWidth: number | null };
+  uiPrefs: { habitColWidth: number | null; tableLayout: TableLayout };
+  // anchor — session-only (завжди стартує з «сьогодні»); персиститься лише scale.
+  period: { anchor: string; scale: Scale };
 };
 
 function read<T>(key: string, fallback: T): T {
@@ -42,7 +48,14 @@ function loadPersistedState(): PersistedState | undefined {
     theme: { value: read<Theme>(THEME_KEY, getSystemTheme()) },
     accent: { value: read<AccentKey>(ACCENT_KEY, DEFAULT_ACCENT) },
     locale: { value: getStoredLocale() },
-    uiPrefs: { habitColWidth: read<number | null>(HABIT_COL_WIDTH_KEY, null) },
+    uiPrefs: {
+      habitColWidth: read<number | null>(HABIT_COL_WIDTH_KEY, null),
+      tableLayout: read<TableLayout>(TABLE_LAYOUT_KEY, "columns"),
+    },
+    period: {
+      anchor: todayISODate(),
+      scale: read<Scale>(PERIOD_SCALE_KEY, "week"),
+    },
   };
 }
 
@@ -52,6 +65,9 @@ export const store = configureStore({
     accent: accentReducer,
     locale: localeReducer,
     uiPrefs: uiPrefsReducer,
+    // Перегляд періоду (anchor + scale). Session-only: НЕ у persist-підписці нижче.
+    // anchor — session-only; персиститься лише scale (нижче в підписці).
+    period: periodReducer,
     // Мок серверного стану (session-only). На Фазі 9 переїде в RTK Query.
     habits: habitsReducer,
     entries: entriesReducer,
@@ -71,6 +87,14 @@ store.subscribe(() => {
     localStorage.setItem(
       HABIT_COL_WIDTH_KEY,
       JSON.stringify(state.uiPrefs.habitColWidth),
+    );
+    localStorage.setItem(
+      TABLE_LAYOUT_KEY,
+      JSON.stringify(state.uiPrefs.tableLayout),
+    );
+    localStorage.setItem(
+      PERIOD_SCALE_KEY,
+      JSON.stringify(state.period.scale),
     );
   } catch {
     // ignore (private mode / quota)

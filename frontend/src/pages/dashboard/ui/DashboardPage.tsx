@@ -1,12 +1,10 @@
 import { HabitTable } from "@/widgets/habit-table";
-import { AddHabitButton } from "@/features/manage-habits";
+import { DashboardToolbar } from "@/widgets/dashboard-toolbar";
 
 function DashboardPage() {
   return (
-    <section className="space-y-5">
-      <div className="flex sm:justify-end">
-        <AddHabitButton className="w-full sm:w-auto" />
-      </div>
+    <section className="space-y-8">
+      <DashboardToolbar />
       <HabitTable />
     </section>
   );
