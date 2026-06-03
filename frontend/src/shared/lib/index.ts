@@ -6,6 +6,7 @@ export {
   getWeekDays,
   getMonthDays,
   isToday,
+  isWeekend,
   isFutureDay,
   fromISODate,
   todayISODate,

@@ -7,6 +7,7 @@ import {
   format,
   isAfter,
   isSameDay,
+  isWeekend as isWeekendFns,
   parseISO,
   startOfDay,
   startOfMonth,
@@ -48,6 +49,11 @@ export function getMonthDays(anchor: Date): Date[] {
 
 export function isToday(date: Date): boolean {
   return isSameDay(date, new Date());
+}
+
+/** Вихідний (сб/нд) — для приглушеної підсвітки заголовків днів у таблиці. */
+export function isWeekend(date: Date): boolean {
+  return isWeekendFns(date);
 }
 
 /** Майбутній день (після сьогодні) — такі клітинки в таблиці заблоковані. */

@@ -35,7 +35,8 @@
       "description": "How the habit table is arranged (week and month).",
       "columns": "Days in columns",
       "rows": "Days in rows",
-      "rowsHint": "Looks better on phones"
+      "rowsHint": "Looks better on phones",
+      "proHint": "Choosing a layout is a Pro feature."
     }
   },
   "accents": {
@@ -60,7 +61,8 @@
     "add": "Add",
     "save": "Save",
     "cancel": "Cancel",
-    "close": "Close"
+    "close": "Close",
+    "pro": "Pro"
   },
   "habits": {
     "columnTitle": "Habit",

@@ -52,7 +52,7 @@ export function CheckboxCell({
           whileTap={reduceMotion || disabled ? undefined : { scale: 0.88 }}
           style={done ? { backgroundColor: color, borderColor: color } : undefined}
           className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-md border outline-none",
+            "flex h-8 w-8 items-center justify-center rounded-md border outline-none",
             "transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
             done ? "text-white" : "border-border",
             disabled

@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
@@ -31,6 +31,26 @@ export function DashboardToolbar() {
   const scale = useAppSelector((s) => s.period.scale);
   const reduceMotion = useReducedMotion();
 
+  // Напрямок останньої зміни мітки періоду: -1 ‹ / +1 › (горизонтальний слайд у бік стрілки),
+  // 0 — Today / зміна масштабу (вертикальний слайд, як заголовок сторінки).
+  const [dir, setDir] = useState(0);
+  const SHIFT = 16;
+  const labelVariants = {
+    enter: (d: number) =>
+      reduceMotion
+        ? { opacity: 0 }
+        : d === 0
+          ? { opacity: 0, y: 6 }
+          : { opacity: 0, x: -d * SHIFT },
+    center: { opacity: 1, x: 0, y: 0 },
+    exit: (d: number) =>
+      reduceMotion
+        ? { opacity: 0 }
+        : d === 0
+          ? { opacity: 0, y: -6 }
+          : { opacity: 0, x: d * SHIFT },
+  };
+
   const periodLabel = useMemo(() => {
     const date = fromISODate(anchor);
     if (scale === "month") {
@@ -46,37 +66,60 @@ export function DashboardToolbar() {
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      {/* --- Навігація періоду (UI-каркас, логіка — далі) ---
-          Мобільний: група стрілок+дата зліва, «Сьогодні» відсунута праворуч.
-          Десктоп: усе в один ряд зліва. */}
-      <div className="flex items-center justify-between gap-2 sm:justify-start">
-        <div className="flex items-center gap-1">
-          <MotionIconButton
-            variant="outline"
-            size="sm"
-            aria-label={t("toolbar.prevPeriod")}
-            onClick={() => dispatch(prevPeriod())}
-            whileTap={reduceMotion ? undefined : { scale: 0.88 }}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </MotionIconButton>
-          <span className="w-44 shrink-0 whitespace-nowrap text-center text-sm font-medium tabular-nums">
-            {periodLabel}
-          </span>
-          <MotionIconButton
-            variant="outline"
-            size="sm"
-            aria-label={t("toolbar.nextPeriod")}
-            onClick={() => dispatch(nextPeriod())}
-            whileTap={reduceMotion ? undefined : { scale: 0.88 }}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </MotionIconButton>
-        </div>
-        <MotionButton
+      {/* --- Навігація періоду ---
+          Мобільний (Google-style): [Today] [‹][›] мітка — через flex `order`.
+          Десктоп (sm): order скидається → DOM-порядок ‹ мітка › Today (як було). */}
+      <div className="flex items-center gap-1">
+        <MotionIconButton
+          className="order-2 sm:order-0"
           variant="outline"
           size="sm"
-          onClick={() => dispatch(goToToday())}
+          aria-label={t("toolbar.prevPeriod")}
+          onClick={() => {
+            setDir(-1);
+            dispatch(prevPeriod());
+          }}
+          whileTap={reduceMotion ? undefined : { scale: 0.88 }}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </MotionIconButton>
+        <span className="order-4 flex min-w-0 flex-1 justify-center overflow-hidden text-sm font-medium sm:order-0 sm:w-44 sm:flex-none">
+          <AnimatePresence mode="wait" initial={false} custom={dir}>
+            <motion.span
+              key={periodLabel}
+              custom={dir}
+              variants={labelVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="whitespace-nowrap tabular-nums"
+            >
+              {periodLabel}
+            </motion.span>
+          </AnimatePresence>
+        </span>
+        <MotionIconButton
+          className="order-3 sm:order-0"
+          variant="outline"
+          size="sm"
+          aria-label={t("toolbar.nextPeriod")}
+          onClick={() => {
+            setDir(1);
+            dispatch(nextPeriod());
+          }}
+          whileTap={reduceMotion ? undefined : { scale: 0.88 }}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </MotionIconButton>
+        <MotionButton
+          className="order-1 sm:order-0 sm:ml-1"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setDir(0);
+            dispatch(goToToday());
+          }}
           whileTap={reduceMotion ? undefined : { scale: 0.94 }}
         >
           {t("toolbar.today")}
@@ -98,7 +141,10 @@ export function DashboardToolbar() {
                 key={value}
                 type="button"
                 aria-pressed={active}
-                onClick={() => dispatch(setScale(value))}
+                onClick={() => {
+                  setDir(0);
+                  dispatch(setScale(value));
+                }}
                 className={cn(
                   "relative rounded-[5px] px-3 py-1 text-sm font-medium transition-colors",
                   "outline-none focus-visible:ring-2 focus-visible:ring-ring",
