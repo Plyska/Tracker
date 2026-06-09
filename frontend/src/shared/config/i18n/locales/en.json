@@ -121,5 +121,9 @@
       "passwordMin": "Password must be at least 8 characters",
       "passwordMismatch": "Passwords don't match"
     }
+  },
+  "userMenu": {
+    "label": "User menu",
+    "logout": "Log out"
   }
 }

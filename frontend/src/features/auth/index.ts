@@ -26,3 +26,4 @@ export {
 } from "./lib/mockAuth";
 export { LoginForm } from "./ui/LoginForm";
 export { RegisterForm } from "./ui/RegisterForm";
+export { UserMenu } from "./ui/UserMenu";

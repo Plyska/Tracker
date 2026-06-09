@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useMatches } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ThemeToggle } from "@/features/theme";
+import { UserMenu } from "@/features/auth";
 import { IconButton } from "@/shared/ui";
 import { cn } from "@/shared/lib/cn";
 import type { HeaderProps } from "../model/types";
@@ -58,7 +59,10 @@ export function Header({ onMenuClick }: HeaderProps) {
         </AnimatePresence>
       </div>
 
-      <ThemeToggle />
+      <div className="flex items-center gap-4 sm:gap-5">
+        <ThemeToggle />
+        <UserMenu />
+      </div>
     </header>
   );
 }
