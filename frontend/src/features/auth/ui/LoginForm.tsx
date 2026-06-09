@@ -9,6 +9,7 @@ import { paths } from "@/shared/config/paths";
 import { loginSchema, type LoginValues } from "../model/schema";
 import { mockLogin } from "../lib/mockAuth";
 import { loginSuccess } from "../model/authSlice";
+import { SocialAuth } from "./SocialAuth";
 
 export function LoginForm() {
   const { t } = useTranslation();
@@ -86,6 +87,8 @@ export function LoginForm() {
         {isSubmitting && <Loader2 className="size-4 animate-spin" />}
         {t("auth.loginCta")}
       </Button>
+
+      <SocialAuth />
     </form>
   );
 }

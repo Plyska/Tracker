@@ -110,6 +110,8 @@
     "confirmPassword": "Підтвердьте пароль",
     "loginCta": "Увійти",
     "registerCta": "Створити акаунт",
+    "or": "або",
+    "continueGoogle": "Увійти через Google",
     "error": "Щось пішло не так. Спробуйте ще раз.",
     "validation": {
       "nameRequired": "Введіть імʼя",

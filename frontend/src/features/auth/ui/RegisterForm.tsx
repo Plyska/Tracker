@@ -9,6 +9,7 @@ import { paths } from "@/shared/config/paths";
 import { registerSchema, type RegisterValues } from "../model/schema";
 import { mockRegister } from "../lib/mockAuth";
 import { loginSuccess } from "../model/authSlice";
+import { SocialAuth } from "./SocialAuth";
 
 export function RegisterForm() {
   const { t } = useTranslation();
@@ -119,6 +120,8 @@ export function RegisterForm() {
         {isSubmitting && <Loader2 className="size-4 animate-spin" />}
         {t("auth.registerCta")}
       </Button>
+
+      <SocialAuth />
     </form>
   );
 }

@@ -110,6 +110,8 @@
     "confirmPassword": "Confirm password",
     "loginCta": "Sign in",
     "registerCta": "Create account",
+    "or": "or",
+    "continueGoogle": "Continue with Google",
     "error": "Something went wrong. Please try again.",
     "validation": {
       "nameRequired": "Enter your name",
