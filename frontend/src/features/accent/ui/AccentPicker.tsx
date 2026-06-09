@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { setAccent } from "../model/accentSlice";
 import { ACCENTS } from "../model/accents";
 import { cn } from "@/shared/lib/cn";
+import { AnimatedText } from "@/shared/ui";
 
 export function AccentPicker() {
   const { t } = useTranslation();
@@ -13,9 +14,11 @@ export function AccentPicker() {
   return (
     <div className="space-y-3">
       <div>
-        <h3 className="text-lg font-semibold">{t("settings.accent.title")}</h3>
+        <h3 className="text-lg font-semibold">
+          <AnimatedText>{t("settings.accent.title")}</AnimatedText>
+        </h3>
         <p className="text-sm text-muted-foreground">
-          {t("settings.accent.description")}
+          <AnimatedText>{t("settings.accent.description")}</AnimatedText>
         </p>
       </div>
 
@@ -42,8 +45,10 @@ export function AccentPicker() {
               >
                 {isSelected && <Check className="h-4 w-4 text-white" />}
               </span>
-              <span className="w-full truncate text-center">
-                {t(`accents.${option.key}`)}
+              <span className="w-full text-center">
+                <AnimatedText className="max-w-full truncate">
+                  {t(`accents.${option.key}`)}
+                </AnimatedText>
               </span>
             </button>
           );

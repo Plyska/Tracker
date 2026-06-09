@@ -13,16 +13,26 @@ import {
 import {
   cn,
   entryKey,
+  fromISODate,
   getDateFnsLocale,
+  getMonthDays,
   getWeekDays,
   isFutureDay,
   isToday,
+  isWeekend,
   toISODate,
+  useEntitlement,
 } from "@/shared/lib";
 import { CheckboxCell } from "./CheckboxCell";
+import { RowsGrid } from "./RowsGrid";
+import { BOUND_HEIGHT_CLASS } from "./styles";
 
+// Адаптивний дефолт для ТИЖНЯ (7 колонок). Місяць/ручна ширина — через inline-style
+// з динамічним repeat(days.length), бо кількість колонок змінна.
+// Мобільний: вужча колонка назв (116px), щоб дні-колонки лишали менше горизонтального скролу.
 const GRID_COLS =
-  "grid-cols-[minmax(160px,1.6fr)_repeat(7,minmax(46px,1fr))] " +
+  "grid-cols-[minmax(116px,1.4fr)_repeat(7,minmax(44px,1fr))] " +
+  "sm:grid-cols-[minmax(160px,1.6fr)_repeat(7,minmax(46px,1fr))] " +
   "md:grid-cols-[minmax(184px,1.84fr)_repeat(7,minmax(46px,1fr))]";
 
 export function HabitTable() {
@@ -31,11 +41,23 @@ export function HabitTable() {
   const byKey = useAppSelector((s) => s.entries.byKey);
   // Ручна ширина колонки назви (персиститься). null → адаптивний дефолт (GRID_COLS).
   const colWidth = useAppSelector((s) => s.uiPrefs.habitColWidth);
+  // Опорна дата + масштаб — спільні з тулбаром (features/period-navigation).
+  const anchor = useAppSelector((s) => s.period.anchor);
+  const scale = useAppSelector((s) => s.period.scale);
+  // Орієнтація таблиці (columns/rows) — персиститься в ui-prefs, спільна для week/month.
+  // `rows` під Pro: без права форсуємо `columns` (persisted-стан міг лишитись від Pro).
+  const tableLayout = useAppSelector((s) => s.uiPrefs.tableLayout);
+  const canChooseLayout = useEntitlement("table-layout");
+  const effectiveLayout = canChooseLayout ? tableLayout : "columns";
   const dispatch = useAppDispatch();
 
   const dateLocale = getDateFnsLocale(i18n.language);
-  // Поточний тиждень. Навігація по періодах — Фаза 5.
-  const week = useMemo(() => getWeekDays(new Date()), []);
+  const days = useMemo(() => {
+    const date = fromISODate(anchor);
+    return scale === "month" ? getMonthDays(date) : getWeekDays(date);
+  }, [anchor, scale]);
+  // Тижневий дефолт (без ручної ширини) → адаптивний клас GRID_COLS; інакше inline-style.
+  const useDefaultGrid = colWidth === null && scale === "week";
 
   const headerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startX: number; startW: number } | null>(null);
@@ -76,16 +98,43 @@ export function HabitTable() {
     );
   }
 
+  // Місяць → таблиця отримує власну висоту й скролиться всередині (а не вся сторінка).
+  const boundHeight = scale === "month";
+
+  // Rows-орієнтація (тиждень або місяць) — транспонована сітка (дні в рядках).
+  if (effectiveLayout === "rows") {
+    return (
+      <RowsGrid
+        habits={habits}
+        days={days}
+        byKey={byKey}
+        dateLocale={dateLocale}
+        boundHeight={boundHeight}
+      />
+    );
+  }
+
   return (
-    <div className="overflow-auto rounded-xl border border-border bg-card shadow-card">
+    <div
+      className={cn(
+        "overflow-auto rounded-xl border border-border bg-card shadow-card",
+        boundHeight && BOUND_HEIGHT_CLASS,
+      )}
+    >
       <div
-        className={cn("grid w-full", colWidth === null && GRID_COLS)}
+        className={cn("grid w-max min-w-full", useDefaultGrid && GRID_COLS)}
         style={
-          colWidth !== null
-            ? {
-                gridTemplateColumns: `${colWidth}px repeat(7, minmax(46px, 1fr))`,
+          useDefaultGrid
+            ? undefined
+            : {
+                gridTemplateColumns: `${
+                  colWidth !== null ? `${colWidth}px` : "minmax(160px, 1.6fr)"
+                } repeat(${days.length}, ${
+                  // Місяць: день-колонки фіксовані й компактні (багато днів → вужчі + гориз.
+                  // скрол), не розтягуються. Тиждень (із ручною шириною): заповнюють ширину.
+                  scale === "month" ? "minmax(44px, 46px)" : "minmax(46px, 1fr)"
+                })`,
               }
-            : undefined
         }
       >
         {/* --- Рядок заголовка --- */}
@@ -115,14 +164,16 @@ export function HabitTable() {
             <span className="pointer-events-none absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-primary opacity-0 transition-opacity group-hover:opacity-60 group-focus-visible:opacity-100" />
           </div>
         </div>
-        {week.map((day) => {
+        {days.map((day) => {
           const today = isToday(day);
+          const weekend = isWeekend(day);
           return (
             <div
               key={day.toISOString()}
               className={cn(
                 "sticky top-0 z-10 flex flex-col items-center gap-0.5 border-b border-l border-border bg-muted px-1 py-2",
                 today && "text-primary",
+                !today && weekend && "text-muted-foreground/70",
               )}
             >
               <span className="text-xs font-medium uppercase">
@@ -156,7 +207,7 @@ export function HabitTable() {
               </span>
               <HabitRowMenu habit={habit} />
             </div>
-            {week.map((day) => {
+            {days.map((day) => {
               const date = toISODate(day);
               const done = byKey[entryKey(habit.id, date)]?.done ?? false;
               return (
@@ -164,7 +215,7 @@ export function HabitTable() {
                   key={day.toISOString()}
                   className={cn(
                     "flex items-center justify-center border-b border-l border-border",
-                    isToday(day) && "bg-accent/40",
+                    isToday(day) && "bg-accent/60",
                   )}
                 >
                   <CheckboxCell

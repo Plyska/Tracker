@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Dialog } from "radix-ui";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
@@ -154,18 +155,48 @@ export function HabitDialog({
   onOpenChange,
 }: HabitDialogProps) {
   const { t } = useTranslation();
+  const reduceMotion = useReducedMotion();
+
+  // Центрування лишається на Motion (x/y: -50%), бо `transform` від Motion
+  // перетер би Tailwind-класи `-translate-*`. Поява: fade + легкий scale-pop.
+  const content = reduceMotion
+    ? {
+        initial: { opacity: 0, x: "-50%", y: "-50%" },
+        animate: { opacity: 1, x: "-50%", y: "-50%" },
+        exit: { opacity: 0, x: "-50%", y: "-50%" },
+      }
+    : {
+        initial: { opacity: 0, scale: 0.96, x: "-50%", y: "-50%" },
+        animate: { opacity: 1, scale: 1, x: "-50%", y: "-50%" },
+        exit: { opacity: 0, scale: 0.96, x: "-50%", y: "-50%" },
+      };
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-        <Dialog.Content
-          className={cn(
-            "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2",
-            "rounded-xl border border-border bg-card p-6 text-card-foreground shadow-card",
-          )}
-        >
-          <div className="mb-4 flex items-start justify-between gap-4">
+      <AnimatePresence>
+        {open && (
+          <Dialog.Portal forceMount>
+            <Dialog.Overlay asChild forceMount>
+              <motion.div
+                className="fixed inset-0 z-50 bg-black/50"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.32, ease: "easeOut" }}
+              />
+            </Dialog.Overlay>
+            <Dialog.Content asChild forceMount>
+              <motion.div
+                className={cn(
+                  "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md",
+                  "rounded-xl border border-border bg-card p-6 text-card-foreground shadow-card",
+                )}
+                initial={content.initial}
+                animate={content.animate}
+                exit={content.exit}
+                transition={{ duration: 0.32, ease: "easeOut" }}
+              >
+                <div className="mb-4 flex items-start justify-between gap-4">
             <div className="space-y-1">
               <Dialog.Title className="text-lg font-semibold">
                 {t(
@@ -185,13 +216,16 @@ export function HabitDialog({
             </Dialog.Close>
           </div>
 
-          <HabitForm
-            mode={mode}
-            habit={habit}
-            onDone={() => onOpenChange(false)}
-          />
-        </Dialog.Content>
-      </Dialog.Portal>
+                <HabitForm
+                  mode={mode}
+                  habit={habit}
+                  onDone={() => onOpenChange(false)}
+                />
+              </motion.div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        )}
+      </AnimatePresence>
     </Dialog.Root>
   );
 }

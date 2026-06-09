@@ -1,9 +1,16 @@
 import {
   addDays,
+  addMonths,
+  addWeeks,
+  eachDayOfInterval,
+  endOfMonth,
   format,
   isAfter,
   isSameDay,
+  isWeekend as isWeekendFns,
+  parseISO,
   startOfDay,
+  startOfMonth,
   startOfWeek,
 } from "date-fns";
 import { enUS, uk } from "date-fns/locale";
@@ -32,11 +39,48 @@ export function getWeekDays(anchor: Date): Date[] {
   return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 }
 
+/** Усі календарні дні місяця (1 → останній), що містить `anchor`. */
+export function getMonthDays(anchor: Date): Date[] {
+  return eachDayOfInterval({
+    start: startOfMonth(anchor),
+    end: endOfMonth(anchor),
+  });
+}
+
 export function isToday(date: Date): boolean {
   return isSameDay(date, new Date());
+}
+
+/** Вихідний (сб/нд) — для приглушеної підсвітки заголовків днів у таблиці. */
+export function isWeekend(date: Date): boolean {
+  return isWeekendFns(date);
 }
 
 /** Майбутній день (після сьогодні) — такі клітинки в таблиці заблоковані. */
 export function isFutureDay(date: Date): boolean {
   return isAfter(startOfDay(date), startOfDay(new Date()));
+}
+
+/** ISO 'YYYY-MM-DD' → Date (локальна, опівночі). Зворотне до `toISODate`. */
+export function fromISODate(iso: string): Date {
+  return parseISO(iso);
+}
+
+/** Сьогоднішня дата як ISO 'YYYY-MM-DD' (опорна точка для «Today»). */
+export function todayISODate(): string {
+  return toISODate(new Date());
+}
+
+/**
+ * Зсув опорної дати на один період у напрямку `dir` (-1 назад / +1 вперед).
+ * `week` → ±7 днів, `month` → ±1 календарний місяць. Повертає ISO 'YYYY-MM-DD'.
+ */
+export function shiftAnchor(
+  anchorISO: string,
+  scale: "week" | "month",
+  dir: -1 | 1,
+): string {
+  const date = parseISO(anchorISO);
+  const next = scale === "week" ? addWeeks(date, dir) : addMonths(date, dir);
+  return toISODate(next);
 }
