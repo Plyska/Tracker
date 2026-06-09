@@ -5,9 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAppDispatch } from "@/app/store/hooks";
 import { Button, Field, Input } from "@/shared/ui";
-import { paths } from "@/shared/config/paths";
 import { loginSchema, type LoginValues } from "../model/schema";
 import { mockLogin } from "../lib/mockAuth";
+import { useFromPath } from "../lib/useFromPath";
 import { loginSuccess } from "../model/authSlice";
 import { SocialAuth } from "./SocialAuth";
 
@@ -15,6 +15,7 @@ export function LoginForm() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const from = useFromPath();
   const {
     register,
     handleSubmit,
@@ -29,7 +30,7 @@ export function LoginForm() {
     try {
       const { user, token } = await mockLogin(values);
       dispatch(loginSuccess({ user, token }));
-      navigate(paths.dashboard, { replace: true });
+      navigate(from, { replace: true });
     } catch {
       setError("root", { message: t("auth.error") });
     }

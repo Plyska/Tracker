@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAppDispatch } from "@/app/store/hooks";
 import { Button } from "@/shared/ui";
-import { paths } from "@/shared/config/paths";
 import { mockOAuth } from "../lib/mockAuth";
+import { useFromPath } from "../lib/useFromPath";
 import { loginSuccess } from "../model/authSlice";
 import { GoogleIcon } from "./GoogleIcon";
 
@@ -13,6 +13,7 @@ export function SocialAuth() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const from = useFromPath();
   const [loading, setLoading] = useState(false);
 
   const onGoogle = async () => {
@@ -20,7 +21,7 @@ export function SocialAuth() {
     try {
       const { user, token } = await mockOAuth("google");
       dispatch(loginSuccess({ user, token }));
-      navigate(paths.dashboard, { replace: true });
+      navigate(from, { replace: true });
     } catch {
       setLoading(false);
     }
