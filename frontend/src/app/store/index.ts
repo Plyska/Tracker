@@ -8,6 +8,7 @@ import {
 import { localeReducer } from "@/features/locale";
 import { uiPrefsReducer, type TableLayout } from "@/features/ui-prefs";
 import { periodReducer, type Scale } from "@/features/period-navigation";
+import { authReducer, initialAuthState, type AuthState } from "@/features/auth";
 import { habitsReducer } from "@/entities/habit";
 import { entriesReducer } from "@/entities/habit-entry";
 import { todayISODate } from "@/shared/lib";
@@ -22,6 +23,7 @@ const ACCENT_KEY = "tracker-accent";
 const HABIT_COL_WIDTH_KEY = "tracker-habit-col-width";
 const TABLE_LAYOUT_KEY = "tracker-table-layout";
 const PERIOD_SCALE_KEY = "tracker-period-scale";
+const AUTH_KEY = "tracker-auth";
 
 type PersistedState = {
   theme: { value: Theme };
@@ -30,6 +32,8 @@ type PersistedState = {
   uiPrefs: { habitColWidth: number | null; tableLayout: TableLayout };
   // anchor — session-only (завжди стартує з «сьогодні»); персиститься лише scale.
   period: { anchor: string; scale: Scale };
+  // Сесія: рефреш не розлогінює. Нема збереженого → anonymous.
+  auth: AuthState;
 };
 
 function read<T>(key: string, fallback: T): T {
@@ -56,6 +60,7 @@ function loadPersistedState(): PersistedState | undefined {
       anchor: todayISODate(),
       scale: read<Scale>(PERIOD_SCALE_KEY, "week"),
     },
+    auth: read<AuthState>(AUTH_KEY, initialAuthState),
   };
 }
 
@@ -68,6 +73,8 @@ export const store = configureStore({
     // Перегляд періоду (anchor + scale). Session-only: НЕ у persist-підписці нижче.
     // anchor — session-only; персиститься лише scale (нижче в підписці).
     period: periodReducer,
+    // Сесія користувача (персист у tracker-auth нижче).
+    auth: authReducer,
     // Мок серверного стану (session-only). На Фазі 9 переїде в RTK Query.
     habits: habitsReducer,
     entries: entriesReducer,
@@ -96,6 +103,7 @@ store.subscribe(() => {
       PERIOD_SCALE_KEY,
       JSON.stringify(state.period.scale),
     );
+    localStorage.setItem(AUTH_KEY, JSON.stringify(state.auth));
   } catch {
     // ignore (private mode / quota)
   }
