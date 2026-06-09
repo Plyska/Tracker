@@ -100,6 +100,30 @@
   },
   "auth": {
     "login": "Вхід",
-    "register": "Реєстрація"
+    "register": "Реєстрація",
+    "name": "Імʼя",
+    "namePlaceholder": "Ваше імʼя",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Пароль",
+    "passwordPlaceholder": "••••••••",
+    "confirmPassword": "Підтвердьте пароль",
+    "loginCta": "Увійти",
+    "registerCta": "Створити акаунт",
+    "or": "або",
+    "continueGoogle": "Увійти через Google",
+    "error": "Щось пішло не так. Спробуйте ще раз.",
+    "validation": {
+      "nameRequired": "Введіть імʼя",
+      "emailRequired": "Введіть email",
+      "emailInvalid": "Некоректний email",
+      "passwordRequired": "Введіть пароль",
+      "passwordMin": "Пароль має містити щонайменше 8 символів",
+      "passwordMismatch": "Паролі не збігаються"
+    }
+  },
+  "userMenu": {
+    "label": "Меню користувача",
+    "logout": "Вийти"
   }
 }
