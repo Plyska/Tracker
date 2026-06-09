@@ -1,13 +1,7 @@
-import { useTranslation } from "react-i18next";
+import { LoginForm } from "@/features/auth";
 
 function LoginPage() {
-  const { t } = useTranslation();
-
-  return (
-    <section>
-      <h2>{t("auth.login")}</h2>
-    </section>
-  );
+  return <LoginForm />;
 }
 
 export default LoginPage;

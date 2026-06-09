@@ -100,6 +100,24 @@
   },
   "auth": {
     "login": "Login",
-    "register": "Register"
+    "register": "Register",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "confirmPassword": "Confirm password",
+    "loginCta": "Sign in",
+    "registerCta": "Create account",
+    "error": "Something went wrong. Please try again.",
+    "validation": {
+      "nameRequired": "Enter your name",
+      "emailRequired": "Enter your email",
+      "emailInvalid": "Invalid email address",
+      "passwordRequired": "Enter your password",
+      "passwordMin": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords don't match"
+    }
   }
 }

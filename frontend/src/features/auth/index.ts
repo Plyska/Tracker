@@ -24,3 +24,5 @@ export {
   type AuthResult,
   type OAuthProvider,
 } from "./lib/mockAuth";
+export { LoginForm } from "./ui/LoginForm";
+export { RegisterForm } from "./ui/RegisterForm";
