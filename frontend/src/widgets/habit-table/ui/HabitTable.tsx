@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { ListChecks } from "lucide-react";
-import { HabitGlyph } from "@/entities/habit";
+import { HabitGlyph, useGetHabitsQuery } from "@/entities/habit";
+import { useGetEntriesQuery, type HabitEntry } from "@/entities/habit-entry";
 import { AddHabitButton, HabitRowMenu } from "@/features/manage-habits";
 import {
   HABIT_COL_MAX,
@@ -23,8 +24,10 @@ import {
   toISODate,
   useEntitlement,
 } from "@/shared/lib";
+import { useDelayedFlag } from "@/shared/lib/hooks/useDelayedFlag";
 import { CheckboxCell } from "./CheckboxCell";
 import { RowsGrid } from "./RowsGrid";
+import { SkeletonCell, TableSkeleton } from "./skeleton";
 import { BOUND_HEIGHT_CLASS } from "./styles";
 
 // Адаптивний дефолт для ТИЖНЯ (7 колонок). Місяць/ручна ширина — через inline-style
@@ -37,8 +40,9 @@ const GRID_COLS =
 
 export function HabitTable() {
   const { t, i18n } = useTranslation();
-  const habits = useAppSelector((s) => s.habits.items);
-  const byKey = useAppSelector((s) => s.entries.byKey);
+  // Серверний стан (RTK Query). Навички кешуються окремо від відміток, тож рядки
+  // лишаються стабільними при навігації періодом (скелетон — лише на сітці галочок).
+  const { data: habits = [], isLoading: habitsLoading } = useGetHabitsQuery();
   // Ручна ширина колонки назви (персиститься). null → адаптивний дефолт (GRID_COLS).
   const colWidth = useAppSelector((s) => s.uiPrefs.habitColWidth);
   // Опорна дата + масштаб — спільні з тулбаром (features/period-navigation).
@@ -56,6 +60,25 @@ export function HabitTable() {
     const date = fromISODate(anchor);
     return scale === "month" ? getMonthDays(date) : getWeekDays(date);
   }, [anchor, scale]);
+
+  // Відмітки періоду: межі діапазону виводимо з anchor+scale (один endpoint для week/month).
+  const from = toISODate(days[0]);
+  const to = toISODate(days[days.length - 1]);
+  const { data: entries, isLoading: entriesLoading } = useGetEntriesQuery({
+    from,
+    to,
+  });
+  const byKey = useMemo(() => {
+    const map: Record<string, HabitEntry> = {};
+    for (const e of entries ?? []) map[entryKey(e.habitId, e.date)] = e;
+    return map;
+  }, [entries]);
+
+  // Скелетон лише коли немає кешу для аргументів (isLoading), із порогом проти мерехтіння.
+  // Кешований період (stale-while-revalidate) → isLoading=false → лоадера нема.
+  const firstLoad = useDelayedFlag(habitsLoading);
+  const gridLoading = useDelayedFlag(entriesLoading);
+
   // Тижневий дефолт (без ручної ширини) → адаптивний клас GRID_COLS; інакше inline-style.
   const useDefaultGrid = colWidth === null && scale === "week";
 
@@ -83,7 +106,10 @@ export function HabitTable() {
     e.currentTarget.releasePointerCapture(e.pointerId);
   };
 
-  if (habits.length === 0) {
+  // Перше завантаження навичок — повний скелетон таблиці (порожній стан не блимає).
+  if (firstLoad) return <TableSkeleton />;
+
+  if (!habitsLoading && habits.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-accent-foreground">
@@ -110,6 +136,7 @@ export function HabitTable() {
         byKey={byKey}
         dateLocale={dateLocale}
         boundHeight={boundHeight}
+        loading={gridLoading}
       />
     );
   }
@@ -218,14 +245,18 @@ export function HabitTable() {
                     isToday(day) && "bg-accent/60",
                   )}
                 >
-                  <CheckboxCell
-                    habitId={habit.id}
-                    date={date}
-                    done={done}
-                    color={habit.color}
-                    disabled={isFutureDay(day)}
-                    label={`${habit.name} — ${format(day, "PP", { locale: dateLocale })}`}
-                  />
+                  {gridLoading ? (
+                    <SkeletonCell />
+                  ) : (
+                    <CheckboxCell
+                      habitId={habit.id}
+                      date={date}
+                      done={done}
+                      color={habit.color}
+                      disabled={isFutureDay(day)}
+                      label={`${habit.name} — ${format(day, "PP", { locale: dateLocale })}`}
+                    />
+                  )}
                 </div>
               );
             })}

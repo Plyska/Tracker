@@ -1,12 +1,11 @@
 export type { Habit } from "./model/types";
 export {
-  default as habitsReducer,
-  addHabit,
-  renameHabit,
-  setHabitColor,
-  setHabitIcon,
-  removeHabit,
-} from "./model/habitsSlice";
+  habitsApi,
+  useGetHabitsQuery,
+  useAddHabitMutation,
+  useUpdateHabitMutation,
+  useDeleteHabitMutation,
+} from "./api/habitsApi";
 export { HabitIcon } from "./ui/HabitIcon";
 export { HabitGlyph } from "./ui/HabitGlyph";
 export { HABIT_ICON_NAMES } from "./lib/habitIcons";

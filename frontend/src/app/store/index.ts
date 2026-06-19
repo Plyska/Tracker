@@ -1,4 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query";
+import { baseApi } from "@/shared/api";
 import { themeReducer, getSystemTheme, type Theme } from "@/features/theme";
 import {
   accentReducer,
@@ -9,8 +11,6 @@ import { localeReducer } from "@/features/locale";
 import { uiPrefsReducer, type TableLayout } from "@/features/ui-prefs";
 import { periodReducer, type Scale } from "@/features/period-navigation";
 import { authReducer, initialAuthState, type AuthState } from "@/features/auth";
-import { habitsReducer } from "@/entities/habit";
-import { entriesReducer } from "@/entities/habit-entry";
 import { todayISODate } from "@/shared/lib";
 import {
   getStoredLocale,
@@ -75,12 +75,16 @@ export const store = configureStore({
     period: periodReducer,
     // Сесія користувача (персист у tracker-auth нижче).
     auth: authReducer,
-    // Мок серверного стану (session-only). На Фазі 9 переїде в RTK Query.
-    habits: habitsReducer,
-    entries: entriesReducer,
+    // Серверний стан (навички/відмітки/auth) — RTK Query. Кеш session-only (без persist).
+    [baseApi.reducerPath]: baseApi.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(baseApi.middleware),
   preloadedState: loadPersistedState(),
 });
+
+// refetchOnFocus / refetchOnReconnect для RTK Query.
+setupListeners(store.dispatch);
 
 store.subscribe(() => {
   try {

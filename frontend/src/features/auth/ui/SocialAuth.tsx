@@ -1,10 +1,9 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAppDispatch } from "@/app/store/hooks";
 import { Button } from "@/shared/ui";
-import { mockOAuth } from "../lib/mockAuth";
+import { useOauthMutation } from "../api/authApi";
 import { useFromPath } from "../lib/useFromPath";
 import { loginSuccess } from "../model/authSlice";
 import { GoogleIcon } from "./GoogleIcon";
@@ -14,16 +13,15 @@ export function SocialAuth() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const from = useFromPath();
-  const [loading, setLoading] = useState(false);
+  const [oauth, { isLoading: loading }] = useOauthMutation();
 
   const onGoogle = async () => {
-    setLoading(true);
     try {
-      const { user, token } = await mockOAuth("google");
+      const { user, token } = await oauth("google").unwrap();
       dispatch(loginSuccess({ user, token }));
       navigate(from, { replace: true });
     } catch {
-      setLoading(false);
+      // лишаємось на формі; стан помилки соц-входу — у подальшому поліші
     }
   };
 

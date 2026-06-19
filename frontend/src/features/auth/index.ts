@@ -18,12 +18,13 @@ export {
   type RegisterValues,
 } from "./model/schema";
 export {
-  mockLogin,
-  mockRegister,
-  mockOAuth,
+  authApi,
+  useLoginMutation,
+  useRegisterMutation,
+  useOauthMutation,
+  useGetMeQuery,
   type AuthResult,
-  type OAuthProvider,
-} from "./lib/mockAuth";
+} from "./api/authApi";
 export { LoginForm } from "./ui/LoginForm";
 export { RegisterForm } from "./ui/RegisterForm";
 export { UserMenu } from "./ui/UserMenu";

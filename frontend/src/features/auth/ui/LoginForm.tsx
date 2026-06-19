@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useAppDispatch } from "@/app/store/hooks";
 import { Button, Field, Input } from "@/shared/ui";
 import { loginSchema, type LoginValues } from "../model/schema";
-import { mockLogin } from "../lib/mockAuth";
+import { useLoginMutation } from "../api/authApi";
 import { useFromPath } from "../lib/useFromPath";
 import { loginSuccess } from "../model/authSlice";
 import { SocialAuth } from "./SocialAuth";
@@ -16,6 +16,7 @@ export function LoginForm() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const from = useFromPath();
+  const [login] = useLoginMutation();
   const {
     register,
     handleSubmit,
@@ -28,7 +29,7 @@ export function LoginForm() {
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      const { user, token } = await mockLogin(values);
+      const { user, token } = await login(values).unwrap();
       dispatch(loginSuccess({ user, token }));
       navigate(from, { replace: true });
     } catch {

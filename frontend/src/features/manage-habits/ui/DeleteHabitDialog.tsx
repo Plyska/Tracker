@@ -1,9 +1,7 @@
 import { AlertDialog } from "radix-ui";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { useAppDispatch } from "@/app/store/hooks";
-import { removeHabit, type Habit } from "@/entities/habit";
-import { clearHabitEntries } from "@/entities/habit-entry";
+import { useDeleteHabitMutation, type Habit } from "@/entities/habit";
 import { Button } from "@/shared/ui";
 import { cn } from "@/shared/lib";
 
@@ -19,12 +17,12 @@ export function DeleteHabitDialog({
   onOpenChange,
 }: DeleteHabitDialogProps) {
   const { t } = useTranslation();
-  const dispatch = useAppDispatch();
+  const [deleteHabit] = useDeleteHabitMutation();
   const reduceMotion = useReducedMotion();
 
+  // Каскадне видалення entries — на боці сервера (db), інвалідація тегів оновить таблицю.
   const onConfirm = () => {
-    dispatch(removeHabit(habit.id));
-    dispatch(clearHabitEntries(habit.id));
+    void deleteHabit(habit.id);
     onOpenChange(false);
   };
 

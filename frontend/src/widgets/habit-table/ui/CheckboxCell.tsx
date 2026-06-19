@@ -1,8 +1,7 @@
 import { Checkbox } from "radix-ui";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
-import { useAppDispatch } from "@/app/store/hooks";
-import { toggleEntry } from "@/entities/habit-entry";
+import { useToggleEntryMutation } from "@/entities/habit-entry";
 import { cn } from "@/shared/lib";
 
 interface CheckboxCellProps {
@@ -29,7 +28,7 @@ export function CheckboxCell({
   disabled,
   label,
 }: CheckboxCellProps) {
-  const dispatch = useAppDispatch();
+  const [toggleEntry] = useToggleEntryMutation();
   const reduceMotion = useReducedMotion();
 
   const pop = reduceMotion
@@ -43,7 +42,7 @@ export function CheckboxCell({
         checked={done}
         disabled={disabled}
         onCheckedChange={(next) =>
-          dispatch(toggleEntry({ habitId, date, done: next === true }))
+          void toggleEntry({ habitId, date, done: next === true })
         }
         aria-label={label}
         title={label}
