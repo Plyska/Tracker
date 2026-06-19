@@ -17,6 +17,19 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
+  // body-parser / http-errors несуть числовий status (напр. невалідний JSON → 400).
+  // Мапимо клієнтські 4xx на їхній статус, а не в 500.
+  const status = (err as { status?: number; statusCode?: number })?.status ??
+    (err as { statusCode?: number })?.statusCode;
+  if (typeof status === "number" && status >= 400 && status < 500) {
+    const malformed = (err as { type?: string })?.type === "entity.parse.failed";
+    res.status(status).json({
+      code: malformed ? "MALFORMED_JSON" : "BAD_REQUEST",
+      message: malformed ? "Malformed JSON body" : (err as Error).message,
+    });
+    return;
+  }
+
   // eslint-disable-next-line no-console
   console.error("Unhandled error:", err);
   res.status(500).json({
