@@ -5,15 +5,12 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useAppDispatch } from "@/app/store/hooks";
 import {
-  addHabit,
   HabitGlyph,
   randomHabitColor,
-  renameHabit,
   resolveHabitIcon,
-  setHabitColor,
-  setHabitIcon,
+  useAddHabitMutation,
+  useUpdateHabitMutation,
   type Habit,
 } from "@/entities/habit";
 import { Button, IconButton } from "@/shared/ui";
@@ -44,7 +41,8 @@ function HabitForm({
   onDone: () => void;
 }) {
   const { t } = useTranslation();
-  const dispatch = useAppDispatch();
+  const [addHabit] = useAddHabitMutation();
+  const [updateHabit] = useUpdateHabitMutation();
   const canCustomize = useEntitlement("customization");
 
   const { register, handleSubmit, control, setValue, formState } =
@@ -72,13 +70,19 @@ function HabitForm({
 
   const onSubmit = handleSubmit((values) => {
     if (mode === "create") {
-      dispatch(
-        addHabit({ name: values.name, color: values.color, icon: values.icon }),
-      );
+      void addHabit({
+        name: values.name,
+        color: values.color,
+        icon: values.icon,
+      });
     } else if (habit) {
-      dispatch(renameHabit({ id: habit.id, name: values.name }));
-      dispatch(setHabitColor({ id: habit.id, color: values.color }));
-      dispatch(setHabitIcon({ id: habit.id, icon: values.icon }));
+      // Часткове оновлення одним PATCH (§5.2 контракту): name + color + icon.
+      void updateHabit({
+        id: habit.id,
+        name: values.name,
+        color: values.color,
+        icon: values.icon,
+      });
     }
     onDone();
   });

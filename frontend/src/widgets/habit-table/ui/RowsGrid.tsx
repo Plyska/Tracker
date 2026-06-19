@@ -13,6 +13,7 @@ import {
   toISODate,
 } from "@/shared/lib";
 import { CheckboxCell } from "./CheckboxCell";
+import { SkeletonCell } from "./skeleton";
 import { BOUND_HEIGHT_CLASS } from "./styles";
 
 type Props = {
@@ -22,6 +23,8 @@ type Props = {
   dateLocale: Locale;
   /** Обмежити висоту → скрол усередині таблиці (sticky-шапка чіпляється до неї). */
   boundHeight?: boolean;
+  /** Завантаження відміток періоду → скелетон-клітинки замість галочок. */
+  loading?: boolean;
 };
 
 /**
@@ -30,7 +33,14 @@ type Props = {
  * (природний на мобільному); sticky-заголовок з навичками і sticky-колонка дат.
  * Альтернатива до колонкової сітки в `HabitTable`.
  */
-export function RowsGrid({ habits, days, byKey, dateLocale, boundHeight }: Props) {
+export function RowsGrid({
+  habits,
+  days,
+  byKey,
+  dateLocale,
+  boundHeight,
+  loading,
+}: Props) {
   return (
     <div
       className={cn(
@@ -113,14 +123,18 @@ export function RowsGrid({ habits, days, byKey, dateLocale, boundHeight }: Props
                       today && "bg-accent/60",
                     )}
                   >
-                    <CheckboxCell
-                      habitId={habit.id}
-                      date={date}
-                      done={done}
-                      color={habit.color}
-                      disabled={future}
-                      label={`${habit.name} — ${format(day, "PP", { locale: dateLocale })}`}
-                    />
+                    {loading ? (
+                      <SkeletonCell />
+                    ) : (
+                      <CheckboxCell
+                        habitId={habit.id}
+                        date={date}
+                        done={done}
+                        color={habit.color}
+                        disabled={future}
+                        label={`${habit.name} — ${format(day, "PP", { locale: dateLocale })}`}
+                      />
+                    )}
                   </div>
                 );
               })}

@@ -14,7 +14,7 @@ export type AuthState = {
   /** Явний статус сесії (не виводимо з `user`): місце під майбутні loading/error (Фаза 9). */
   status: AuthStatus;
   user: User | null;
-  /** Мок-токен від `mockAuth`; на backend-фазі стане реальним JWT (звідси його братиме RTK Query). */
+  /** Мок-токен від `authApi`; на backend-фазі стане реальним JWT (звідси його братиме RTK Query). */
   token: string | null;
 };
 

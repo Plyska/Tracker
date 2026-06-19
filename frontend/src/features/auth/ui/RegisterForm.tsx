@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useAppDispatch } from "@/app/store/hooks";
 import { Button, Field, Input } from "@/shared/ui";
 import { registerSchema, type RegisterValues } from "../model/schema";
-import { mockRegister } from "../lib/mockAuth";
+import { useRegisterMutation } from "../api/authApi";
 import { useFromPath } from "../lib/useFromPath";
 import { loginSuccess } from "../model/authSlice";
 import { SocialAuth } from "./SocialAuth";
@@ -16,6 +16,7 @@ export function RegisterForm() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const from = useFromPath();
+  const [registerUser] = useRegisterMutation();
   const {
     register,
     handleSubmit,
@@ -28,7 +29,12 @@ export function RegisterForm() {
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      const { user, token } = await mockRegister(values);
+      const { name, email, password } = values;
+      const { user, token } = await registerUser({
+        name,
+        email,
+        password,
+      }).unwrap();
       dispatch(loginSuccess({ user, token }));
       navigate(from, { replace: true });
     } catch {
