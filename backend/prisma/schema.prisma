@@ -1,0 +1,74 @@
+// Tracker — схема БД. Дзеркалить доменні моделі (docs/data-models.md) і контракт
+// (docs/api-contract.md). `plan` НЕ зберігається — похідне від підписки (mapper повертає 'pro'
+// на час релізу; монетизація — пізніша фаза).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  user
+  admin
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  avatarUrl    String?
+  passwordHash String? // null = OAuth-only акаунт (шов на майбутнє)
+  role         Role     @default(user)
+  createdAt    DateTime @default(now())
+
+  habits        Habit[]
+  refreshTokens RefreshToken[]
+}
+
+model Habit {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String
+  icon      String?
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  entries HabitEntry[]
+
+  @@index([userId])
+}
+
+model HabitEntry {
+  id      String  @id @default(cuid())
+  habitId String
+  habit   Habit   @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date    String // 'YYYY-MM-DD' — рядок, матчить ISO-інваріант контракту (без TZ-пасток)
+  done    Boolean @default(true)
+
+  // Унікальний ключ запису (habitId+date) — основа upsert у PUT /entries
+  @@unique([habitId, date])
+  @@index([habitId])
+}
+
+// Refresh-токени: ротація + reuse-detection. Зберігаємо лише SHA-256 хеш непрозорого токена.
+// При повторному використанні відкликаного токена відкликаємо всю `family` (захист від крадіжки).
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family    String // спільний id ланцюга ротації
+  tokenHash String    @unique // sha256(opaque token)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([family])
+}

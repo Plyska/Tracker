@@ -1,6 +1,5 @@
 # Docker-оркестрація монорепо Tracker.
-# Зараз піднімається лише frontend (Vite dev-server).
-# backend додамо пізніше окремим сервісом.
+# frontend (Vite dev-server) + backend (Express API). БД — зовнішня (Neon), у compose не піднімається.
 
 services:
   frontend:
@@ -19,11 +18,17 @@ services:
       - CHOKIDAR_USEPOLLING=true
     restart: unless-stopped
 
-  # backend:
-  #   build:
-  #     context: ./backend
-  #   container_name: tracker-backend
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - db
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tracker-backend
+    ports:
+      - "3000:3000"
+    # Креди БД (Neon) + секрети — з backend/.env (не в репо).
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    restart: unless-stopped
