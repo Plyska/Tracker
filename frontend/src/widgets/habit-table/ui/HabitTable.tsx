@@ -74,9 +74,8 @@ export function HabitTable() {
     return map;
   }, [entries]);
 
-  // Скелетон лише коли немає кешу для аргументів (isLoading), із порогом проти мерехтіння.
-  // Кешований період (stale-while-revalidate) → isLoading=false → лоадера нема.
-  const firstLoad = useDelayedFlag(habitsLoading);
+  // Сітка галочок: скелетон лише коли немає кешу для діапазону (isLoading), із порогом проти
+  // мерехтіння. Кешований період (stale-while-revalidate) → isLoading=false → лоадера нема.
   const gridLoading = useDelayedFlag(entriesLoading);
 
   // Тижневий дефолт (без ручної ширини) → адаптивний клас GRID_COLS; інакше inline-style.
@@ -106,8 +105,9 @@ export function HabitTable() {
     e.currentTarget.releasePointerCapture(e.pointerId);
   };
 
-  // Перше завантаження навичок — повний скелетон таблиці (порожній стан не блимає).
-  if (firstLoad) return <TableSkeleton />;
+  // Перше завантаження навичок — одразу повний скелетон (навички вантажаться раз за сесію,
+  // тож без 150мс-порогу: інакше до спрацювання порогу блимала б порожня таблиця/empty state).
+  if (habitsLoading) return <TableSkeleton />;
 
   if (!habitsLoading && habits.length === 0) {
     return (
