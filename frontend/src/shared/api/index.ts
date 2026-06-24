@@ -11,5 +11,6 @@ export type {
   LoginRequest,
   RegisterRequest,
   AuthResponse,
+  RefreshResponse,
   OAuthProvider,
 } from "./types";

@@ -9,6 +9,7 @@ import { UserAvatar } from "@/entities/user";
 import { paths } from "@/shared/config/paths";
 import { cn } from "@/shared/lib/cn";
 import { logout, selectCurrentUser } from "../model/authSlice";
+import { useLogoutMutation } from "../api/authApi";
 
 const itemClass = cn(
   "flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none",
@@ -22,10 +23,14 @@ export function UserMenu() {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
+  const [logoutOnServer] = useLogoutMutation();
 
   if (!user) return null;
 
   const onLogout = () => {
+    // Відкликаємо сесію на сервері (best-effort), але локальний стан чистимо завжди —
+    // навіть якщо запит упав (офлайн/прострочений токен), користувач має вийти.
+    void logoutOnServer();
     dispatch(logout());
     navigate(paths.login, { replace: true });
   };

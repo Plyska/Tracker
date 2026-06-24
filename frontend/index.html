@@ -5,18 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tracker</title>
     <script>
-      // Виставляємо тему до першого рендеру, щоб уникнути спалаху світлої теми (FOUC).
-      // Читаємо той самий ключ/формат, що зберігає zustand persist (stores/theme.ts).
+      // Виставляємо тему/акцент до першого рендеру, щоб уникнути спалаху світлої теми (FOUC).
+      // Формат — як у Redux-persist (app/store): значення зберігається напряму (напр. "dark"),
+      // не обгорнуте в { state: ... } (так було у знятого zustand-persist).
       (function () {
         try {
           var stored = localStorage.getItem('tracker-theme');
-          var theme = stored ? JSON.parse(stored).state.theme : null;
+          var theme = stored ? JSON.parse(stored) : null;
           if (theme !== 'light' && theme !== 'dark') {
             theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
           }
           document.documentElement.classList.toggle('dark', theme === 'dark');
+          var accent = JSON.parse(localStorage.getItem('tracker-accent'));
+          if (accent) document.documentElement.dataset.accent = accent;
         } catch (e) {
-          /* localStorage недоступний — лишаємо світлу тему */
+          /* localStorage недоступний/порожній — лишаємо дефолт (тема за prefers-color-scheme) */
         }
       })();
     </script>

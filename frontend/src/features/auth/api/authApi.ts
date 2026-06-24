@@ -25,7 +25,7 @@ export interface AuthResult {
 
 const toResult = (res: AuthResponse): AuthResult => ({
   user: toUser(res.user),
-  token: res.token,
+  token: res.accessToken,
 });
 
 /**
@@ -47,6 +47,11 @@ export const authApi = baseApi.injectEndpoints({
       query: (provider) => ({ url: `/auth/oauth/${provider}`, method: "POST" }),
       transformResponse: toResult,
     }),
+    // Відкликає refresh-токен на сервері + чистить httpOnly cookie. Локальний стан
+    // (`authSlice`) чистить виклик-сайт незалежно від мережевого результату.
+    logout: build.mutation<void, void>({
+      query: () => ({ url: "/auth/logout", method: "POST" }),
+    }),
     // Шов на майбутнє (рехідрація сесії). UI зараз не викликає — сесію тримає authSlice-персист.
     getMe: build.query<User, void>({
       query: () => ({ url: "/auth/me" }),
@@ -60,5 +65,6 @@ export const {
   useLoginMutation,
   useRegisterMutation,
   useOauthMutation,
+  useLogoutMutation,
   useGetMeQuery,
 } = authApi;
