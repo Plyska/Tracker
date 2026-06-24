@@ -71,7 +71,12 @@ export interface RegisterRequest {
 
 export interface AuthResponse {
   user: UserDto;
-  token: string;
+  accessToken: string; // короткоживучий JWT (~15хв) → Authorization: Bearer
+}
+
+/** Відповідь POST /auth/refresh — лише новий access (refresh ротується в httpOnly cookie). */
+export interface RefreshResponse {
+  accessToken: string;
 }
 
 export type OAuthProvider = "google";

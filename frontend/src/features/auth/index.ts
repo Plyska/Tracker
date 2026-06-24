@@ -22,6 +22,7 @@ export {
   useLoginMutation,
   useRegisterMutation,
   useOauthMutation,
+  useLogoutMutation,
   useGetMeQuery,
   type AuthResult,
 } from "./api/authApi";

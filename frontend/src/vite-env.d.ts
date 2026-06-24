@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  /** Базовий URL API (Фаза 9: мок-baseQuery ігнорує; backend-фаза: fetchBaseQuery). */
+  /** Базовий URL REST API (Express). Споживає `httpBaseQuery` (fetchBaseQuery). */
   readonly VITE_API_URL: string;
 }
 

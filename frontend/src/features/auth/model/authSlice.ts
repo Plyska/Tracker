@@ -14,7 +14,7 @@ export type AuthState = {
   /** Явний статус сесії (не виводимо з `user`): місце під майбутні loading/error (Фаза 9). */
   status: AuthStatus;
   user: User | null;
-  /** Мок-токен від `authApi`; на backend-фазі стане реальним JWT (звідси його братиме RTK Query). */
+  /** Access-JWT від `authApi`; звідси його бере httpBaseQuery для `Authorization: Bearer`. */
   token: string | null;
 };
 
@@ -37,11 +37,15 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
     },
+    /** Оновлення лише access-токена після тихого refresh (reauth у httpBaseQuery). */
+    tokenRefreshed: (state, action: PayloadAction<string>) => {
+      state.token = action.payload;
+    },
     logout: () => initialAuthState,
   },
 });
 
-export const { loginSuccess, logout } = authSlice.actions;
+export const { loginSuccess, tokenRefreshed, logout } = authSlice.actions;
 export default authSlice.reducer;
 
 // Селектори — одна типізована точка істини (читають RequireAuth/Sidebar тощо).
