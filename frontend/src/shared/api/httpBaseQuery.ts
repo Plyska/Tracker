@@ -4,46 +4,57 @@ import {
   type FetchArgs,
   type FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
-import type { RefreshResponse } from "./types";
 
 /**
- * Реальний транспорт (backend-фаза) — замінює мок-`baseQuery`. Той самий інтерфейс, тож
- * endpoints в entities/features не змінюються (шов із ADR 0003 / api-contract.md).
+ * Реальний транспорт (cookie-флоу автентифікації, Security-фаза варіант B).
  *
- * - `credentials: "include"` — браузер шле/приймає httpOnly refresh-cookie (cross-origin 5173→3000).
- * - `Authorization: Bearer <access>` — токен беремо з `state.auth.token` (структурно, без імпорту
- *   RootState: shared — нижній шар FSD і не залежить від app/features).
- * - На `401` тихо рефрешимо access (`POST /auth/refresh` по cookie), оновлюємо токен і повторюємо
- *   запит один раз; якщо refresh не вдався — диспатчимо logout.
+ * - `credentials: "include"` — браузер шле/приймає httpOnly cookie (access + refresh) cross-origin.
+ *   Access-токен у cookie, тож **жодного `Authorization` заголовка** — JS токен не торкається (анти-XSS).
+ * - CSRF (double-submit): читаємо `csrf_token` із cookie й дублюємо у заголовок `X-CSRF-Token` на
+ *   мутаціях; бекенд звіряє cookie==заголовок (`requireCsrf`).
+ * - На `401` тихо рефрешимо сесію (`POST /auth/refresh` по refresh-cookie → нові access/csrf cookie)
+ *   і повторюємо запит один раз; якщо refresh не вдався — диспатчимо logout.
  */
+
+const CSRF_COOKIE = "csrf_token";
+const CSRF_HEADER = "X-CSRF-Token";
+
+/** Читає значення cookie за іменем (CSRF-токен — навмисно не httpOnly). */
+const readCookie = (name: string): string | undefined =>
+  document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`))
+    ?.slice(name.length + 1);
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
   credentials: "include",
-  prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as { auth?: { token?: string | null } }).auth
-      ?.token;
-    if (token) headers.set("authorization", `Bearer ${token}`);
+  prepareHeaders: (headers) => {
+    const csrf = readCookie(CSRF_COOKIE);
+    if (csrf) headers.set(CSRF_HEADER, csrf);
     return headers;
   },
 });
 
-// Екшени диспатчимо за рядковим типом (`<slice name>/<reducer>`), щоб не імпортувати
-// features/auth у shared (заборонений висхідний імпорт FSD). Типи зведені у authSlice.
-const TOKEN_REFRESHED = "auth/tokenRefreshed";
+// Екшени диспатчимо за рядковим типом, щоб не імпортувати features/auth у shared (FSD).
 const LOGOUT = "auth/logout";
 
 const REFRESH_URL = "/auth/refresh";
 
 // Single-flight: усі паралельні 401 чекають на один refresh-запит (без шторму рефрешів).
-let refreshing: Promise<string | null> | null = null;
+let refreshing: Promise<boolean> | null = null;
 
 const requestRefresh = async (
   api: Parameters<typeof rawBaseQuery>[1],
   extraOptions: Parameters<typeof rawBaseQuery>[2],
-): Promise<string | null> => {
-  const r = await rawBaseQuery({ url: REFRESH_URL, method: "POST" }, api, extraOptions);
-  return (r.data as RefreshResponse | undefined)?.accessToken ?? null;
+): Promise<boolean> => {
+  const r = await rawBaseQuery(
+    { url: REFRESH_URL, method: "POST" },
+    api,
+    extraOptions,
+  );
+  // Успіх → бекенд оновив access/csrf cookie; токен у тілі не повертається.
+  return !r.error;
 };
 
 export const httpBaseQuery: BaseQueryFn<
@@ -56,11 +67,10 @@ export const httpBaseQuery: BaseQueryFn<
   const url = typeof args === "string" ? args : args.url;
   if (result.error?.status === 401 && url !== REFRESH_URL) {
     refreshing ??= requestRefresh(api, extraOptions);
-    const newToken = await refreshing;
+    const ok = await refreshing;
     refreshing = null;
 
-    if (newToken) {
-      api.dispatch({ type: TOKEN_REFRESHED, payload: newToken });
+    if (ok) {
       result = await rawBaseQuery(args, api, extraOptions);
     } else {
       api.dispatch({ type: LOGOUT });

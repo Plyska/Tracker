@@ -10,36 +10,29 @@ export const AUTH_STATUS = {
 
 export type AuthStatus = (typeof AUTH_STATUS)[keyof typeof AUTH_STATUS];
 
+/**
+ * Сесійний стан. Access-токен тут НЕ зберігаємо — він живе у httpOnly cookie (Security-фаза,
+ * варіант B): JS його не бачить (анти-XSS). Slice тримає лише статус + профіль для UI.
+ */
 export type AuthState = {
-  /** Явний статус сесії (не виводимо з `user`): місце під майбутні loading/error (Фаза 9). */
+  /** Явний статус сесії (не виводимо з `user`): місце під майбутні loading/error. */
   status: AuthStatus;
   user: User | null;
-  /** Access-JWT від `authApi`; звідси його бере httpBaseQuery для `Authorization: Bearer`. */
-  token: string | null;
 };
 
 export const initialAuthState: AuthState = {
   status: AUTH_STATUS.Anonymous,
   user: null,
-  token: null,
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState: initialAuthState,
   reducers: {
-    // Єдина точка входу для login / register / OAuth (усі мок-флоу диспатчать її).
-    loginSuccess: (
-      state,
-      action: PayloadAction<{ user: User; token: string }>,
-    ) => {
+    // Єдина точка входу для login / register / OAuth. Токени вже у cookie (виставив бекенд).
+    loginSuccess: (state, action: PayloadAction<{ user: User }>) => {
       state.status = AUTH_STATUS.Authenticated;
       state.user = action.payload.user;
-      state.token = action.payload.token;
-    },
-    /** Оновлення лише access-токена після тихого refresh (reauth у httpBaseQuery). */
-    tokenRefreshed: (state, action: PayloadAction<string>) => {
-      state.token = action.payload;
     },
     /** Свіжий `user` із `GET /auth/me` при рехідрації сесії на буті (SessionProvider). */
     userLoaded: (state, action: PayloadAction<User>) => {
@@ -49,13 +42,11 @@ const authSlice = createSlice({
   },
 });
 
-export const { loginSuccess, tokenRefreshed, userLoaded, logout } =
-  authSlice.actions;
+export const { loginSuccess, userLoaded, logout } = authSlice.actions;
 export default authSlice.reducer;
 
 // Селектори — одна типізована точка істини (читають RequireAuth/Sidebar тощо).
 export const selectIsAuthenticated = (s: RootState) =>
   s.auth.status === AUTH_STATUS.Authenticated;
 export const selectCurrentUser = (s: RootState) => s.auth.user;
-export const selectAuthToken = (s: RootState) => s.auth.token;
 export const selectIsAdmin = (s: RootState) => s.auth.user?.role === "admin";

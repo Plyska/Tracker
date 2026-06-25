@@ -20,18 +20,16 @@ const toUser = (dto: UserDto): User => ({
 
 export interface AuthResult {
   user: User;
-  token: string;
 }
 
 const toResult = (res: AuthResponse): AuthResult => ({
   user: toUser(res.user),
-  token: res.accessToken,
 });
 
 /**
  * Транспорт автентифікації (RTK Query). Власник сесійного стану лишається `authSlice`
- * (status/user/token + персист) — API лише ходить по мережу. Backend-фаза: auth стане
- * першим реальним ендпоінтом, тіло мутацій не зміниться (лише baseQuery → HTTP).
+ * (status/user + персист) — API лише ходить по мережу. Cookie-флоу (Security-фаза B):
+ * токени виставляє бекенд у cookie, у тілі лише `{ user }`.
  */
 export const authApi = baseApi.injectEndpoints({
   endpoints: (build) => ({

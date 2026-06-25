@@ -69,14 +69,12 @@ export interface RegisterRequest {
   password: string;
 }
 
+/**
+ * Cookie-флоу (Security-фаза, варіант B): токени не в тілі. login/register повертають лише
+ * `{ user }`; access/refresh/csrf виставляє бекенд у cookie. refresh → 204 (теж лише cookie).
+ */
 export interface AuthResponse {
   user: UserDto;
-  accessToken: string; // короткоживучий JWT (~15хв) → Authorization: Bearer
-}
-
-/** Відповідь POST /auth/refresh — лише новий access (refresh ротується в httpOnly cookie). */
-export interface RefreshResponse {
-  accessToken: string;
 }
 
 export type OAuthProvider = "google";

@@ -37,6 +37,18 @@ type PersistedState = {
   auth: AuthState;
 };
 
+// Персистимо лише {status, user} (для миттєвого UI без флешу при рехідрації). Жодного токена
+// в localStorage немає: access/refresh/csrf живуть у cookie (Security-фаза, варіант B). На буті
+// SessionProvider валідує сесію (`GET /auth/me`, тихий refresh на 401). Явно реконструюємо
+// об'єкт (відкидаємо можливий застарілий `token` зі старого формату → без зайвих ключів у стані).
+type PersistedAuth = Pick<AuthState, "status" | "user">;
+
+function readPersistedAuth(): AuthState {
+  const stored = read<PersistedAuth | null>(AUTH_KEY, null);
+  if (!stored) return initialAuthState;
+  return { status: stored.status, user: stored.user };
+}
+
 function read<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
@@ -61,7 +73,7 @@ function loadPersistedState(): PersistedState | undefined {
       anchor: todayISODate(),
       scale: read<Scale>(PERIOD_SCALE_KEY, "week"),
     },
-    auth: read<AuthState>(AUTH_KEY, initialAuthState),
+    auth: readPersistedAuth(),
   };
 }
 
@@ -108,7 +120,14 @@ store.subscribe(() => {
       PERIOD_SCALE_KEY,
       JSON.stringify(state.period.scale),
     );
-    localStorage.setItem(AUTH_KEY, JSON.stringify(state.auth));
+    // Лише {status, user}; `token` — поза localStorage (тримається в пам'яті).
+    localStorage.setItem(
+      AUTH_KEY,
+      JSON.stringify({
+        status: state.auth.status,
+        user: state.auth.user,
+      } satisfies PersistedAuth),
+    );
   } catch {
     // ignore (private mode / quota)
   }

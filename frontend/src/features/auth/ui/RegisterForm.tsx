@@ -30,12 +30,12 @@ export function RegisterForm() {
   const onSubmit = handleSubmit(async (values) => {
     try {
       const { name, email, password } = values;
-      const { user, token } = await registerUser({
+      const { user } = await registerUser({
         name,
         email,
         password,
       }).unwrap();
-      dispatch(loginSuccess({ user, token }));
+      dispatch(loginSuccess({ user }));
       navigate(from, { replace: true });
     } catch {
       setError("root", { message: t("auth.error") });
