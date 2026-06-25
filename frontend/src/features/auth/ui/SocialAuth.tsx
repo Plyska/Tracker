@@ -17,8 +17,8 @@ export function SocialAuth() {
 
   const onGoogle = async () => {
     try {
-      const { user, token } = await oauth("google").unwrap();
-      dispatch(loginSuccess({ user, token }));
+      const { user } = await oauth("google").unwrap();
+      dispatch(loginSuccess({ user }));
       navigate(from, { replace: true });
     } catch {
       // лишаємось на формі; стан помилки соц-входу — у подальшому поліші

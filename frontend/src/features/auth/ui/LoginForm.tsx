@@ -29,8 +29,8 @@ export function LoginForm() {
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      const { user, token } = await login(values).unwrap();
-      dispatch(loginSuccess({ user, token }));
+      const { user } = await login(values).unwrap();
+      dispatch(loginSuccess({ user }));
       navigate(from, { replace: true });
     } catch {
       setError("root", { message: t("auth.error") });

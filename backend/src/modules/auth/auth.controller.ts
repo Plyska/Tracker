@@ -3,62 +3,61 @@ import { Errors } from "../../lib/errors.js";
 import { signAccessToken } from "../../lib/jwt.js";
 import { toUserDto } from "../../lib/mappers.js";
 import {
-  clearRefreshCookie,
+  clearAuthCookies,
   REFRESH_COOKIE,
+  setAccessCookie,
+  setCsrfCookie,
   setRefreshCookie,
 } from "../../lib/cookies.js";
+import { generateCsrfToken } from "../../lib/csrf.js";
 import {
   issueRefreshToken,
   revokeRefreshToken,
   rotateRefreshToken,
 } from "../../lib/refreshTokens.js";
-import {
-  getUserById,
-  loginUser,
-  registerUser,
-} from "./auth.service.js";
+import { getUserById, loginUser, registerUser } from "./auth.service.js";
 import type { LoginInput, RegisterInput } from "./auth.schema.js";
 
 /**
- * AuthResponse контракту: `{ user, accessToken }`. Refresh-токен — у httpOnly cookie
- * (видається/ротується/чиститься тут, у тілі відповіді не світиться).
+ * Cookie-флоу (Security-фаза, варіант B): access-JWT + CSRF-токен ставимо в cookie, у тілі
+ * відповіді токени НЕ світяться (лише `{ user }`). refresh — httpOnly cookie scope `/auth`.
  */
-const issueSession = async (
-  res: Response,
-  userId: string,
-): Promise<string> => {
+const issueSession = async (res: Response, userId: string): Promise<void> => {
   const refresh = await issueRefreshToken(userId);
   setRefreshCookie(res, refresh.token, refresh.expiresAt);
-  return signAccessToken(userId);
+  setAccessCookie(res, signAccessToken(userId));
+  setCsrfCookie(res, generateCsrfToken());
 };
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   const user = await registerUser(req.body as RegisterInput);
-  const accessToken = await issueSession(res, user.id);
-  res.status(201).json({ user: toUserDto(user), accessToken });
+  await issueSession(res, user.id);
+  res.status(201).json({ user: toUserDto(user) });
 };
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   const user = await loginUser(req.body as LoginInput);
-  const accessToken = await issueSession(res, user.id);
-  res.json({ user: toUserDto(user), accessToken });
+  await issueSession(res, user.id);
+  res.json({ user: toUserDto(user) });
 };
 
-/** Ротація: cookie → новий access + ротований refresh-cookie. */
+/** Ротація: refresh-cookie → новий access + CSRF + ротований refresh-cookie. */
 export const refresh = async (req: Request, res: Response): Promise<void> => {
   const raw = req.cookies?.[REFRESH_COOKIE] as string | undefined;
   if (!raw) throw Errors.unauthenticated("Missing refresh token");
 
   const rotated = await rotateRefreshToken(raw);
   setRefreshCookie(res, rotated.token, rotated.expiresAt);
-  res.json({ accessToken: signAccessToken(rotated.userId) });
+  setAccessCookie(res, signAccessToken(rotated.userId));
+  setCsrfCookie(res, generateCsrfToken());
+  res.status(204).end();
 };
 
-/** Logout: відкликаємо refresh у БД + чистимо cookie. Idempotent. */
+/** Logout: відкликаємо refresh у БД + чистимо всі auth-cookie. Idempotent. */
 export const logout = async (req: Request, res: Response): Promise<void> => {
   const raw = req.cookies?.[REFRESH_COOKIE] as string | undefined;
   if (raw) await revokeRefreshToken(raw);
-  clearRefreshCookie(res);
+  clearAuthCookies(res);
   res.status(204).end();
 };
 

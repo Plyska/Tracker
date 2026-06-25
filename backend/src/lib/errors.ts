@@ -22,6 +22,7 @@ export const Errors = {
     new AppError(401, "UNAUTHENTICATED", message),
   invalidCredentials: (message = "Invalid email or password") =>
     new AppError(401, "INVALID_CREDENTIALS", message),
+  forbidden: (message = "Forbidden") => new AppError(403, "FORBIDDEN", message),
   emailTaken: (message = "Email already registered") =>
     new AppError(409, "EMAIL_TAKEN", message),
   habitNotFound: (message = "Habit not found") =>

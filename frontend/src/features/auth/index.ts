@@ -7,7 +7,6 @@ export {
   AUTH_STATUS,
   selectIsAuthenticated,
   selectCurrentUser,
-  selectAuthToken,
   selectIsAdmin,
   type AuthState,
   type AuthStatus,
