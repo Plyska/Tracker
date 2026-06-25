@@ -1,6 +1,7 @@
 export {
   default as authReducer,
   loginSuccess,
+  userLoaded,
   logout,
   initialAuthState,
   AUTH_STATUS,

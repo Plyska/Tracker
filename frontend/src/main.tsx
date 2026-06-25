@@ -5,14 +5,18 @@ import "@/app/styles/index.css";
 import "@/shared/config/i18n";
 import App from "@/app/App";
 import { store } from "@/app/store";
-import { I18nProvider, ThemeProvider } from "@/app/providers";
+import { I18nProvider, SessionProvider, ThemeProvider } from "@/app/providers";
+import { Toaster } from "@/shared/ui";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
       <I18nProvider>
         <ThemeProvider>
-          <App />
+          <SessionProvider>
+            <App />
+            <Toaster />
+          </SessionProvider>
         </ThemeProvider>
       </I18nProvider>
     </Provider>

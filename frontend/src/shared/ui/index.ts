@@ -4,3 +4,4 @@ export { Card } from "./Card";
 export { Input } from "./Input";
 export { Field, type FieldProps } from "./Field";
 export { AnimatedText } from "./AnimatedText";
+export { Toaster, toast } from "./Toast";

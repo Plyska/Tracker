@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { baseApi } from "@/shared/api";
+import { errorToastMiddleware } from "./errorToastMiddleware";
 import { themeReducer, getSystemTheme, type Theme } from "@/features/theme";
 import {
   accentReducer,
@@ -79,7 +80,7 @@ export const store = configureStore({
     [baseApi.reducerPath]: baseApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(baseApi.middleware),
+    getDefaultMiddleware().concat(baseApi.middleware, errorToastMiddleware),
   preloadedState: loadPersistedState(),
 });
 
