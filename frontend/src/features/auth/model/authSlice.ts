@@ -41,11 +41,16 @@ const authSlice = createSlice({
     tokenRefreshed: (state, action: PayloadAction<string>) => {
       state.token = action.payload;
     },
+    /** Свіжий `user` із `GET /auth/me` при рехідрації сесії на буті (SessionProvider). */
+    userLoaded: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+    },
     logout: () => initialAuthState,
   },
 });
 
-export const { loginSuccess, tokenRefreshed, logout } = authSlice.actions;
+export const { loginSuccess, tokenRefreshed, userLoaded, logout } =
+  authSlice.actions;
 export default authSlice.reducer;
 
 // Селектори — одна типізована точка істини (читають RequireAuth/Sidebar тощо).

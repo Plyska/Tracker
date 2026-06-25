@@ -125,5 +125,10 @@
   "userMenu": {
     "label": "User menu",
     "logout": "Log out"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "HABIT_NOT_FOUND": "This habit no longer exists.",
+    "VALIDATION_ERROR": "Invalid data. Please check and try again."
   }
 }
