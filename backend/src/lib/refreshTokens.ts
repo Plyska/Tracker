@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { prisma } from "../prisma.js";
 import { env } from "../env.js";
 import { Errors } from "./errors.js";
+import { audit } from "./audit.js";
 
 /**
  * Refresh-токени з ротацією та виявленням повторного використання.
@@ -63,6 +64,10 @@ export const rotateRefreshToken = async (
       where: { family: existing.family, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+    audit("refresh.reuse_detected", {
+      userId: existing.userId,
+      family: existing.family,
+    });
     throw Errors.unauthenticated("Refresh token reuse detected");
   }
 
@@ -86,4 +91,17 @@ export const revokeRefreshToken = async (rawToken: string): Promise<void> => {
     where: { tokenHash: sha256(rawToken), revokedAt: null },
     data: { revokedAt: new Date() },
   });
+};
+
+/**
+ * Прибирання **прострочених** рядків refresh-токенів (для cron, `npm run db:cleanup`).
+ * Видаляємо лише `expiresAt < now` — відкликані-але-ще-не-прострочені лишаємо, бо вони потрібні
+ * reuse-detection (видалений токен виглядав би як «невідомий», а не як «повторно використаний»).
+ * Повертає кількість видалених рядків.
+ */
+export const deleteExpiredRefreshTokens = async (): Promise<number> => {
+  const { count } = await prisma.refreshToken.deleteMany({
+    where: { expiresAt: { lt: new Date() } },
+  });
+  return count;
 };
