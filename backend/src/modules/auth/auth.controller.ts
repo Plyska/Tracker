@@ -10,6 +10,7 @@ import {
   setRefreshCookie,
 } from "../../lib/cookies.js";
 import { generateCsrfToken } from "../../lib/csrf.js";
+import { audit } from "../../lib/audit.js";
 import {
   issueRefreshToken,
   revokeRefreshToken,
@@ -32,12 +33,21 @@ const issueSession = async (res: Response, userId: string): Promise<void> => {
 export const register = async (req: Request, res: Response): Promise<void> => {
   const user = await registerUser(req.body as RegisterInput);
   await issueSession(res, user.id);
+  audit("register", { userId: user.id, email: user.email, ip: req.ip });
   res.status(201).json({ user: toUserDto(user) });
 };
 
 export const login = async (req: Request, res: Response): Promise<void> => {
-  const user = await loginUser(req.body as LoginInput);
+  const input = req.body as LoginInput;
+  let user;
+  try {
+    user = await loginUser(input);
+  } catch (err) {
+    audit("login.failure", { email: input.email, ip: req.ip });
+    throw err;
+  }
   await issueSession(res, user.id);
+  audit("login.success", { userId: user.id, email: user.email, ip: req.ip });
   res.json({ user: toUserDto(user) });
 };
 
@@ -50,6 +60,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
   setRefreshCookie(res, rotated.token, rotated.expiresAt);
   setAccessCookie(res, signAccessToken(rotated.userId));
   setCsrfCookie(res, generateCsrfToken());
+  audit("refresh", { userId: rotated.userId, ip: req.ip });
   res.status(204).end();
 };
 
@@ -58,6 +69,7 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
   const raw = req.cookies?.[REFRESH_COOKIE] as string | undefined;
   if (raw) await revokeRefreshToken(raw);
   clearAuthCookies(res);
+  audit("logout", { ip: req.ip });
   res.status(204).end();
 };
 
