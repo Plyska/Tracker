@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Skeleton } from "@/shared/ui";
 import { cn } from "@/shared/lib";
 
@@ -15,8 +16,15 @@ export function SkeletonCell() {
 
 /** Плейсхолдер усієї таблиці на першому завантаженні (навички ще не прийшли). */
 export function TableSkeleton({ rows = 5, cols = 7 }: { rows?: number; cols?: number }) {
+  const { t } = useTranslation();
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+    <div
+      role="status"
+      aria-busy
+      aria-live="polite"
+      className="overflow-hidden rounded-xl border border-border bg-card shadow-card"
+    >
+      <span className="sr-only">{t("common.loading")}</span>
       <div
         className="grid w-full"
         style={{

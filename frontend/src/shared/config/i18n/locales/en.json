@@ -62,7 +62,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "close": "Close",
-    "pro": "Pro"
+    "pro": "Pro",
+    "loading": "Loading…"
   },
   "habits": {
     "columnTitle": "Habit",

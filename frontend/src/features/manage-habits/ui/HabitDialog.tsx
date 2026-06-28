@@ -98,10 +98,14 @@ function HabitForm({
           autoFocus
           placeholder={t("habits.form.namePlaceholder")}
           className={inputClass}
+          aria-invalid={!!formState.errors.name}
+          aria-describedby={
+            formState.errors.name ? "habit-name-error" : undefined
+          }
           {...register("name")}
         />
         {formState.errors.name && (
-          <p className="text-xs text-destructive">
+          <p id="habit-name-error" className="text-xs text-destructive">
             {t("habits.form.nameRequired")}
           </p>
         )}

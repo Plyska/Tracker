@@ -40,7 +40,7 @@ export function LangSwitcher() {
                 value={l.value}
                 className={cn(
                   "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-3 text-sm",
-                  "outline-none focus:bg-accent focus:text-accent-foreground",
+                  "outline-none data-highlighted:bg-accent data-highlighted:text-accent-foreground",
                   "data-[state=checked]:font-medium",
                 )}
               >

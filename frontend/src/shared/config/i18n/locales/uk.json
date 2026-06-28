@@ -62,7 +62,8 @@
     "save": "Зберегти",
     "cancel": "Скасувати",
     "close": "Закрити",
-    "pro": "Pro"
+    "pro": "Pro",
+    "loading": "Завантаження…"
   },
   "habits": {
     "columnTitle": "Навичка",
