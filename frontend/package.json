@@ -16,7 +16,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "framer-motion": "^12.42.0",
-    "i18next": "^24.2.3",
+    "i18next": "^26.3.3",
     "lucide-react": "^1.21.0",
     "radix-ui": "^1.6.0",
     "react": "^19.2.7",
