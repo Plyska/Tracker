@@ -126,6 +126,11 @@
     "label": "User menu",
     "logout": "Log out"
   },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you're looking for doesn't exist or may have moved.",
+    "cta": "Back to dashboard"
+  },
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "HABIT_NOT_FOUND": "This habit no longer exists.",
