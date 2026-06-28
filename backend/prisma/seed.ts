@@ -1,10 +1,14 @@
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
 // Демо-дані для локальної розробки. Паритет із фронтовим сідом (shared/api/mock/db.ts).
 // Запуск: npm run db:seed. Idempotent — upsert за email.
 
-const prisma = new PrismaClient();
+// Prisma 7: standalone-скрипт конектиться через driver adapter (env завантажуємо самі).
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 const DEMO_EMAIL = "demo@tracker.app";
 const DEMO_PASSWORD = "password123";
