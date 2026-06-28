@@ -8,6 +8,7 @@ import { RegisterPage } from "@/pages/register";
 import { DashboardPage } from "@/pages/dashboard";
 import { StatisticsPage } from "@/pages/statistics";
 import { SettingsPage } from "@/pages/settings";
+import { NotFoundPage } from "@/pages/not-found";
 
 export const router = createBrowserRouter([
   {
@@ -56,7 +57,8 @@ export const router = createBrowserRouter([
     ],
   },
   {
+    // Невідомий маршрут → 404 (раніше тихо редіректило на dashboard).
     path: "*",
-    element: <Navigate to={paths.dashboard} replace />,
+    element: <NotFoundPage />,
   },
 ]);

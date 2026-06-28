@@ -5,3 +5,4 @@ export { Input } from "./Input";
 export { Field, type FieldProps } from "./Field";
 export { AnimatedText } from "./AnimatedText";
 export { Toaster, toast } from "./Toast";
+export { Skeleton } from "./Skeleton";
