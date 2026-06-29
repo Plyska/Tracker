@@ -29,6 +29,7 @@ model User {
   habits        Habit[]
   refreshTokens RefreshToken[]
   dailyLogs     DailyLog[]
+  tasks         Task[]
 }
 
 model Habit {
@@ -42,6 +43,7 @@ model Habit {
   createdAt DateTime @default(now())
 
   entries HabitEntry[]
+  tasks   Task[]
 
   @@index([userId])
 }
@@ -71,6 +73,26 @@ model DailyLog {
   // Унікальний ключ (userId+date) — основа upsert у PUT /daily-logs
   @@unique([userId, date])
   @@index([userId])
+}
+
+// Задача розпорядку дня / списку справ (docs/data-models.md). Прив'язана до дати; `startTime`/
+// `endTime` ('HH:mm', локальний час без TZ — ADR 0009) опційні: задані ⇒ елемент розпорядку,
+// відсутні ⇒ елемент списку справ. `habitId` — опційна мітка на навичку (SetNull при її видаленні).
+model Task {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String? // 'YYYY-MM-DD' (без TZ); null = без дати → «Загальна» картка
+  title     String
+  startTime String? // 'HH:mm' (локальний, без TZ)
+  endTime   String? // 'HH:mm'
+  habitId   String?
+  habit     Habit?   @relation(fields: [habitId], references: [id], onDelete: SetNull)
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, date])
+  @@index([habitId])
 }
 
 // Refresh-токени: ротація + reuse-detection. Зберігаємо лише SHA-256 хеш непрозорого токена.

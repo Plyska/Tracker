@@ -8,6 +8,7 @@ import { authRouter } from "./modules/auth/auth.routes.js";
 import { habitsRouter } from "./modules/habits/habit.routes.js";
 import { entriesRouter } from "./modules/entries/entry.routes.js";
 import { dailyLogsRouter } from "./modules/daily-log/daily-log.routes.js";
+import { tasksRouter } from "./modules/tasks/task.routes.js";
 import { statsRouter } from "./modules/stats/stats.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 
@@ -48,6 +49,7 @@ export const createApp = () => {
   app.use("/habits", habitsRouter);
   app.use("/entries", entriesRouter);
   app.use("/daily-logs", dailyLogsRouter);
+  app.use("/tasks", tasksRouter);
   app.use("/stats", statsRouter);
 
   app.use(notFoundHandler);

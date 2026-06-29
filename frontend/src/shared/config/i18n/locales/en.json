@@ -6,6 +6,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "planner": "Planner",
     "statistics": "Statistics",
     "settings": "Settings"
   },
@@ -64,6 +65,64 @@
     "close": "Close",
     "pro": "Pro",
     "loading": "Loading…"
+  },
+  "planner": {
+    "general": "General",
+    "doneSection": "Done ({{count}})",
+    "deleteCard": "Delete card",
+    "deleteCardConfirm": "Delete \"{{name}}\" and all its {{count}} tasks? This can't be undone.",
+    "dayEmpty": "No tasks here yet.",
+    "moreTasks_one": "+{{count}} more",
+    "moreTasks_other": "+{{count}} more",
+    "tabsLabel": "Planner view",
+    "tabs": {
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "archivedEmpty": "No past days with tasks yet.",
+    "activeEmpty": {
+      "title": "Nothing planned",
+      "subtitle": "Add a task to start planning your day."
+    }
+  },
+  "datePicker": {
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "noDay": "No day"
+  },
+  "timePicker": {
+    "placeholder": "--:--",
+    "clear": "Clear"
+  },
+  "tasks": {
+    "add": "Add task",
+    "toggleDone": "Mark \"{{title}}\" done",
+    "menu": {
+      "label": "Task options",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "form": {
+      "addTitle": "New task",
+      "editTitle": "Edit task",
+      "subtitle": "Add a time range for a schedule item, or leave it blank for a to-do.",
+      "day": "Day",
+      "noDay": "No day",
+      "showHabits": "Show habits",
+      "title": "Title",
+      "titlePlaceholder": "Type a title or pick a habit",
+      "titleHint": "Start typing — we'll suggest your habits.",
+      "titleRequired": "Enter a task title.",
+      "startTime": "Start",
+      "endTime": "End",
+      "timeHint": "Leave times empty to add it to the to-do list.",
+      "timeInvalid": "Use the HH:mm format.",
+      "timeRange": "End time must not be before start time."
+    },
+    "delete": {
+      "title": "Delete task?",
+      "description": "Delete \"{{title}}\"? This can't be undone."
+    }
   },
   "habits": {
     "columnTitle": "Habit",
@@ -195,6 +254,7 @@
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "HABIT_NOT_FOUND": "This habit no longer exists.",
+    "TASK_NOT_FOUND": "This task no longer exists.",
     "VALIDATION_ERROR": "Invalid data. Please check and try again."
   }
 }
