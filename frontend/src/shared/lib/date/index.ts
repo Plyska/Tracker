@@ -9,5 +9,6 @@ export {
   isFutureDay,
   fromISODate,
   todayISODate,
+  addDaysISO,
   shiftAnchor,
 } from "./week";

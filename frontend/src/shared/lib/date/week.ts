@@ -71,6 +71,11 @@ export function todayISODate(): string {
   return toISODate(new Date());
 }
 
+/** Зсув ISO-дати на `n` днів (може бути від'ємним). Повертає ISO 'YYYY-MM-DD'. */
+export function addDaysISO(iso: string, n: number): string {
+  return toISODate(addDays(parseISO(iso), n));
+}
+
 /**
  * Зсув опорної дати на один період у напрямку `dir` (-1 назад / +1 вперед).
  * `week` → ±7 днів, `month` → ±1 календарний місяць. Повертає ISO 'YYYY-MM-DD'.

@@ -21,6 +21,9 @@ export const entriesApi = baseApi.injectEndpoints({
 
     toggleEntry: build.mutation<HabitEntry, ToggleEntryRequest>({
       query: (body) => ({ url: "/entries", method: "PUT", body }),
+      // Статистика агрегатна → рефетчимо її за тегом (таблиці це не торкається: інших
+      // споживачів `Stats/LIST` немає, а `Entry` лишається суто оптимістичним нижче).
+      invalidatesTags: [{ type: "Stats", id: "LIST" }],
       // Оптимістично патчимо всі закешовані діапазони, що містять цю дату — без рефетчу
       // (інакше сітка миготіла б). Відкат на помилку.
       async onQueryStarted(arg, { dispatch, getState, queryFulfilled }) {

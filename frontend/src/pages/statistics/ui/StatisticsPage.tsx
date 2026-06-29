@@ -1,11 +1,9 @@
-import { useTranslation } from "react-i18next";
+import { StatisticsView } from "@/widgets/statistics";
 
 function StatisticsPage() {
-  const { t } = useTranslation();
-
   return (
     <section>
-      <p className="text-muted-foreground">{t("statistics.placeholder")}</p>
+      <StatisticsView />
     </section>
   );
 }

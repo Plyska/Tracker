@@ -14,6 +14,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:stats": "tsx prisma/seedUserData.ts",
     "db:cleanup": "tsx src/scripts/cleanup.ts"
   },
   "dependencies": {

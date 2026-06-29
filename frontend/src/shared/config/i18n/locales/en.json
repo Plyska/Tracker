@@ -97,7 +97,67 @@
   },
   "statistics": {
     "title": "Statistics",
-    "placeholder": "Your productivity stats will appear here."
+    "scale": {
+      "label": "Period",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year",
+      "all": "All time"
+    },
+    "filter": {
+      "all": "All habits"
+    },
+    "metric": {
+      "completion": "Completion",
+      "currentStreak": "Current streak",
+      "longestStreak": "Longest streak",
+      "perfectDays": "Perfect days",
+      "bestHabit": "Best habit",
+      "moodAverage": "Avg. mood"
+    },
+    "unit": {
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days"
+    },
+    "activity": {
+      "title": "Activity over time"
+    },
+    "heatmap": {
+      "title": "Year in review",
+      "less": "Less",
+      "more": "More",
+      "locked": "The yearly heatmap is a Pro feature."
+    },
+    "mood": {
+      "title": "Mood & habits",
+      "completionTitle": "Productivity & mood",
+      "completionUp": "You tend to feel better on days when you complete most of your habits.",
+      "completionDown": "You tend to feel better on lighter days, when you complete fewer of your habits and rest.",
+      "completionFlat": "Your mood barely depends on how many habits you complete.",
+      "completionBasis": "Based on {{count}} days with a logged mood.",
+      "empty": "Not enough data yet — log your mood for a few more days (we need at least 5 days both with and without a habit done).",
+      "higher": "Higher average mood on days you do this",
+      "lower": "Lower average mood on days you do this",
+      "samples": "{{withCount}} days done · {{withoutCount}} not done",
+      "disclaimer": "Shows mood linked to habits, not what causes it."
+    },
+    "empty": {
+      "title": "No stats yet",
+      "hint": "Add a habit and start checking it off to see your statistics."
+    }
+  },
+  "mood": {
+    "prompt": "How was your day?",
+    "menuLabel": "Log your mood",
+    "tooltip": "Track your daily mood",
+    "notePlaceholder": "Add a note (optional)",
+    "scale": {
+      "awful": "Awful",
+      "bad": "Bad",
+      "okay": "Okay",
+      "good": "Good",
+      "great": "Great"
+    }
   },
   "auth": {
     "login": "Login",

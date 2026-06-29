@@ -6,7 +6,6 @@ import { MainLayout } from "@/app/layouts/MainLayout";
 import { LoginPage } from "@/pages/login";
 import { RegisterPage } from "@/pages/register";
 import { DashboardPage } from "@/pages/dashboard";
-import { StatisticsPage } from "@/pages/statistics";
 import { SettingsPage } from "@/pages/settings";
 import { NotFoundPage } from "@/pages/not-found";
 
@@ -44,7 +43,12 @@ export const router = createBrowserRouter([
           },
           {
             path: "statistics",
-            element: <StatisticsPage />,
+            // Ліниво (важкий recharts) — окремий чанк через route-level lazy: у основний
+            // бандл не потрапляє, навігація чекає чанк (~97 КБ gzip, швидко).
+            lazy: async () => {
+              const { StatisticsPage } = await import("@/pages/statistics");
+              return { Component: StatisticsPage };
+            },
             handle: { titleKey: "nav.statistics" },
           },
           {
