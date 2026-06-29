@@ -10,6 +10,6 @@ import { httpBaseQuery } from "./httpBaseQuery";
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: httpBaseQuery,
-  tagTypes: ["Habit", "Entry", "Me"],
+  tagTypes: ["Habit", "Entry", "Me", "DailyLog", "Stats"],
   endpoints: () => ({}),
 });

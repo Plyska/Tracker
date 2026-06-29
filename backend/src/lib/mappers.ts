@@ -1,4 +1,4 @@
-import type { Habit, HabitEntry, User } from "@prisma/client";
+import type { DailyLog, Habit, HabitEntry, User } from "@prisma/client";
 
 /**
  * Domain (Prisma) → DTO «на дроті» (docs/api-contract.md). Опційні поля — явні `null`.
@@ -29,6 +29,12 @@ export interface HabitEntryDto {
   done: boolean;
 }
 
+export interface DailyLogDto {
+  date: string;
+  mood: number; // 1–5
+  notes: string | null;
+}
+
 const toISODate = (d: Date): string => d.toISOString().slice(0, 10);
 
 export const toUserDto = (u: User): UserDto => ({
@@ -54,4 +60,10 @@ export const toHabitEntryDto = (e: HabitEntry): HabitEntryDto => ({
   habitId: e.habitId,
   date: e.date,
   done: e.done,
+});
+
+export const toDailyLogDto = (l: DailyLog): DailyLogDto => ({
+  date: l.date,
+  mood: l.mood,
+  notes: l.notes ?? null,
 });

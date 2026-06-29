@@ -31,6 +31,42 @@ export interface UserDto {
   role: "user" | "admin";
 }
 
+export interface DailyLogDto {
+  date: string; // 'YYYY-MM-DD'
+  mood: number; // 1–5
+  notes: string | null;
+}
+
+export interface StatsDto {
+  completionRate: number; // 0..1
+  currentStreak: number;
+  longestStreak: number;
+  perfectDays: number;
+  bestHabit: { habitId: string; completionRate: number } | null;
+  moodAverage: number | null;
+  moodDays: number;
+  daily: {
+    date: string;
+    completed: number;
+    total: number;
+    mood: number | null;
+  }[];
+  moodCorrelations: {
+    habitId: string;
+    moodWith: number;
+    moodWithout: number;
+    delta: number;
+    sampleWith: number;
+    sampleWithout: number;
+  }[];
+  moodVsCompletion: {
+    delta: number;
+    lowAvg: number;
+    highAvg: number;
+    sampleDays: number;
+  } | null;
+}
+
 /** Тіло будь-якої помилки API. */
 export interface ApiError {
   message: string; // людиночитабельне
@@ -56,6 +92,18 @@ export interface ToggleEntryRequest {
   habitId: string;
   date: string;
   done: boolean;
+}
+
+export interface UpsertDailyLogRequest {
+  date: string;
+  mood: number; // 1–5
+  notes?: string;
+}
+
+export interface StatsQuery {
+  from: string; // 'YYYY-MM-DD'
+  to: string; // 'YYYY-MM-DD'
+  habitId?: string;
 }
 
 export interface LoginRequest {

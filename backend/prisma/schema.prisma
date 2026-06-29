@@ -28,6 +28,7 @@ model User {
 
   habits        Habit[]
   refreshTokens RefreshToken[]
+  dailyLogs     DailyLog[]
 }
 
 model Habit {
@@ -55,6 +56,21 @@ model HabitEntry {
   // Унікальний ключ запису (habitId+date) — основа upsert у PUT /entries
   @@unique([habitId, date])
   @@index([habitId])
+}
+
+// Щоденний настрій/нотатки (docs/data-models.md). Окремий ЖЦ від HabitEntry: про день у цілому,
+// не про звичку. Sparse — один запис на день. Передумова mood-кореляції (stats).
+model DailyLog {
+  id     String  @id @default(cuid())
+  userId String
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date   String // 'YYYY-MM-DD' — той самий ISO-інваріант (без TZ-пасток)
+  mood   Int // 1–5 (валідація на вході zod-схемою)
+  notes  String?
+
+  // Унікальний ключ (userId+date) — основа upsert у PUT /daily-logs
+  @@unique([userId, date])
+  @@index([userId])
 }
 
 // Refresh-токени: ротація + reuse-detection. Зберігаємо лише SHA-256 хеш непрозорого токена.

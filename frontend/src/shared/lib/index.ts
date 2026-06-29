@@ -10,6 +10,7 @@ export {
   isFutureDay,
   fromISODate,
   todayISODate,
+  addDaysISO,
   shiftAnchor,
 } from "./date";
 export {

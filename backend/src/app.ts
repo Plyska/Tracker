@@ -7,6 +7,8 @@ import { apiLimiter } from "./middleware/rateLimit.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { habitsRouter } from "./modules/habits/habit.routes.js";
 import { entriesRouter } from "./modules/entries/entry.routes.js";
+import { dailyLogsRouter } from "./modules/daily-log/daily-log.routes.js";
+import { statsRouter } from "./modules/stats/stats.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 
 export const createApp = () => {
@@ -45,6 +47,8 @@ export const createApp = () => {
   app.use("/auth", authRouter);
   app.use("/habits", habitsRouter);
   app.use("/entries", entriesRouter);
+  app.use("/daily-logs", dailyLogsRouter);
+  app.use("/stats", statsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -11,6 +11,7 @@ import {
 import { localeReducer } from "@/features/locale";
 import { uiPrefsReducer, type TableLayout } from "@/features/ui-prefs";
 import { periodReducer, type Scale } from "@/features/period-navigation";
+import { statsPeriodReducer } from "@/features/stats-period";
 import { authReducer, initialAuthState, type AuthState } from "@/features/auth";
 import { todayISODate } from "@/shared/lib";
 import {
@@ -86,6 +87,8 @@ export const store = configureStore({
     // Перегляд періоду (anchor + scale). Session-only: НЕ у persist-підписці нижче.
     // anchor — session-only; персиститься лише scale (нижче в підписці).
     period: periodReducer,
+    // Перегляд статистики (масштаб + фільтр звички). Session-only.
+    statsPeriod: statsPeriodReducer,
     // Сесія користувача (персист у tracker-auth нижче).
     auth: authReducer,
     // Серверний стан (навички/відмітки/auth) — RTK Query. Кеш session-only (без persist).

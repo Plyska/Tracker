@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useMatches } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ThemeToggle } from "@/features/theme";
+import { MoodMenu } from "@/features/log-mood";
 import { UserMenu } from "@/features/auth";
 import { IconButton } from "@/shared/ui";
 import { cn } from "@/shared/lib/cn";
@@ -28,11 +29,11 @@ export function Header({ onMenuClick }: HeaderProps) {
   return (
     <header
       className={cn(
-        "flex h-16 items-center justify-between gap-4 px-4 sm:px-6",
+        "flex h-16 items-center gap-4 px-4 sm:px-6",
         "border-b border-border bg-card text-card-foreground",
       )}
     >
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <IconButton
           variant="outline"
           size="lg"
@@ -59,7 +60,12 @@ export function Header({ onMenuClick }: HeaderProps) {
         </AnimatePresence>
       </div>
 
-      <div className="flex items-center gap-4 sm:gap-5">
+      {/* Центральна зона: настрій по центру хедера (ліва й права зони — flex-1, рівні). */}
+      <div className="flex shrink-0 items-center justify-center">
+        <MoodMenu />
+      </div>
+
+      <div className="flex flex-1 items-center justify-end gap-4 sm:gap-5">
         <ThemeToggle />
         <UserMenu />
       </div>
