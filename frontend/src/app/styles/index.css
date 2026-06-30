@@ -3,6 +3,15 @@
 /* Class-based dark mode: активується класом .dark на <html> */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Приховати скролбар, лишивши прокрутку (напр. колонки TimePicker). */
+@utility no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* старий Edge/IE */
+  &::-webkit-scrollbar {
+    display: none; /* WebKit/Chromium */
+  }
+}
+
 /* Skeleton-shimmer: біжить зліва направо (overlay-градієнт у Skeleton-примітиві).
  * Використання: `before:animate-[shimmer_1.6s_infinite]`. Під reduced-motion вимикається. */
 @keyframes shimmer {

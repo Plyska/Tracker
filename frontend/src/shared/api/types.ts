@@ -67,6 +67,22 @@ export interface StatsDto {
   } | null;
 }
 
+/**
+ * Задача розпорядку дня / списку справ. `startTime`/`endTime` ('HH:mm', локальний час без TZ —
+ * ADR 0009): задані ⇒ елемент розпорядку, обидва `null` ⇒ елемент списку справ. `habitId` —
+ * опційна мітка на навичку.
+ */
+export interface TaskDto {
+  id: string;
+  date: string | null; // 'YYYY-MM-DD'; null = без дати («Загальна» картка)
+  title: string;
+  startTime: string | null; // 'HH:mm'
+  endTime: string | null; // 'HH:mm'
+  habitId: string | null;
+  done: boolean;
+  createdAt: string; // ISO 'YYYY-MM-DD'
+}
+
 /** Тіло будь-якої помилки API. */
 export interface ApiError {
   message: string; // людиночитабельне
@@ -99,6 +115,23 @@ export interface UpsertDailyLogRequest {
   mood: number; // 1–5
   notes?: string;
 }
+
+export interface CreateTaskRequest {
+  date?: string | null; // null/відсутня → «Загальна» картка
+  title: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  habitId?: string | null;
+}
+
+export type UpdateTaskRequest = Partial<{
+  date: string | null;
+  title: string;
+  startTime: string | null;
+  endTime: string | null;
+  habitId: string | null;
+  done: boolean;
+}>;
 
 export interface StatsQuery {
   from: string; // 'YYYY-MM-DD'

@@ -6,6 +6,7 @@ import { MainLayout } from "@/app/layouts/MainLayout";
 import { LoginPage } from "@/pages/login";
 import { RegisterPage } from "@/pages/register";
 import { DashboardPage } from "@/pages/dashboard";
+import { PlannerPage } from "@/pages/planner";
 import { SettingsPage } from "@/pages/settings";
 import { NotFoundPage } from "@/pages/not-found";
 
@@ -40,6 +41,11 @@ export const router = createBrowserRouter([
             path: "dashboard",
             element: <DashboardPage />,
             handle: { titleKey: "nav.dashboard" },
+          },
+          {
+            path: "planner",
+            element: <PlannerPage />,
+            handle: { titleKey: "nav.planner" },
           },
           {
             path: "statistics",
