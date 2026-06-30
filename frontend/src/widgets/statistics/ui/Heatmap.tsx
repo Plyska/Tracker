@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useStatsData } from "@/features/stats-period";
-import { Card, Skeleton } from "@/shared/ui";
+import { Card, InfoHint, Skeleton } from "@/shared/ui";
 import {
   cn,
   getDateFnsLocale,
@@ -89,7 +89,10 @@ export function Heatmap() {
       transition={{ duration: 0.25, ease: "easeOut" }}
       className="space-y-3 p-4 sm:p-5"
     >
-      <h3 className="text-sm font-semibold">{t("statistics.heatmap.title")}</h3>
+      <div className="flex items-center gap-1.5">
+        <h3 className="text-sm font-semibold">{t("statistics.heatmap.title")}</h3>
+        <InfoHint label={t("statistics.heatmap.info")} />
+      </div>
       <div className="overflow-x-auto">
         <div className="flex w-full gap-2">
           {/* підписи днів тижня */}

@@ -8,3 +8,4 @@ export { TimePicker } from "./TimePicker";
 export { AnimatedText } from "./AnimatedText";
 export { Toaster, toast } from "./Toast";
 export { Skeleton } from "./Skeleton";
+export { InfoHint } from "./Tooltip";

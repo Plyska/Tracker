@@ -179,13 +179,15 @@
       "days_other": "{{count}} days"
     },
     "activity": {
-      "title": "Activity over time"
+      "title": "Activity over time",
+      "info": "Percentage of habits completed for each day of the period. Hover a point to see the value."
     },
     "heatmap": {
       "title": "Year in review",
       "less": "Less",
       "more": "More",
-      "locked": "The yearly heatmap is a Pro feature."
+      "locked": "The yearly heatmap is a Pro feature.",
+      "info": "Each cell is a day of the year; the darker it is, the higher the share of habits completed that day."
     },
     "mood": {
       "title": "Mood & habits",
@@ -198,7 +200,8 @@
       "higher": "Higher average mood on days you do this",
       "lower": "Lower average mood on days you do this",
       "samples": "{{withCount}} days done · {{withoutCount}} not done",
-      "disclaimer": "Shows mood linked to habits, not what causes it."
+      "disclaimer": "Shows mood linked to habits, not what causes it.",
+      "info": "Compares average mood on days a habit was done vs days it wasn't."
     },
     "empty": {
       "title": "No stats yet",

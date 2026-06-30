@@ -50,14 +50,17 @@ export function StatisticsView() {
           <StatsToolbar />
         </motion.div>
         <MetricCards />
-        {/* Графік 2/3, настрій 1/3. Висоту рядка задає картка «Настрій і навички» (за контентом),
-            а графік (h-full) підлаштовується під неї. Картка настрою без h-full → лишається за
-            контентом (без порожнечі всередині), навіть якщо комірка тягнеться. */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="h-full lg:col-span-2">
+        {/* Графік 2/3, настрій 1/3. На lg обидві картки lg:h-full + grid-stretch → однакова висота
+            (графік заповнює її через flex-1, див. ActivityChart). На мобільному стек — у графіка
+            фіксована висота. min-w-0 на grid-нащадках: інакше колонка графіка (з широким minWidth
+            на рік/весь час) не стискається до треку й розпирає сітку вправо разом із Mood-карткою. */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="min-w-0 lg:col-span-2">
             <ActivityChart />
           </div>
-          <MoodCorrelationCard />
+          <div className="min-w-0">
+            <MoodCorrelationCard />
+          </div>
         </div>
         <Heatmap />
       </div>
