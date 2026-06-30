@@ -12,7 +12,7 @@ import {
 import { motion, useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useStatsData } from "@/features/stats-period";
-import { Card, Skeleton } from "@/shared/ui";
+import { Card, InfoHint, Skeleton } from "@/shared/ui";
 import { getDateFnsLocale } from "@/shared/lib";
 
 const MotionCard = motion.create(Card);
@@ -48,13 +48,17 @@ export function ActivityChart() {
       initial={reduce ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="flex h-full flex-col gap-3 p-4 sm:p-5"
+      className="flex flex-col gap-3 p-4 sm:p-5 lg:h-full"
     >
-      <h3 className="text-sm font-semibold">{t("statistics.activity.title")}</h3>
-      {/* h-full + flex-1 — графік підлаштовується під висоту рядка (її задає сусідня картка
-          «Настрій і навички»). min-h — флор, коли настрою мало. overflow-x-auto — горизонт. скрол
-          на довгих періодах. accessibilityLayer вимкнено нижче, focus-обведенку recharts прибираємо. */}
-      <div className="min-h-56 flex-1 overflow-x-auto [&_*:focus-visible]:outline-none [&_*:focus]:outline-none">
+      <div className="flex items-center gap-1.5">
+        <h3 className="text-sm font-semibold">{t("statistics.activity.title")}</h3>
+        <InfoHint label={t("statistics.activity.info")} />
+      </div>
+      {/* Мобільний/планшет (стек): фіксована висота — ResponsiveContainer height="100%" мусить
+          міряти сталий контейнер, інакше ResizeObserver зациклюється й графік мерехтить.
+          lg (поруч із «Настрій»): flex-1 заповнює картку, яку grid-stretch тягне до висоти Mood-
+          картки → однакова висота. overflow-x-auto — горизонт. скрол на довгих періодах. */}
+      <div className="h-64 overflow-x-auto overflow-y-hidden sm:h-72 lg:h-auto lg:min-h-0 lg:flex-1 [&_*:focus-visible]:outline-none [&_*:focus]:outline-none">
         <div className="h-full w-full" style={{ minWidth }}>
           <ResponsiveContainer width="100%" height="100%">
           <AreaChart

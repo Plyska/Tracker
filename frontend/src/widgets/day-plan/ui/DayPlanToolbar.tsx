@@ -21,7 +21,7 @@ export function DayPlanToolbar({ tab, onTabChange }: DayPlanToolbarProps) {
       <div
         role="tablist"
         aria-label={t("planner.tabsLabel")}
-        className="inline-flex rounded-md border border-border bg-muted p-0.5"
+        className="flex w-full rounded-md border border-border bg-muted p-0.5 sm:inline-flex sm:w-auto"
       >
         {TABS.map((value) => {
           const active = value === tab;
@@ -33,7 +33,7 @@ export function DayPlanToolbar({ tab, onTabChange }: DayPlanToolbarProps) {
               aria-selected={active}
               onClick={() => onTabChange(value)}
               className={cn(
-                "relative rounded-[5px] px-3 py-1 text-sm font-medium transition-colors",
+                "relative flex-1 rounded-[5px] px-3 py-1 text-sm font-medium transition-colors sm:flex-none",
                 "outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 active
                   ? "text-primary-foreground"

@@ -2,7 +2,7 @@ import { ArrowDownRight, ArrowUpRight, HeartPulse } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useStatsData } from "@/features/stats-period";
-import { Card, Skeleton } from "@/shared/ui";
+import { Card, InfoHint, Skeleton } from "@/shared/ui";
 import { cn } from "@/shared/lib";
 
 const MotionCard = motion.create(Card);
@@ -34,11 +34,12 @@ export function MoodCorrelationCard() {
       initial={reduce ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="space-y-4 p-4 sm:p-5"
+      className="space-y-4 p-4 sm:p-5 lg:h-full"
     >
       <div className="flex items-center gap-2">
         <HeartPulse className="h-4 w-4 text-primary" aria-hidden />
         <h3 className="text-sm font-semibold">{t("statistics.mood.title")}</h3>
+        <InfoHint label={t("statistics.mood.info")} className="ml-auto" />
       </div>
 
       {!hasData ? (

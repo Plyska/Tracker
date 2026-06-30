@@ -41,7 +41,7 @@ export function StatsToolbar() {
       <div
         role="group"
         aria-label={t("statistics.scale.label")}
-        className="inline-flex flex-wrap rounded-md border border-border bg-muted p-0.5"
+        className="flex w-full rounded-md border border-border bg-muted p-0.5 sm:inline-flex sm:w-auto"
       >
         {SCALES.map((value) => {
           const active = value === scale;
@@ -54,7 +54,7 @@ export function StatsToolbar() {
               disabled={locked}
               onClick={() => dispatch(setStatsScale(value))}
               className={cn(
-                "relative flex items-center gap-1 rounded-[5px] px-3 py-1 text-sm font-medium transition-colors",
+                "relative flex flex-1 items-center justify-center gap-1 rounded-[5px] px-3 py-1 text-sm font-medium transition-colors sm:flex-none",
                 "outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
                 active
                   ? "text-primary-foreground"
@@ -84,7 +84,7 @@ export function StatsToolbar() {
       {/* --- Фільтр по звичці --- */}
       <DropdownMenu.Root open={filterOpen} onOpenChange={setFilterOpen}>
         <DropdownMenu.Trigger asChild>
-          <Button variant="outline" size="sm" className="justify-between gap-2">
+          <Button variant="outline" size="sm" className="w-full justify-between gap-2 sm:w-auto">
             <span className="truncate">
               {activeHabit ? activeHabit.name : t("statistics.filter.all")}
             </span>

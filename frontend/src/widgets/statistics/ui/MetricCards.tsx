@@ -28,9 +28,11 @@ function Metric({
 }) {
   return (
     <Card className="flex h-full flex-col gap-2 p-4">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Icon className="h-4 w-4 text-primary" aria-hidden />
-        <span className="text-xs font-medium tracking-wide uppercase">{label}</span>
+      <div className="flex items-start gap-2 text-muted-foreground">
+        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+        <span className="text-xs font-medium tracking-wide uppercase leading-tight">
+          {label}
+        </span>
       </div>
       <div className="text-2xl font-semibold tabular-nums">{value}</div>
       {hint && <div className="truncate text-xs text-muted-foreground">{hint}</div>}
