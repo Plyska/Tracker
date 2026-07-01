@@ -13,7 +13,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="flex items-baseline gap-2">{children}</span>
+      <span className="flex items-center gap-2">{children}</span>
     </div>
   );
 }
@@ -83,24 +83,20 @@ export function ProgressCard() {
           <span className="text-sm font-semibold tabular-nums">
             {pct(stats.completionRate)}
           </span>
-          <DeltaBadge
-            delta={cmp.completionRateDelta}
-            format="pct"
-            className="text-sm"
-          />
+          <DeltaBadge delta={cmp.completionRateDelta} format="pct" />
         </Row>
         <Row label={t("statistics.metric.perfectDays")}>
           <span className="text-sm font-semibold tabular-nums">
             {stats.perfectDays}
           </span>
-          <DeltaBadge delta={cmp.perfectDaysDelta} format="int" className="text-sm" />
+          <DeltaBadge delta={cmp.perfectDaysDelta} format="int" />
         </Row>
         {cmp.moodAverageDelta != null && stats.moodAverage != null && (
           <Row label={t("statistics.metric.moodAverage")}>
             <span className="text-sm font-semibold tabular-nums">
               {stats.moodAverage.toFixed(1)}/5
             </span>
-            <DeltaBadge delta={cmp.moodAverageDelta} format="mood" className="text-sm" />
+            <DeltaBadge delta={cmp.moodAverageDelta} format="mood" />
           </Row>
         )}
       </div>
