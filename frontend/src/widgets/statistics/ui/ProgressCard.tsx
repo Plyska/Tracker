@@ -83,20 +83,24 @@ export function ProgressCard() {
           <span className="text-sm font-semibold tabular-nums">
             {pct(stats.completionRate)}
           </span>
-          <DeltaBadge delta={cmp.completionRateDelta} format="pct" />
+          <DeltaBadge
+            delta={cmp.completionRateDelta}
+            format="pct"
+            className="text-sm"
+          />
         </Row>
         <Row label={t("statistics.metric.perfectDays")}>
           <span className="text-sm font-semibold tabular-nums">
             {stats.perfectDays}
           </span>
-          <DeltaBadge delta={cmp.perfectDaysDelta} format="int" />
+          <DeltaBadge delta={cmp.perfectDaysDelta} format="int" className="text-sm" />
         </Row>
         {cmp.moodAverageDelta != null && stats.moodAverage != null && (
           <Row label={t("statistics.metric.moodAverage")}>
             <span className="text-sm font-semibold tabular-nums">
               {stats.moodAverage.toFixed(1)}/5
             </span>
-            <DeltaBadge delta={cmp.moodAverageDelta} format="mood" />
+            <DeltaBadge delta={cmp.moodAverageDelta} format="mood" className="text-sm" />
           </Row>
         )}
       </div>
