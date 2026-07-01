@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { useAppSelector } from "@/app/store/hooks";
 import { useStatsData } from "@/features/stats-period";
 import { Card, Skeleton } from "@/shared/ui";
 import { DeltaBadge } from "./DeltaBadge";
@@ -64,7 +63,6 @@ function Metric({
 export function MetricCards() {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
-  const scale = useAppSelector((s) => s.statsPeriod.scale);
   const { stats, isLoading, habits, comparison, key } = useStatsData(undefined, {
     withComparison: true,
   });
@@ -85,15 +83,9 @@ export function MetricCards() {
     ? habits.find((h) => h.id === stats.bestHabit!.habitId)?.name
     : undefined;
 
-  // Підпис «vs минулий <період>» під дельтою (лише для week/month/year, де порівняння є).
+  // Дельта vs попередній період — лише бейдж (без «vs …»: контекст періоду є в картці «Динаміка»,
+  // а довгий підпис ламався в 2 рядки на вузьких картках). Доступно для week/month/year.
   const cmp = comparison?.available ? comparison : null;
-  const vsLabel = cmp ? t(`statistics.comparison.vsPrevious.${scale}`) : "";
-  const withVs = (badge: ReactNode): ReactNode => (
-    <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
-      {badge}
-      <span className="text-[11px] text-muted-foreground">{vsLabel}</span>
-    </div>
-  );
 
   const metrics: {
     key: string;
@@ -106,9 +98,9 @@ export function MetricCards() {
       key: "completion",
       Icon: Percent,
       value: pct(stats.completionRate),
-      delta: cmp
-        ? withVs(<DeltaBadge delta={cmp.completionRateDelta} format="pct" />)
-        : undefined,
+      delta: cmp ? (
+        <DeltaBadge delta={cmp.completionRateDelta} format="pct" />
+      ) : undefined,
     },
     { key: "currentStreak", Icon: Flame, value: days(stats.currentStreak) },
     { key: "longestStreak", Icon: Award, value: days(stats.longestStreak) },
@@ -116,9 +108,9 @@ export function MetricCards() {
       key: "perfectDays",
       Icon: Sparkles,
       value: days(stats.perfectDays),
-      delta: cmp
-        ? withVs(<DeltaBadge delta={cmp.perfectDaysDelta} format="int" />)
-        : undefined,
+      delta: cmp ? (
+        <DeltaBadge delta={cmp.perfectDaysDelta} format="int" />
+      ) : undefined,
     },
     {
       key: "bestHabit",
@@ -132,9 +124,9 @@ export function MetricCards() {
       value: stats.moodAverage != null ? `${stats.moodAverage.toFixed(1)}/5` : "—",
       hint: stats.moodDays > 0 ? days(stats.moodDays) : undefined,
       delta:
-        cmp && cmp.moodAverageDelta != null
-          ? withVs(<DeltaBadge delta={cmp.moodAverageDelta} format="mood" />)
-          : undefined,
+        cmp && cmp.moodAverageDelta != null ? (
+          <DeltaBadge delta={cmp.moodAverageDelta} format="mood" />
+        ) : undefined,
     },
   ];
 
