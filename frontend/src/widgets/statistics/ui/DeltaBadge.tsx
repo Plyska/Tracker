@@ -1,12 +1,11 @@
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 import { cn } from "@/shared/lib";
 
-type DeltaFormat = "int" | "mood";
+type DeltaFormat = "pct" | "int" | "mood";
 
 interface DeltaBadgeProps {
   delta: number;
-  /** 'int' — ціле (напр. ідеальні дні); 'mood' — бали з 1 знаком. Частку виконання показуємо
-   *  через RateDelta («було → стало»), а не тут. */
+  /** 'pct' — частка → % (×100, різниця в пунктах); 'int' — ціле (ідеальні дні); 'mood' — бали (1 знак). */
   format: DeltaFormat;
   className?: string;
 }
@@ -18,12 +17,20 @@ interface DeltaBadgeProps {
 export function DeltaBadge({ delta, format, className }: DeltaBadgeProps) {
   // Округлене значення + чи це «нуль» (нижче помітного порога) — у форматі метрики.
   const rounded =
-    format === "mood" ? Math.round(delta * 10) / 10 : Math.round(delta);
+    format === "mood"
+      ? Math.round(delta * 10) / 10
+      : format === "pct"
+        ? Math.round(delta * 100)
+        : Math.round(delta);
   const isFlat = rounded === 0;
   const up = rounded > 0;
 
   const magnitude =
-    format === "mood" ? Math.abs(rounded).toFixed(1) : String(Math.abs(rounded));
+    format === "mood"
+      ? Math.abs(rounded).toFixed(1)
+      : format === "pct"
+        ? `${Math.abs(rounded)}%`
+        : String(Math.abs(rounded));
 
   const Icon = isFlat ? Minus : up ? ArrowUpRight : ArrowDownRight;
   const sign = isFlat ? "" : up ? "+" : "−";

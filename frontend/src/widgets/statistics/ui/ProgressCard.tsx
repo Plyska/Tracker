@@ -6,7 +6,6 @@ import { useAppSelector } from "@/app/store/hooks";
 import { useStatsData } from "@/features/stats-period";
 import { Card, InfoHint, Skeleton } from "@/shared/ui";
 import { DeltaBadge } from "./DeltaBadge";
-import { RateDelta } from "./RateDelta";
 
 const MotionCard = motion.create(Card);
 
@@ -59,6 +58,7 @@ export function ProgressCard() {
   }
 
   const cmp = comparison;
+  const pct = (r: number) => `${Math.round(r * 100)}%`;
 
   // Інсайт за зміною виконання (в.п.): помітно краще / гірше / приблизно так само.
   const pp = Math.round(cmp.completionRateDelta * 100);
@@ -80,7 +80,10 @@ export function ProgressCard() {
 
       <div className="space-y-2.5">
         <Row label={t("statistics.metric.completion")}>
-          <RateDelta from={cmp.prev.completionRate} to={stats.completionRate} />
+          <span className="text-sm font-semibold tabular-nums">
+            {pct(stats.completionRate)}
+          </span>
+          <DeltaBadge delta={cmp.completionRateDelta} format="pct" />
         </Row>
         <Row label={t("statistics.metric.perfectDays")}>
           <span className="text-sm font-semibold tabular-nums">
