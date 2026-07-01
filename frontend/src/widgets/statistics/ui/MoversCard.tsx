@@ -30,21 +30,28 @@ export function MoversCard() {
     { withComparison: true },
   );
 
-  if (isLoading || !stats) return <Skeleton className="h-64 rounded-xl" />;
+  if (isLoading || !stats)
+    return <Skeleton className="h-64 rounded-xl lg:h-full" />;
 
   const title = t("statistics.movers.title");
   const info = t("statistics.movers.info");
 
   if (!comparison?.available) {
     return (
-      <Card className="flex flex-col gap-3 p-4 sm:p-5">
+      <MotionCard
+        key={`empty-${scale}`}
+        initial={reduce ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        className="flex flex-col gap-3 p-4 sm:p-5 lg:h-full"
+      >
         <Header title={title} info={info} />
         <p className="text-sm text-muted-foreground">
           {scale === "all"
             ? t("statistics.progress.notForAll")
             : t("statistics.progress.notEnough")}
         </p>
-      </Card>
+      </MotionCard>
     );
   }
 
@@ -57,7 +64,7 @@ export function MoversCard() {
       initial={reduce ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="flex flex-col gap-4 p-4 sm:p-5"
+      className="flex flex-col gap-4 p-4 sm:p-5 lg:h-full"
     >
       <Header title={title} info={info} />
 
