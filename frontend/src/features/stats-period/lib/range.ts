@@ -28,3 +28,19 @@ export function getStatsRange(
   }
   return { from: addDaysISO(to, -(SPAN_DAYS[scale] - 1)), to };
 }
+
+/**
+ * Попереднє rolling-вікно тієї ж довжини, що завершується напередодні `current.from`
+ * (для «місяця» — 30 днів перед поточними 30). Для `all` порівняння не має сенсу → `null`.
+ */
+export function getPreviousStatsRange(
+  scale: StatsScale,
+  current: StatsRange,
+): StatsRange | null {
+  if (scale === "all") return null;
+  const span = SPAN_DAYS[scale];
+  return {
+    from: addDaysISO(current.from, -span),
+    to: addDaysISO(current.from, -1),
+  };
+}

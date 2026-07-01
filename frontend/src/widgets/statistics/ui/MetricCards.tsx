@@ -10,8 +10,10 @@ import {
 } from "lucide-react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useAppSelector } from "@/app/store/hooks";
 import { useStatsData } from "@/features/stats-period";
 import { Card, Skeleton } from "@/shared/ui";
+import { DeltaBadge } from "./DeltaBadge";
 
 const GRID = "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6";
 
@@ -20,11 +22,13 @@ function Metric({
   label,
   value,
   hint,
+  delta,
 }: {
   Icon: LucideIcon;
   label: string;
   value: ReactNode;
   hint?: string;
+  delta?: ReactNode;
 }) {
   return (
     <Card className="flex h-full flex-col gap-2 p-4">
@@ -35,6 +39,7 @@ function Metric({
         </span>
       </div>
       <div className="text-2xl font-semibold tabular-nums">{value}</div>
+      {delta}
       {hint && <div className="truncate text-xs text-muted-foreground">{hint}</div>}
     </Card>
   );
@@ -44,11 +49,17 @@ function Metric({
  * Картки-метрики за вибраним періодом (Streak — «now»-факт по всій історії). Конфіг-масив —
  * щоб згодом легко додавати метрики й керувати видимістю (Фаза 7). Анімація: на відкритті/зміні
  * фільтра картки виїжджають збоку зі stagger (контейнер keyed по запиту → переанімовується).
+ *
+ * Під метриками, прив'язаними до періоду (виконання/ідеальні дні/настрій), показуємо дельту
+ * vs попередній rolling-період (коли доступно — не для «весь час»). Streak-метрики не порівнюємо.
  */
 export function MetricCards() {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
-  const { stats, isLoading, habits, key } = useStatsData();
+  const scale = useAppSelector((s) => s.statsPeriod.scale);
+  const { stats, isLoading, habits, comparison, key } = useStatsData(undefined, {
+    withComparison: true,
+  });
 
   if (isLoading || !stats) {
     return (
@@ -66,11 +77,41 @@ export function MetricCards() {
     ? habits.find((h) => h.id === stats.bestHabit!.habitId)?.name
     : undefined;
 
-  const metrics: { key: string; Icon: LucideIcon; value: ReactNode; hint?: string }[] = [
-    { key: "completion", Icon: Percent, value: pct(stats.completionRate) },
+  // Підпис «vs минулий <період>» під дельтою (лише для week/month/year, де порівняння є).
+  const cmp = comparison?.available ? comparison : null;
+  const vsLabel = cmp ? t(`statistics.comparison.vsPrevious.${scale}`) : "";
+  const withVs = (badge: ReactNode): ReactNode => (
+    <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
+      {badge}
+      <span className="text-[11px] text-muted-foreground">{vsLabel}</span>
+    </div>
+  );
+
+  const metrics: {
+    key: string;
+    Icon: LucideIcon;
+    value: ReactNode;
+    hint?: string;
+    delta?: ReactNode;
+  }[] = [
+    {
+      key: "completion",
+      Icon: Percent,
+      value: pct(stats.completionRate),
+      delta: cmp
+        ? withVs(<DeltaBadge delta={cmp.completionRateDelta} format="pp" />)
+        : undefined,
+    },
     { key: "currentStreak", Icon: Flame, value: days(stats.currentStreak) },
     { key: "longestStreak", Icon: Award, value: days(stats.longestStreak) },
-    { key: "perfectDays", Icon: Sparkles, value: days(stats.perfectDays) },
+    {
+      key: "perfectDays",
+      Icon: Sparkles,
+      value: days(stats.perfectDays),
+      delta: cmp
+        ? withVs(<DeltaBadge delta={cmp.perfectDaysDelta} format="int" />)
+        : undefined,
+    },
     {
       key: "bestHabit",
       Icon: Trophy,
@@ -82,6 +123,10 @@ export function MetricCards() {
       Icon: Smile,
       value: stats.moodAverage != null ? `${stats.moodAverage.toFixed(1)}/5` : "—",
       hint: stats.moodDays > 0 ? days(stats.moodDays) : undefined,
+      delta:
+        cmp && cmp.moodAverageDelta != null
+          ? withVs(<DeltaBadge delta={cmp.moodAverageDelta} format="mood" />)
+          : undefined,
     },
   ];
 
@@ -113,6 +158,7 @@ export function MetricCards() {
             label={t(`statistics.metric.${m.key}`)}
             value={m.value}
             hint={m.hint}
+            delta={m.delta}
           />
         </motion.div>
       ))}

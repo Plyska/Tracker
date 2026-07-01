@@ -9,6 +9,12 @@ export interface DailyStat {
   mood: number | null;
 }
 
+export interface HabitBreakdown {
+  habitId: string;
+  completionRate: number; // 0..1 за період
+  activeDays: number; // днів, коли звичка була активна (для гейту вибірки)
+}
+
 export interface MoodCorrelation {
   habitId: string;
   moodWith: number; // середній настрій у дні виконання
@@ -31,6 +37,7 @@ export interface Stats {
   longestStreak: number;
   perfectDays: number;
   bestHabit: { habitId: string; completionRate: number } | null;
+  habitBreakdown: HabitBreakdown[];
   moodAverage: number | null;
   moodDays: number;
   daily: DailyStat[];
