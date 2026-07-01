@@ -6,25 +6,15 @@ import { useAppSelector } from "@/app/store/hooks";
 import { useStatsData } from "@/features/stats-period";
 import { Card, InfoHint, Skeleton } from "@/shared/ui";
 import { DeltaBadge } from "./DeltaBadge";
+import { RateDelta } from "./RateDelta";
 
 const MotionCard = motion.create(Card);
 
-function Row({
-  label,
-  value,
-  delta,
-}: {
-  label: string;
-  value: string;
-  delta: ReactNode;
-}) {
+function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="flex items-baseline gap-2">
-        <span className="text-sm font-semibold tabular-nums">{value}</span>
-        {delta}
-      </span>
+      <span className="flex items-baseline gap-2">{children}</span>
     </div>
   );
 }
@@ -69,7 +59,6 @@ export function ProgressCard() {
   }
 
   const cmp = comparison;
-  const pct = (r: number) => `${Math.round(r * 100)}%`;
 
   // Інсайт за зміною виконання (в.п.): помітно краще / гірше / приблизно так само.
   const pp = Math.round(cmp.completionRateDelta * 100);
@@ -90,22 +79,22 @@ export function ProgressCard() {
       />
 
       <div className="space-y-2.5">
-        <Row
-          label={t("statistics.metric.completion")}
-          value={pct(stats.completionRate)}
-          delta={<DeltaBadge delta={cmp.completionRateDelta} format="pp" />}
-        />
-        <Row
-          label={t("statistics.metric.perfectDays")}
-          value={String(stats.perfectDays)}
-          delta={<DeltaBadge delta={cmp.perfectDaysDelta} format="int" />}
-        />
+        <Row label={t("statistics.metric.completion")}>
+          <RateDelta from={cmp.prev.completionRate} to={stats.completionRate} />
+        </Row>
+        <Row label={t("statistics.metric.perfectDays")}>
+          <span className="text-sm font-semibold tabular-nums">
+            {stats.perfectDays}
+          </span>
+          <DeltaBadge delta={cmp.perfectDaysDelta} format="int" />
+        </Row>
         {cmp.moodAverageDelta != null && stats.moodAverage != null && (
-          <Row
-            label={t("statistics.metric.moodAverage")}
-            value={`${stats.moodAverage.toFixed(1)}/5`}
-            delta={<DeltaBadge delta={cmp.moodAverageDelta} format="mood" />}
-          />
+          <Row label={t("statistics.metric.moodAverage")}>
+            <span className="text-sm font-semibold tabular-nums">
+              {stats.moodAverage.toFixed(1)}/5
+            </span>
+            <DeltaBadge delta={cmp.moodAverageDelta} format="mood" />
+          </Row>
         )}
       </div>
 

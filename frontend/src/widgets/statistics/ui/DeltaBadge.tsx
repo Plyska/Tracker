@@ -1,40 +1,29 @@
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/lib";
 
-type DeltaFormat = "pp" | "int" | "mood";
+type DeltaFormat = "int" | "mood";
 
 interface DeltaBadgeProps {
   delta: number;
-  /** 'pp' — частка → в.п. (×100); 'int' — ціле (напр. ідеальні дні); 'mood' — бали з 1 знаком. */
+  /** 'int' — ціле (напр. ідеальні дні); 'mood' — бали з 1 знаком. Частку виконання показуємо
+   *  через RateDelta («було → стало»), а не тут. */
   format: DeltaFormat;
   className?: string;
 }
 
 /**
  * Бейдж зміни vs попередній період: ▲/▼ + значення, зелене (зросло) / червоне (просіло) /
- * приглушене «—» (без змін). Патерн кольорів — як у MoodCorrelationCard. «Вгору = краще»
- * для всіх метрик, що ми порівнюємо (виконання, ідеальні дні, настрій).
+ * приглушене «—» (без змін). Патерн кольорів — як у MoodCorrelationCard. «Вгору = краще».
  */
 export function DeltaBadge({ delta, format, className }: DeltaBadgeProps) {
-  const { t } = useTranslation();
-
   // Округлене значення + чи це «нуль» (нижче помітного порога) — у форматі метрики.
   const rounded =
-    format === "pp"
-      ? Math.round(delta * 100)
-      : format === "mood"
-        ? Math.round(delta * 10) / 10
-        : Math.round(delta);
+    format === "mood" ? Math.round(delta * 10) / 10 : Math.round(delta);
   const isFlat = rounded === 0;
   const up = rounded > 0;
 
   const magnitude =
-    format === "pp"
-      ? `${Math.abs(rounded)} ${t("statistics.unit.pp")}`
-      : format === "mood"
-        ? Math.abs(rounded).toFixed(1)
-        : String(Math.abs(rounded));
+    format === "mood" ? Math.abs(rounded).toFixed(1) : String(Math.abs(rounded));
 
   const Icon = isFlat ? Minus : up ? ArrowUpRight : ArrowDownRight;
   const sign = isFlat ? "" : up ? "+" : "−";

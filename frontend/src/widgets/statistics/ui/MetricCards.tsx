@@ -14,6 +14,7 @@ import { useAppSelector } from "@/app/store/hooks";
 import { useStatsData } from "@/features/stats-period";
 import { Card, Skeleton } from "@/shared/ui";
 import { DeltaBadge } from "./DeltaBadge";
+import { RateDelta } from "./RateDelta";
 
 const GRID = "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6";
 
@@ -99,7 +100,9 @@ export function MetricCards() {
       Icon: Percent,
       value: pct(stats.completionRate),
       delta: cmp
-        ? withVs(<DeltaBadge delta={cmp.completionRateDelta} format="pp" />)
+        ? withVs(
+            <RateDelta from={cmp.prev.completionRate} to={stats.completionRate} />,
+          )
         : undefined,
     },
     { key: "currentStreak", Icon: Flame, value: days(stats.currentStreak) },

@@ -176,8 +176,7 @@
     },
     "unit": {
       "days_one": "{{count}} day",
-      "days_other": "{{count}} days",
-      "pp": "pp"
+      "days_other": "{{count}} days"
     },
     "activity": {
       "title": "Activity over time",

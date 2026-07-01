@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAppSelector } from "@/app/store/hooks";
 import { buildMovers, useStatsData, type HabitMover } from "@/features/stats-period";
 import { Card, InfoHint, Skeleton } from "@/shared/ui";
-import { DeltaBadge } from "./DeltaBadge";
+import { RateDelta } from "./RateDelta";
 
 const MotionCard = motion.create(Card);
 
@@ -12,7 +12,11 @@ function MoverRow({ mover }: { mover: HabitMover }) {
   return (
     <li className="flex items-center justify-between gap-3">
       <span className="min-w-0 truncate text-sm">{mover.name}</span>
-      <DeltaBadge delta={mover.delta} format="pp" className="shrink-0" />
+      <RateDelta
+        from={mover.current - mover.delta}
+        to={mover.current}
+        className="shrink-0"
+      />
     </li>
   );
 }
