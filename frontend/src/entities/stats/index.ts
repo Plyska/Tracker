@@ -1,6 +1,7 @@
 export type {
   Stats,
   DailyStat,
+  HabitBreakdown,
   MoodCorrelation,
   MoodVsCompletion,
 } from "./model/types";

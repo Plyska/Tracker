@@ -43,6 +43,8 @@ export interface StatsDto {
   longestStreak: number;
   perfectDays: number;
   bestHabit: { habitId: string; completionRate: number } | null;
+  // Частка виконання по кожній звичці за період (активні ≥1 день) — для «movers».
+  habitBreakdown: { habitId: string; completionRate: number; activeDays: number }[];
   moodAverage: number | null;
   moodDays: number;
   daily: {

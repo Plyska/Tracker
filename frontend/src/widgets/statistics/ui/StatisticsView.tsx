@@ -4,6 +4,8 @@ import { useGetHabitsQuery } from "@/entities/habit";
 import { Card, Skeleton } from "@/shared/ui";
 import { StatsToolbar } from "./StatsToolbar";
 import { MetricCards } from "./MetricCards";
+import { ProgressCard } from "./ProgressCard";
+import { MoversCard } from "./MoversCard";
 import { Heatmap } from "./Heatmap";
 import { ActivityChart } from "./ActivityChart";
 import { MoodCorrelationCard } from "./MoodCorrelationCard";
@@ -50,6 +52,15 @@ export function StatisticsView() {
           <StatsToolbar />
         </motion.div>
         <MetricCards />
+        {/* Динаміка vs попередній період: прогрес + per-habit movers. min-w-0 як усюди. */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="min-w-0">
+            <ProgressCard />
+          </div>
+          <div className="min-w-0">
+            <MoversCard />
+          </div>
+        </div>
         {/* Графік 2/3, настрій 1/3. На lg обидві картки lg:h-full + grid-stretch → однакова висота
             (графік заповнює її через flex-1, див. ActivityChart). На мобільному стек — у графіка
             фіксована висота. min-w-0 на grid-нащадках: інакше колонка графіка (з широким minWidth

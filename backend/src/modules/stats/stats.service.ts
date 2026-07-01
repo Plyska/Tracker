@@ -28,6 +28,9 @@ export interface StatsDto {
   longestStreak: number; // найдовша серія за всю історію
   perfectDays: number; // днів періоду, де виконано всі активні навички
   bestHabit: { habitId: string; completionRate: number } | null;
+  // Частка виконання по КОЖНІЙ звичці за період (лише активні ≥1 день). Клієнт порівнює breakdown
+  // поточного й попереднього вікна → «movers» (звички, що зросли/просіли).
+  habitBreakdown: { habitId: string; completionRate: number; activeDays: number }[];
   moodAverage: number | null; // середній настрій за період (null = немає логів)
   moodDays: number; // скільки днів із настроєм лягло в moodAverage
   daily: { date: string; completed: number; total: number; mood: number | null }[];
@@ -149,13 +152,15 @@ export async function computeStats(
   const currentStreak = currentRun(activeDays, to);
   const longestStreak = longestRun(activeDays);
 
-  // ── bestHabit (за період): найвищий % виконання серед активних днів ───────────────────
+  // ── per-habit breakdown + bestHabit (за період): % виконання серед активних днів ──────
+  const habitBreakdown: StatsDto["habitBreakdown"] = [];
   let bestHabit: StatsDto["bestHabit"] = null;
   for (const id of habitIds) {
     const activeInPeriod = period.filter((d) => isActive(id, d));
     if (!activeInPeriod.length) continue;
     const doneInPeriod = activeInPeriod.filter((d) => doneByHabit.get(id)!.has(d)).length;
     const rate = doneInPeriod / activeInPeriod.length;
+    habitBreakdown.push({ habitId: id, completionRate: rate, activeDays: activeInPeriod.length });
     if (!bestHabit || rate > bestHabit.completionRate) bestHabit = { habitId: id, completionRate: rate };
   }
 
@@ -212,6 +217,7 @@ export async function computeStats(
     longestStreak,
     perfectDays,
     bestHabit,
+    habitBreakdown,
     moodAverage,
     moodDays: logs.length,
     daily,

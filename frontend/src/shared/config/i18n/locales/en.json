@@ -206,6 +206,31 @@
     "empty": {
       "title": "No stats yet",
       "hint": "Add a habit and start checking it off to see your statistics."
+    },
+    "comparison": {
+      "vsPrevious": {
+        "week": "vs last week",
+        "month": "vs last month",
+        "year": "vs last year"
+      }
+    },
+    "progress": {
+      "title": "Progress",
+      "info": "Compares this period's metrics with the previous window of the same length (e.g. the last 30 days vs the 30 before). Streaks aren't compared — they're all-time figures.",
+      "notForAll": "Pick week, month or year to see the change vs the previous period.",
+      "notEnough": "Not enough history to compare with the previous period.",
+      "insight": {
+        "up": "This period is clearly better than the last — keep it up!",
+        "down": "This period is weaker than the last. A small step today gets the momentum back.",
+        "flat": "You're holding steady — about the same as the previous period."
+      }
+    },
+    "movers": {
+      "title": "What changed",
+      "info": "Habits whose completion rate noticeably rose or fell vs the previous period of the same length (with enough active days).",
+      "improved": "Improved",
+      "declined": "Declined",
+      "empty": "No notable changes vs the previous period."
     }
   },
   "mood": {
