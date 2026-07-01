@@ -231,6 +231,13 @@
       "improved": "Improved",
       "declined": "Declined",
       "empty": "No notable changes vs the previous period."
+    },
+    "weekday": {
+      "title": "Weekdays",
+      "info": "The weekdays with the highest and lowest average completion for the selected period. Shown only when there is enough data (≥2 occurrences of a day).",
+      "best": "Best day",
+      "worst": "Weakest day",
+      "empty": "Not enough data to compare weekdays yet."
     }
   },
   "mood": {
