@@ -39,8 +39,16 @@ function Metric({
         </span>
       </div>
       <div className="text-2xl font-semibold tabular-nums">{value}</div>
-      {delta}
-      {hint && <div className="truncate text-xs text-muted-foreground">{hint}</div>}
+      {/* mt-auto: дельту/підказку тиснемо до низу картки, щоб вони вирівнялись по спільній
+          нижній лінії між картками (підписи різної довжини інакше зсувають їх на різні рівні). */}
+      {(delta || hint) && (
+        <div className="mt-auto flex flex-col gap-1 pt-1">
+          {delta}
+          {hint && (
+            <div className="truncate text-xs text-muted-foreground">{hint}</div>
+          )}
+        </div>
+      )}
     </Card>
   );
 }
