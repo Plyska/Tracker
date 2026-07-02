@@ -15,11 +15,14 @@ export type UiPrefsState = {
   /** null → адаптивний дефолт (CSS-сітка), користувач ще не міняв ширину. */
   habitColWidth: number | null;
   tableLayout: TableLayout;
+  /** Цільовий % виконання для статистики (0..100). null → ціль не задано. */
+  statsGoalPct: number | null;
 };
 
 const initialState: UiPrefsState = {
   habitColWidth: null,
   tableLayout: "columns",
+  statsGoalPct: null,
 };
 
 /** Клієнтські UI-налаштування, що персистяться (як тема/акцент/мова). */
@@ -36,8 +39,15 @@ const uiPrefsSlice = createSlice({
     setTableLayout: (state, action: PayloadAction<TableLayout>) => {
       state.tableLayout = action.payload;
     },
+    setStatsGoal: (state, action: PayloadAction<number | null>) => {
+      state.statsGoalPct =
+        action.payload === null
+          ? null
+          : Math.min(100, Math.max(0, Math.round(action.payload)));
+    },
   },
 });
 
-export const { setHabitColWidth, setTableLayout } = uiPrefsSlice.actions;
+export const { setHabitColWidth, setTableLayout, setStatsGoal } =
+  uiPrefsSlice.actions;
 export default uiPrefsSlice.reducer;
