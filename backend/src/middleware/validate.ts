@@ -19,8 +19,20 @@ export const validate =
         first ? `${first.path.join(".") || source}: ${first.message}` : "Validation failed",
       );
     }
-    // query/params у Express read-only за типами — присвоюємо через каст.
-    (req as Record<Source, unknown>)[source] = result.data;
+    // Пишемо розпарсене назад у req[source]. Express 5: `req.query` — гетер без сетера
+    // (обчислюється з URL), тож пряме присвоєння кидає TypeError — перевизначаємо власною
+    // властивістю інстансу (перекриває прототипний гетер). `body`/`params` лишаються звичайними
+    // властивостями → присвоюємо напряму.
+    if (source === "query") {
+      Object.defineProperty(req, "query", {
+        value: result.data,
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      });
+    } else {
+      (req as Record<Source, unknown>)[source] = result.data;
+    }
     next();
   };
 
