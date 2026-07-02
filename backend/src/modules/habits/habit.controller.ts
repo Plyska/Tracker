@@ -26,7 +26,10 @@ export const createHabit = async (req: Request, res: Response): Promise<void> =>
   res.status(201).json(toHabitDto(habit));
 };
 
-export const updateHabit = async (req: Request, res: Response): Promise<void> => {
+export const updateHabit = async (
+  req: Request<{ id: string }>,
+  res: Response,
+): Promise<void> => {
   const { id } = req.params;
   const patch = req.body as UpdateHabitInput;
 
@@ -41,7 +44,10 @@ export const updateHabit = async (req: Request, res: Response): Promise<void> =>
   res.json(toHabitDto(habit!));
 };
 
-export const deleteHabit = async (req: Request, res: Response): Promise<void> => {
+export const deleteHabit = async (
+  req: Request<{ id: string }>,
+  res: Response,
+): Promise<void> => {
   const { id } = req.params;
   // Каскад entries — через onDelete: Cascade у схемі.
   const result = await prisma.habit.deleteMany({

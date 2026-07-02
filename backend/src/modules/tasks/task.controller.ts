@@ -53,7 +53,10 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
   res.status(201).json(toTaskDto(task));
 };
 
-export const updateTask = async (req: Request, res: Response): Promise<void> => {
+export const updateTask = async (
+  req: Request<{ id: string }>,
+  res: Response,
+): Promise<void> => {
   const { id } = req.params;
   const patch = req.body as UpdateTaskInput;
   if (patch.habitId) await assertHabitOwned(patch.habitId, req.userId!);
@@ -69,7 +72,10 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
   res.json(toTaskDto(task!));
 };
 
-export const deleteTask = async (req: Request, res: Response): Promise<void> => {
+export const deleteTask = async (
+  req: Request<{ id: string }>,
+  res: Response,
+): Promise<void> => {
   const { id } = req.params;
   const result = await prisma.task.deleteMany({
     where: { id, userId: req.userId! },
