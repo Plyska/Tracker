@@ -13,7 +13,7 @@ export { useStatsData } from "./lib/useStatsData";
 export { buildComparison, type StatsComparison } from "./lib/comparison";
 export { buildMovers, type Movers, type HabitMover } from "./lib/movers";
 export {
-  bestWorstWeekday,
+  weekdayInsights,
   type WeekdayInsight,
-  type WeekdayStat,
+  type WeekdayCell,
 } from "./lib/weekday";
