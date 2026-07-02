@@ -30,10 +30,16 @@ export const habitsApi = baseApi.injectEndpoints({
           : [{ type: "Habit" as const, id: "LIST" }],
     }),
 
+    // Stats залежить від набору активних навичок (total, breakdown, best habit), тож будь-яка
+    // зміна навичок (додавання/архів/перейменування/видалення) мусить інвалідувати `Stats/LIST` —
+    // інакше картки статистики лишаються застарілими (аж до видалених навичок у breakdown).
     addHabit: build.mutation<Habit, CreateHabitRequest>({
       query: (body) => ({ url: "/habits", method: "POST", body }),
       transformResponse: toHabit,
-      invalidatesTags: [{ type: "Habit", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Habit", id: "LIST" },
+        { type: "Stats", id: "LIST" },
+      ],
     }),
 
     updateHabit: build.mutation<Habit, { id: string } & UpdateHabitRequest>({
@@ -43,19 +49,25 @@ export const habitsApi = baseApi.injectEndpoints({
         body: patch,
       }),
       transformResponse: toHabit,
-      invalidatesTags: (_r, _e, { id }) => [
-        { type: "Habit", id },
-        { type: "Habit", id: "LIST" },
+      // Тільки архівування/розархівування змінює набір активних звичок → Stats. Перейменування/
+      // колір не чіпають цифр (breakdown резолвить ім'я зі списку навичок) → зайвий рефетч не робимо.
+      invalidatesTags: (_r, _e, { id, ...patch }) => [
+        { type: "Habit" as const, id },
+        { type: "Habit" as const, id: "LIST" },
+        ...("archived" in patch
+          ? [{ type: "Stats" as const, id: "LIST" }]
+          : []),
       ],
     }),
 
     deleteHabit: build.mutation<void, string>({
       query: (id) => ({ url: `/habits/${id}`, method: "DELETE" }),
-      // Каскад: видалення навички прибирає її entries (§5.2) → інвалідуємо й Entry.
+      // Каскад: видалення навички прибирає її entries (§5.2) → інвалідуємо Entry і Stats.
       invalidatesTags: (_r, _e, id) => [
         { type: "Habit", id },
         { type: "Habit", id: "LIST" },
         { type: "Entry", id: "LIST" },
+        { type: "Stats", id: "LIST" },
       ],
     }),
   }),

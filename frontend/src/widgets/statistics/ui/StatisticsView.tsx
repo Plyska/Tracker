@@ -6,6 +6,7 @@ import { StatsToolbar } from "./StatsToolbar";
 import { MetricCards } from "./MetricCards";
 import { ProgressCard } from "./ProgressCard";
 import { MoversCard } from "./MoversCard";
+import { WeekdayCard } from "./WeekdayCard";
 import { Heatmap } from "./Heatmap";
 import { ActivityChart } from "./ActivityChart";
 import { MoodCorrelationCard } from "./MoodCorrelationCard";
@@ -52,13 +53,17 @@ export function StatisticsView() {
           <StatsToolbar />
         </motion.div>
         <MetricCards />
-        {/* Динаміка vs попередній період: прогрес + per-habit movers. min-w-0 як усюди. */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Інсайти: динаміка vs попередній період + per-habit movers + дні тижня. min-w-0 як усюди;
+            lg:h-full на картках → однакова висота в ряду. */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="min-w-0">
             <ProgressCard />
           </div>
           <div className="min-w-0">
             <MoversCard />
+          </div>
+          <div className="min-w-0 sm:col-span-2 lg:col-span-1">
+            <WeekdayCard />
           </div>
         </div>
         {/* Графік 2/3, настрій 1/3. На lg обидві картки lg:h-full + grid-stretch → однакова висота

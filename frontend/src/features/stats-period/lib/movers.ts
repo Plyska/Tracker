@@ -35,6 +35,8 @@ export function buildMovers(
 
   const movers: HabitMover[] = [];
   for (const cur of current.habitBreakdown) {
+    const name = nameById.get(cur.habitId);
+    if (!name) continue; // звички немає в поточному списку (видалена/гонка рефетчів) → пропускаємо
     const before = prevById.get(cur.habitId);
     if (!before) continue; // немає в попередньому вікні (нова звичка) → не рухомець
     if (cur.activeDays < MIN_ACTIVE_DAYS || before.activeDays < MIN_ACTIVE_DAYS) continue;
@@ -42,7 +44,7 @@ export function buildMovers(
     if (Math.abs(delta) < MIN_DELTA) continue;
     movers.push({
       habitId: cur.habitId,
-      name: nameById.get(cur.habitId) ?? "—",
+      name,
       delta,
       current: cur.completionRate,
     });
