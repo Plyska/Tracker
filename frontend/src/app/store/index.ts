@@ -24,6 +24,7 @@ const THEME_KEY = "tracker-theme";
 const ACCENT_KEY = "tracker-accent";
 const HABIT_COL_WIDTH_KEY = "tracker-habit-col-width";
 const TABLE_LAYOUT_KEY = "tracker-table-layout";
+const STATS_GOAL_KEY = "tracker-stats-goal";
 const PERIOD_SCALE_KEY = "tracker-period-scale";
 const AUTH_KEY = "tracker-auth";
 
@@ -31,7 +32,11 @@ type PersistedState = {
   theme: { value: Theme };
   accent: { value: AccentKey };
   locale: { value: Locale };
-  uiPrefs: { habitColWidth: number | null; tableLayout: TableLayout };
+  uiPrefs: {
+    habitColWidth: number | null;
+    tableLayout: TableLayout;
+    statsGoalPct: number | null;
+  };
   // anchor — session-only (завжди стартує з «сьогодні»); персиститься лише scale.
   period: { anchor: string; scale: Scale };
   // Сесія: рефреш не розлогінює. Нема збереженого → anonymous.
@@ -69,6 +74,7 @@ function loadPersistedState(): PersistedState | undefined {
     uiPrefs: {
       habitColWidth: read<number | null>(HABIT_COL_WIDTH_KEY, null),
       tableLayout: read<TableLayout>(TABLE_LAYOUT_KEY, "columns"),
+      statsGoalPct: read<number | null>(STATS_GOAL_KEY, null),
     },
     period: {
       anchor: todayISODate(),
@@ -118,6 +124,10 @@ store.subscribe(() => {
     localStorage.setItem(
       TABLE_LAYOUT_KEY,
       JSON.stringify(state.uiPrefs.tableLayout),
+    );
+    localStorage.setItem(
+      STATS_GOAL_KEY,
+      JSON.stringify(state.uiPrefs.statsGoalPct),
     );
     localStorage.setItem(
       PERIOD_SCALE_KEY,

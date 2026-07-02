@@ -4,6 +4,7 @@ import { useGetHabitsQuery } from "@/entities/habit";
 import { Card, Skeleton } from "@/shared/ui";
 import { StatsToolbar } from "./StatsToolbar";
 import { MetricCards } from "./MetricCards";
+import { GoalCard } from "./GoalCard";
 import { ProgressCard } from "./ProgressCard";
 import { MoversCard } from "./MoversCard";
 import { WeekdayCard } from "./WeekdayCard";
@@ -53,16 +54,19 @@ export function StatisticsView() {
           <StatsToolbar />
         </motion.div>
         <MetricCards />
-        {/* Інсайти: динаміка vs попередній період + per-habit movers + дні тижня. min-w-0 як усюди;
-            lg:h-full на картках → однакова висота в ряду. */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Інсайти: ціль + динаміка vs попередній період + per-habit movers + дні тижня. min-w-0
+            як усюди; lg:h-full на картках → однакова висота в ряду. 2 колонки на sm/lg, 4 на xl. */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="min-w-0">
+            <GoalCard />
+          </div>
           <div className="min-w-0">
             <ProgressCard />
           </div>
           <div className="min-w-0">
             <MoversCard />
           </div>
-          <div className="min-w-0 sm:col-span-2 lg:col-span-1">
+          <div className="min-w-0">
             <WeekdayCard />
           </div>
         </div>

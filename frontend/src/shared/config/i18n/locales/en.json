@@ -239,6 +239,17 @@
       "worst": "Weakest day",
       "empty": "Not enough data to compare weekdays yet.",
       "moodLabel": "Mood"
+    },
+    "goal": {
+      "title": "Goal",
+      "info": "Your target completion rate. The ring shows this period's completion progress toward the goal.",
+      "prompt": "Set a goal to track your progress toward it.",
+      "set": "Set a goal",
+      "none": "No goal",
+      "reached": "Goal reached 🎉",
+      "remaining": "{{pct}}% to go",
+      "target": "Goal {{pct}}%",
+      "edit": "Change goal"
     }
   },
   "mood": {
