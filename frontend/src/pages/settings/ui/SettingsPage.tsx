@@ -5,8 +5,9 @@ import { AccentPicker } from "@/features/accent";
 import { ProfileForm } from "@/features/auth";
 import { LangSwitcher } from "@/features/locale";
 import { HabitTrash } from "@/features/manage-habits";
+import { ThemeToggle } from "@/features/theme";
 import { TableLayoutSwitcher } from "@/features/ui-prefs";
-import { AnimatedText, Card, Tabs, type TabItem } from "@/shared/ui";
+import { AnimatedText, TiltCard, Tabs, type TabItem } from "@/shared/ui";
 
 /** Той самий glow-фон, що на AuthLayout: зсувається залежно від активного таба. */
 const GRADIENT = [
@@ -76,11 +77,25 @@ function SettingsPage() {
               {tab === "app" ? (
                 // Клієнтські налаштування (акцент, мова, орієнтація таблиці).
                 <div className="space-y-8">
-                  <Card>
-                    <AccentPicker />
-                  </Card>
+                  <TiltCard className="flex items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">
+                        <AnimatedText>{t("settings.theme.title")}</AnimatedText>
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        <AnimatedText>
+                          {t("settings.theme.description")}
+                        </AnimatedText>
+                      </p>
+                    </div>
+                    <ThemeToggle />
+                  </TiltCard>
 
-                  <Card className="flex items-center justify-between gap-4">
+                  <TiltCard>
+                    <AccentPicker />
+                  </TiltCard>
+
+                  <TiltCard className="flex items-center justify-between gap-4">
                     <div>
                       <h3 className="text-lg font-semibold">
                         <AnimatedText>
@@ -94,22 +109,22 @@ function SettingsPage() {
                       </p>
                     </div>
                     <LangSwitcher />
-                  </Card>
+                  </TiltCard>
 
-                  <Card>
+                  <TiltCard>
                     <TableLayoutSwitcher />
-                  </Card>
+                  </TiltCard>
                 </div>
               ) : tab === "profile" ? (
                 // Налаштування юзера.
-                <Card>
+                <TiltCard>
                   <ProfileForm />
-                </Card>
+                </TiltCard>
               ) : (
                 // Кошик видалених навичок.
-                <Card>
+                <TiltCard>
                   <HabitTrash />
-                </Card>
+                </TiltCard>
               )}
             </motion.div>
           </AnimatePresence>
