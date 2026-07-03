@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AlertDialog } from "radix-ui";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -19,11 +20,18 @@ export function DeleteHabitDialog({
   const { t } = useTranslation();
   const [deleteHabit] = useDeleteHabitMutation();
   const reduceMotion = useReducedMotion();
+  // За замовчуванням — у кошик (soft, з відновленням). Галочка → остаточне видалення повз кошик.
+  const [immediate, setImmediate] = useState(false);
 
-  // Каскадне видалення entries — на боці сервера (db), інвалідація тегів оновить таблицю.
+  const close = (next: boolean) => {
+    if (!next) setImmediate(false); // скидаємо вибір при закритті
+    onOpenChange(next);
+  };
+
+  // Каскад/кошик — на боці сервера, інвалідація тегів оновить таблицю (і кошик).
   const onConfirm = () => {
-    void deleteHabit(habit.id);
-    onOpenChange(false);
+    void deleteHabit({ id: habit.id, permanent: immediate });
+    close(false);
   };
 
   // Та сама анімація, що й у HabitDialog: fade overlay + scale-pop контенту.
@@ -42,7 +50,7 @@ export function DeleteHabitDialog({
       };
 
   return (
-    <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
+    <AlertDialog.Root open={open} onOpenChange={close}>
       <AnimatePresence>
         {open && (
           <AlertDialog.Portal forceMount>
@@ -70,8 +78,21 @@ export function DeleteHabitDialog({
                   {t("habits.delete.title")}
                 </AlertDialog.Title>
                 <AlertDialog.Description className="mt-2 text-sm text-muted-foreground">
-                  {t("habits.delete.description", { name: habit.name })}
+                  {immediate
+                    ? t("habits.delete.descriptionImmediate", { name: habit.name })
+                    : t("habits.delete.description", { name: habit.name })}
                 </AlertDialog.Description>
+
+                <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={immediate}
+                    onChange={(e) => setImmediate(e.target.checked)}
+                    className="size-4 rounded border-border accent-primary"
+                  />
+                  {t("habits.delete.immediate")}
+                </label>
+
                 <div className="mt-6 flex justify-end gap-2">
                   <AlertDialog.Cancel asChild>
                     <Button variant="outline">{t("common.cancel")}</Button>
@@ -81,7 +102,9 @@ export function DeleteHabitDialog({
                       onClick={onConfirm}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                      {t("habits.menu.delete")}
+                      {immediate
+                        ? t("habits.delete.confirmImmediate")
+                        : t("habits.delete.confirm")}
                     </Button>
                   </AlertDialog.Action>
                 </div>

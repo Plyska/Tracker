@@ -11,12 +11,12 @@ export const createHabitSchema = z.object({
 });
 
 // PATCH — часткове оновлення; хоча б одне поле.
+// Архів/видалення — окремі ендпоінти (DELETE = у кошик, POST /:id/restore = назад), не через PATCH.
 export const updateHabitSchema = z
   .object({
     name: z.string().trim().min(1).max(120),
     color,
     icon,
-    archived: z.boolean(),
   })
   .partial()
   .refine((v) => Object.keys(v).length > 0, {

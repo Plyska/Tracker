@@ -13,7 +13,12 @@ export interface HabitDto {
   color: string;
   icon: string | null;
   createdAt: string; // ISO 'YYYY-MM-DD'
-  archived: boolean;
+}
+
+/** Навичка в кошику (`GET /habits/trash`): базовий DTO + коли видалено / коли буде остаточно прибрано. */
+export interface TrashedHabitDto extends HabitDto {
+  deletedAt: string; // ISO datetime
+  purgeAt: string; // ISO datetime — момент остаточного видалення
 }
 
 export interface HabitEntryDto {
@@ -103,7 +108,6 @@ export type UpdateHabitRequest = Partial<{
   name: string;
   color: string;
   icon: string | null;
-  archived: boolean;
 }>;
 
 export interface ToggleEntryRequest {

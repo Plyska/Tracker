@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AccentPicker } from "@/features/accent";
 import { ProfileForm } from "@/features/auth";
 import { LangSwitcher } from "@/features/locale";
+import { HabitTrash } from "@/features/manage-habits";
 import { TableLayoutSwitcher } from "@/features/ui-prefs";
 import { AnimatedText, Card, Tabs, type TabItem } from "@/shared/ui";
 
@@ -22,10 +23,15 @@ function SettingsPage() {
   const tabs: TabItem[] = [
     { value: "app", label: t("settings.tabs.app") },
     { value: "profile", label: t("settings.tabs.profile") },
+    { value: "trash", label: t("settings.tabs.trash") },
   ];
 
-  // Glow тягнеться до активного таба (додаток — ліворуч, профіль — праворуч), як login↔register.
-  const glowX = tab === "profile" ? "80%" : "20%";
+  // Glow тягнеться до активного таба: рівномірно від лівого краю до правого за індексом таба.
+  const activeIndex = Math.max(
+    0,
+    tabs.findIndex((x) => x.value === tab),
+  );
+  const glowX = `${15 + (activeIndex / (tabs.length - 1)) * 70}%`;
 
   return (
     <section className="relative isolate flex flex-1 flex-col">
@@ -94,10 +100,15 @@ function SettingsPage() {
                     <TableLayoutSwitcher />
                   </Card>
                 </div>
-              ) : (
+              ) : tab === "profile" ? (
                 // Налаштування юзера.
                 <Card>
                   <ProfileForm />
+                </Card>
+              ) : (
+                // Кошик видалених навичок.
+                <Card>
+                  <HabitTrash />
                 </Card>
               )}
             </motion.div>

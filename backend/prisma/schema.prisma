@@ -39,13 +39,16 @@ model Habit {
   name      String
   color     String
   icon      String?
-  archived  Boolean  @default(false)
+  // Soft-delete (кошик): null = активна; не-null = у кошику, остаточне видалення через
+  // TRASH_RETENTION_DAYS (lib/habitTrash). Замінює колишній `archived`-прапорець.
+  deletedAt DateTime?
   createdAt DateTime @default(now())
 
   entries HabitEntry[]
   tasks   Task[]
 
   @@index([userId])
+  @@index([deletedAt])
 }
 
 model HabitEntry {
