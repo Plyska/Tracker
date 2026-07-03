@@ -21,4 +21,6 @@ export type {
   UpdateProfileRequest,
   AuthResponse,
   OAuthProvider,
+  PreferencesDto,
+  UpdatePreferencesRequest,
 } from "./types";
