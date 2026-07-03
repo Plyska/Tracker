@@ -103,9 +103,9 @@ export async function computeStats(
   to: string,
   habitId?: string,
 ): Promise<StatsDto> {
-  // Scope-звички: усі неархівовані (або одна, якщо habitId). Архівовані не входять у «активні».
+  // Scope-звички: усі активні (або одна, якщо habitId). У кошику (deletedAt != null) не входять у «активні».
   const habits = await prisma.habit.findMany({
-    where: { userId, archived: false, ...(habitId ? { id: habitId } : {}) },
+    where: { userId, deletedAt: null, ...(habitId ? { id: habitId } : {}) },
     select: { id: true, createdAt: true },
   });
   const habitIds = habits.map((h) => h.id);

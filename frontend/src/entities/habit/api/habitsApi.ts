@@ -2,9 +2,10 @@ import { baseApi } from "@/shared/api";
 import type {
   CreateHabitRequest,
   HabitDto,
+  TrashedHabitDto,
   UpdateHabitRequest,
 } from "@/shared/api";
-import type { Habit } from "../model/types";
+import type { Habit, TrashedHabit } from "../model/types";
 
 /** DTO → domain: опційні поля контракту (`null`) → `undefined` доменної моделі. */
 const toHabit = (dto: HabitDto): Habit => ({
@@ -13,7 +14,12 @@ const toHabit = (dto: HabitDto): Habit => ({
   color: dto.color,
   icon: dto.icon ?? undefined,
   createdAt: dto.createdAt,
-  archived: dto.archived,
+});
+
+const toTrashedHabit = (dto: TrashedHabitDto): TrashedHabit => ({
+  ...toHabit(dto),
+  deletedAt: dto.deletedAt,
+  purgeAt: dto.purgeAt,
 });
 
 export const habitsApi = baseApi.injectEndpoints({
@@ -30,9 +36,15 @@ export const habitsApi = baseApi.injectEndpoints({
           : [{ type: "Habit" as const, id: "LIST" }],
     }),
 
+    // Кошик (soft-deleted навички). Окремий тег `Trash` — інвалідується delete/restore/permanent.
+    getTrashedHabits: build.query<TrashedHabit[], void>({
+      query: () => ({ url: "/habits/trash" }),
+      transformResponse: (dtos: TrashedHabitDto[]) => dtos.map(toTrashedHabit),
+      providesTags: [{ type: "Trash", id: "LIST" }],
+    }),
+
     // Stats залежить від набору активних навичок (total, breakdown, best habit), тож будь-яка
-    // зміна навичок (додавання/архів/перейменування/видалення) мусить інвалідувати `Stats/LIST` —
-    // інакше картки статистики лишаються застарілими (аж до видалених навичок у breakdown).
+    // зміна набору (додавання/видалення/відновлення) інвалідує `Stats/LIST`.
     addHabit: build.mutation<Habit, CreateHabitRequest>({
       query: (body) => ({ url: "/habits", method: "POST", body }),
       transformResponse: toHabit,
@@ -42,6 +54,8 @@ export const habitsApi = baseApi.injectEndpoints({
       ],
     }),
 
+    // Перейменування/колір/іконка — не чіпають набір активних навичок → Stats не інвалідуємо
+    // (breakdown резолвить ім'я зі списку навичок). Видалення/відновлення — окремі мутації нижче.
     updateHabit: build.mutation<Habit, { id: string } & UpdateHabitRequest>({
       query: ({ id, ...patch }) => ({
         url: `/habits/${id}`,
@@ -49,23 +63,36 @@ export const habitsApi = baseApi.injectEndpoints({
         body: patch,
       }),
       transformResponse: toHabit,
-      // Тільки архівування/розархівування змінює набір активних звичок → Stats. Перейменування/
-      // колір не чіпають цифр (breakdown резолвить ім'я зі списку навичок) → зайвий рефетч не робимо.
-      invalidatesTags: (_r, _e, { id, ...patch }) => [
+      invalidatesTags: (_r, _e, { id }) => [
         { type: "Habit" as const, id },
         { type: "Habit" as const, id: "LIST" },
-        ...("archived" in patch
-          ? [{ type: "Stats" as const, id: "LIST" }]
-          : []),
       ],
     }),
 
-    deleteHabit: build.mutation<void, string>({
-      query: (id) => ({ url: `/habits/${id}`, method: "DELETE" }),
-      // Каскад: видалення навички прибирає її entries (§5.2) → інвалідуємо Entry і Stats.
+    // Видалення: за замовчуванням у кошик (soft), `permanent` — одразу назавжди (каскад entries).
+    // Обидва прибирають навичку з активного списку → Habit/Entry/Stats; soft ще й наповнює Trash.
+    deleteHabit: build.mutation<void, { id: string; permanent?: boolean }>({
+      query: ({ id, permanent }) => ({
+        url: `/habits/${id}${permanent ? "?permanent=true" : ""}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: "Habit", id },
+        { type: "Habit", id: "LIST" },
+        { type: "Trash", id: "LIST" },
+        { type: "Entry", id: "LIST" },
+        { type: "Stats", id: "LIST" },
+      ],
+    }),
+
+    // Відновлення з кошика: повертає навичку в активний список.
+    restoreHabit: build.mutation<Habit, string>({
+      query: (id) => ({ url: `/habits/${id}/restore`, method: "POST" }),
+      transformResponse: toHabit,
       invalidatesTags: (_r, _e, id) => [
         { type: "Habit", id },
         { type: "Habit", id: "LIST" },
+        { type: "Trash", id: "LIST" },
         { type: "Entry", id: "LIST" },
         { type: "Stats", id: "LIST" },
       ],
@@ -75,7 +102,9 @@ export const habitsApi = baseApi.injectEndpoints({
 
 export const {
   useGetHabitsQuery,
+  useGetTrashedHabitsQuery,
   useAddHabitMutation,
   useUpdateHabitMutation,
   useDeleteHabitMutation,
+  useRestoreHabitMutation,
 } = habitsApi;

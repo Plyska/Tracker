@@ -1,10 +1,12 @@
-export type { Habit } from "./model/types";
+export type { Habit, TrashedHabit } from "./model/types";
 export {
   habitsApi,
   useGetHabitsQuery,
+  useGetTrashedHabitsQuery,
   useAddHabitMutation,
   useUpdateHabitMutation,
   useDeleteHabitMutation,
+  useRestoreHabitMutation,
 } from "./api/habitsApi";
 export { HabitIcon } from "./ui/HabitIcon";
 export { HabitGlyph } from "./ui/HabitGlyph";

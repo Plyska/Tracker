@@ -2,6 +2,7 @@ export { baseApi } from "./baseApi";
 export type {
   Plan,
   HabitDto,
+  TrashedHabitDto,
   HabitEntryDto,
   UserDto,
   DailyLogDto,

@@ -16,12 +16,19 @@ export const habitsRouter = Router();
 habitsRouter.use(requireAuth, requireCsrf);
 
 habitsRouter.get("/", asyncHandler(ctrl.listHabits));
+// Кошик — статичний шлях; Express матчить його раніше за `/:id`-параметричні.
+habitsRouter.get("/trash", asyncHandler(ctrl.listTrash));
 habitsRouter.post("/", validate(createHabitSchema), asyncHandler(ctrl.createHabit));
 habitsRouter.patch(
   "/:id",
   validate(habitParamsSchema, "params"),
   validate(updateHabitSchema),
   asyncHandler(ctrl.updateHabit),
+);
+habitsRouter.post(
+  "/:id/restore",
+  validate(habitParamsSchema, "params"),
+  asyncHandler(ctrl.restoreHabit),
 );
 habitsRouter.delete(
   "/:id",

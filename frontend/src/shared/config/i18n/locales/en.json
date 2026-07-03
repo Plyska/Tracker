@@ -25,7 +25,8 @@
     "tabsLabel": "Settings sections",
     "tabs": {
       "profile": "Profile",
-      "app": "App"
+      "app": "App",
+      "trash": "Trash"
     },
     "profile": {
       "title": "Profile",
@@ -174,8 +175,21 @@
     },
     "delete": {
       "title": "Delete habit?",
-      "description": "Delete \"{{name}}\" and all its check-ins? This can't be undone."
+      "description": "\"{{name}}\" will be moved to Trash. You can restore it within 7 days.",
+      "descriptionImmediate": "Permanently delete \"{{name}}\" and all its check-ins? This can't be undone.",
+      "immediate": "Delete immediately (skip Trash)",
+      "confirm": "Move to Trash",
+      "confirmImmediate": "Delete forever"
     }
+  },
+  "trash": {
+    "title": "Trash",
+    "description": "Deleted habits stay here for 7 days, then they're gone for good.",
+    "empty": "Trash is empty.",
+    "restore": "Restore",
+    "deleteForever": "Delete forever",
+    "daysLeft": "Auto-deletes in {{count}}d",
+    "expiresToday": "Auto-deletes today"
   },
   "statistics": {
     "title": "Statistics",

@@ -1,4 +1,5 @@
 import type { DailyLog, Habit, HabitEntry, Task, User } from "@prisma/client";
+import { purgeAtFor } from "./habitTrash.js";
 
 /**
  * Domain (Prisma) → DTO «на дроті» (docs/api-contract.md). Опційні поля — явні `null`.
@@ -20,7 +21,12 @@ export interface HabitDto {
   color: string;
   icon: string | null;
   createdAt: string;
-  archived: boolean;
+}
+
+/** Навичка в кошику: базовий DTO + коли видалено і коли буде остаточно прибрано (ISO datetime). */
+export interface TrashedHabitDto extends HabitDto {
+  deletedAt: string;
+  purgeAt: string;
 }
 
 export interface HabitEntryDto {
@@ -64,7 +70,13 @@ export const toHabitDto = (h: Habit): HabitDto => ({
   color: h.color,
   icon: h.icon ?? null,
   createdAt: toISODate(h.createdAt),
-  archived: h.archived,
+});
+
+/** Навичка в кошику. Викликати лише коли `deletedAt` не null (елементи кошика). */
+export const toTrashedHabitDto = (h: Habit): TrashedHabitDto => ({
+  ...toHabitDto(h),
+  deletedAt: h.deletedAt!.toISOString(),
+  purgeAt: purgeAtFor(h.deletedAt!).toISOString(),
 });
 
 export const toHabitEntryDto = (e: HabitEntry): HabitEntryDto => ({
