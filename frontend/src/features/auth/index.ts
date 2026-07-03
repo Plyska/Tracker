@@ -24,10 +24,12 @@ export {
   useOauthMutation,
   useLogoutMutation,
   useGetMeQuery,
+  useUpdateProfileMutation,
   type AuthResult,
 } from "./api/authApi";
 export { LoginForm } from "./ui/LoginForm";
 export { RegisterForm } from "./ui/RegisterForm";
+export { ProfileForm } from "./ui/ProfileForm";
 export { UserMenu } from "./ui/UserMenu";
 export { RequireAuth } from "./ui/RequireAuth";
 export { RedirectIfAuth } from "./ui/RedirectIfAuth";

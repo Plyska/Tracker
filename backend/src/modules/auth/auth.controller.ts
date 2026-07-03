@@ -16,8 +16,17 @@ import {
   revokeRefreshToken,
   rotateRefreshToken,
 } from "../../lib/refreshTokens.js";
-import { getUserById, loginUser, registerUser } from "./auth.service.js";
-import type { LoginInput, RegisterInput } from "./auth.schema.js";
+import {
+  getUserById,
+  loginUser,
+  registerUser,
+  updateUserProfile,
+} from "./auth.service.js";
+import type {
+  LoginInput,
+  RegisterInput,
+  UpdateProfileInput,
+} from "./auth.schema.js";
 
 /**
  * Cookie-флоу (Security-фаза, варіант B): access-JWT + CSRF-токен ставимо в cookie, у тілі
@@ -76,6 +85,13 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 export const me = async (req: Request, res: Response): Promise<void> => {
   const user = await getUserById(req.userId!);
   if (!user) throw Errors.unauthenticated("User no longer exists");
+  res.json(toUserDto(user));
+};
+
+/** Оновлення профілю власника сесії (наразі ім'я). Повертає свіжий `UserDto`. */
+export const updateMe = async (req: Request, res: Response): Promise<void> => {
+  const user = await updateUserProfile(req.userId!, req.body as UpdateProfileInput);
+  audit("profile.update", { userId: user.id, ip: req.ip });
   res.json(toUserDto(user));
 };
 

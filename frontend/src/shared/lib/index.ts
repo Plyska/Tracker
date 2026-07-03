@@ -18,3 +18,9 @@ export {
   type Plan,
   type Entitlement,
 } from "./entitlements";
+export {
+  fileToAvatarDataUrl,
+  ImageProcessingError,
+  MAX_AVATAR_BYTES,
+  type ImageError,
+} from "./image";
