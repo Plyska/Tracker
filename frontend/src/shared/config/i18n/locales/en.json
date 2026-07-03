@@ -22,7 +22,30 @@
   },
   "settings": {
     "title": "Settings",
-    "subtitle": "Manage your account and preferences here.",
+    "tabsLabel": "Settings sections",
+    "tabs": {
+      "profile": "Profile",
+      "app": "App"
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "Update your personal details.",
+      "name": "Name",
+      "namePlaceholder": "Your name",
+      "email": "Email",
+      "emailHint": "Email cannot be changed for now.",
+      "avatarChange": "Change photo",
+      "avatarRemove": "Remove",
+      "avatarHint": "JPG, PNG or WebP, up to 5 MB.",
+      "avatarError": {
+        "type": "Please choose an image file.",
+        "size": "Image is too large (max 5 MB).",
+        "decode": "Could not read that image. Try another one."
+      },
+      "save": "Save changes",
+      "saved": "Profile updated.",
+      "error": "Could not save your profile. Please try again."
+    },
     "accent": {
       "title": "Accent color",
       "description": "Choose the accent palette used across the app."

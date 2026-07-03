@@ -17,6 +17,7 @@ export type {
   StatsQuery,
   LoginRequest,
   RegisterRequest,
+  UpdateProfileRequest,
   AuthResponse,
   OAuthProvider,
 } from "./types";

@@ -4,6 +4,7 @@ import type {
   LoginRequest,
   OAuthProvider,
   RegisterRequest,
+  UpdateProfileRequest,
   UserDto,
 } from "@/shared/api";
 import type { User } from "@/entities/user";
@@ -56,6 +57,13 @@ export const authApi = baseApi.injectEndpoints({
       transformResponse: toUser,
       providesTags: [{ type: "Me", id: "CURRENT" }],
     }),
+    // Оновлення профілю (наразі ім'я). Повертає свіжий `UserDto`; виклик-сайт синхронить
+    // `authSlice` через `userLoaded`. Інвалідує `Me`-кеш (рехідрація сесії підхопить нове ім'я).
+    updateProfile: build.mutation<User, UpdateProfileRequest>({
+      query: (body) => ({ url: "/auth/me", method: "PATCH", body }),
+      transformResponse: toUser,
+      invalidatesTags: [{ type: "Me", id: "CURRENT" }],
+    }),
   }),
 });
 
@@ -65,4 +73,5 @@ export const {
   useOauthMutation,
   useLogoutMutation,
   useGetMeQuery,
+  useUpdateProfileMutation,
 } = authApi;

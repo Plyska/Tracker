@@ -29,5 +29,11 @@ export const registerSchema = z
     path: ["confirmPassword"],
   });
 
+// Форма профілю (Settings → таб «Профіль»): наразі лише ім'я; email read-only.
+export const profileSchema = z.object({
+  name: z.string().trim().min(1, "auth.validation.nameRequired").max(60),
+});
+
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
+export type ProfileValues = z.infer<typeof profileSchema>;

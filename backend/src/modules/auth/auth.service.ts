@@ -2,7 +2,7 @@ import type { User } from "@prisma/client";
 import { prisma } from "../../prisma.js";
 import { Errors } from "../../lib/errors.js";
 import { hashPassword, verifyPassword } from "../../lib/password.js";
-import type { LoginInput, RegisterInput } from "./auth.schema.js";
+import type { LoginInput, RegisterInput, UpdateProfileInput } from "./auth.schema.js";
 
 /** Реєстрація: унікальний email, хеш пароля. Повертає створеного користувача. */
 export const registerUser = async (input: RegisterInput): Promise<User> => {
@@ -35,3 +35,17 @@ export const loginUser = async (input: LoginInput): Promise<User> => {
 
 export const getUserById = (id: string): Promise<User | null> =>
   prisma.user.findUnique({ where: { id } });
+
+/** Оновлення профілю (ім'я + опц. аватар). Scope по id власника сесії. Повертає оновленого користувача. */
+export const updateUserProfile = (
+  id: string,
+  input: UpdateProfileInput,
+): Promise<User> =>
+  prisma.user.update({
+    where: { id },
+    data: {
+      name: input.name,
+      // undefined → Prisma лишає поле незмінним; null → очищає аватар.
+      ...(input.avatarUrl !== undefined && { avatarUrl: input.avatarUrl }),
+    },
+  });

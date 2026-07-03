@@ -12,7 +12,8 @@ export type AuthAuditEvent =
   | "register"
   | "refresh"
   | "refresh.reuse_detected"
-  | "logout";
+  | "logout"
+  | "profile.update";
 
 interface AuditFields {
   userId?: string;

@@ -32,11 +32,13 @@ export function MainLayout() {
       <div className="flex w-full min-w-0 flex-col">
         <Header onMenuClick={() => setSidebarOpen((prev) => !prev)} />
 
-        <main className="min-w-0 flex-1 overflow-auto p-4 pt-6 sm:p-6 sm:pt-8">
-          {/* Анімований перехід між сторінками; оболонка (sidebar/header) стабільна. */}
+        <main className="flex min-w-0 flex-1 flex-col overflow-auto p-4 pt-6 sm:p-6 sm:pt-8">
+          {/* Анімований перехід між сторінками; оболонка (sidebar/header) стабільна.
+              flex-1 — щоб обгортка заповнювала висоту `main` (сторінки можуть тягтись на весь екран). */}
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={location.pathname}
+              className="flex min-h-0 flex-1 flex-col"
               initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
               animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}

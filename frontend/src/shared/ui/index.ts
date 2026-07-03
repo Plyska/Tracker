@@ -9,3 +9,4 @@ export { AnimatedText } from "./AnimatedText";
 export { Toaster, toast } from "./Toast";
 export { Skeleton } from "./Skeleton";
 export { InfoHint } from "./Tooltip";
+export { Tabs, TabsContent, type TabItem } from "./Tabs";

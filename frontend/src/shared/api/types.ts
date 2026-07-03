@@ -153,6 +153,15 @@ export interface RegisterRequest {
 }
 
 /**
+ * Оновлення профілю (`PATCH /auth/me`): ім'я + (опц.) аватар. Email/пароль — окремі флоу.
+ * `avatarUrl`: `undefined` — не чіпати; `null` — прибрати; data-URL (base64) — встановити.
+ */
+export interface UpdateProfileRequest {
+  name: string;
+  avatarUrl?: string | null;
+}
+
+/**
  * Cookie-флоу (Security-фаза, варіант B): токени не в тілі. login/register повертають лише
  * `{ user }`; access/refresh/csrf виставляє бекенд у cookie. refresh → 204 (теж лише cookie).
  */

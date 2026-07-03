@@ -4,7 +4,7 @@ import { validate } from "../../middleware/validate.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { requireCsrf } from "../../lib/csrf.js";
 import { authLimiter } from "../../middleware/rateLimit.js";
-import { loginSchema, registerSchema } from "./auth.schema.js";
+import { loginSchema, registerSchema, updateProfileSchema } from "./auth.schema.js";
 import * as ctrl from "./auth.controller.js";
 
 export const authRouter = Router();
@@ -18,6 +18,14 @@ authRouter.post("/login", authLimiter, validate(loginSchema), asyncHandler(ctrl.
 authRouter.post("/refresh", authLimiter, asyncHandler(ctrl.refresh));
 authRouter.post("/logout", requireCsrf, asyncHandler(ctrl.logout));
 authRouter.get("/me", requireAuth, asyncHandler(ctrl.me));
+// Оновлення профілю — мутація від імені сесії: requireAuth + CSRF (double-submit) + валідація.
+authRouter.patch(
+  "/me",
+  requireAuth,
+  requireCsrf,
+  validate(updateProfileSchema),
+  asyncHandler(ctrl.updateMe),
+);
 
 // Шов OAuth (Google відкладено) — 501.
 authRouter.post("/oauth/:provider", asyncHandler(ctrl.oauth));
