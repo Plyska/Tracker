@@ -10,6 +10,7 @@ import { entriesRouter } from "./modules/entries/entry.routes.js";
 import { dailyLogsRouter } from "./modules/daily-log/daily-log.routes.js";
 import { tasksRouter } from "./modules/tasks/task.routes.js";
 import { statsRouter } from "./modules/stats/stats.routes.js";
+import { preferencesRouter } from "./modules/preferences/preferences.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 
 export const createApp = () => {
@@ -53,6 +54,7 @@ export const createApp = () => {
   app.use("/daily-logs", dailyLogsRouter);
   app.use("/tasks", tasksRouter);
   app.use("/stats", statsRouter);
+  app.use("/me/preferences", preferencesRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

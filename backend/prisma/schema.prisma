@@ -30,6 +30,22 @@ model User {
   refreshTokens RefreshToken[]
   dailyLogs     DailyLog[]
   tasks         Task[]
+  preferences   UserPreferences?
+}
+
+// Клієнтські налаштування, перенесені з localStorage у БД (per-user, крос-девайс).
+// 1:1 з User; усі поля nullable = «не задано» → фронт застосовує дефолт. Розширюється колонками.
+model UserPreferences {
+  userId        String   @id
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme        String? // 'light' | 'dark'
+  accent       String? // ключ акцентної палітри
+  locale       String? // 'en' | 'uk'
+  tableLayout  String? // 'columns' | 'rows'
+  statsGoalPct Int? // ціль виконання, 0..100 (null = без цілі)
+  updatedAt    DateTime @updatedAt
+  // Прим.: ширина колонки навичок (habitColWidth) свідомо лишається лише в localStorage
+  // (per-device, не крос-девайс) — у БД не переноситься.
 }
 
 model Habit {

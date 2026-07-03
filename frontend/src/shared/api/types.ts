@@ -174,3 +174,24 @@ export interface AuthResponse {
 }
 
 export type OAuthProvider = "google";
+
+/**
+ * Клієнтські налаштування, збережені в БД (`/me/preferences`). Усі поля nullable:
+ * `null` = не задано → клієнт застосовує дефолт. Значення — рядки/числа (набори валідує фронт).
+ */
+export interface PreferencesDto {
+  theme: string | null;
+  accent: string | null;
+  locale: string | null;
+  tableLayout: string | null;
+  statsGoalPct: number | null;
+}
+
+/** PATCH /me/preferences — часткове оновлення (передаємо лише те, що змінилось). */
+export type UpdatePreferencesRequest = Partial<{
+  theme: string;
+  accent: string;
+  locale: string;
+  tableLayout: string;
+  statsGoalPct: number | null;
+}>;

@@ -1,4 +1,11 @@
-import type { DailyLog, Habit, HabitEntry, Task, User } from "@prisma/client";
+import type {
+  DailyLog,
+  Habit,
+  HabitEntry,
+  Task,
+  User,
+  UserPreferences,
+} from "@prisma/client";
 import { purgeAtFor } from "./habitTrash.js";
 
 /**
@@ -52,7 +59,25 @@ export interface TaskDto {
   createdAt: string;
 }
 
+/** Клієнтські налаштування. Усі поля nullable: `null` = не задано → фронт бере дефолт. */
+export interface PreferencesDto {
+  theme: string | null;
+  accent: string | null;
+  locale: string | null;
+  tableLayout: string | null;
+  statsGoalPct: number | null;
+}
+
 const toISODate = (d: Date): string => d.toISOString().slice(0, 10);
+
+/** Немає рядка (юзер ще не зберігав) → усі поля null (дефолти застосовує клієнт). */
+export const toPreferencesDto = (p: UserPreferences | null): PreferencesDto => ({
+  theme: p?.theme ?? null,
+  accent: p?.accent ?? null,
+  locale: p?.locale ?? null,
+  tableLayout: p?.tableLayout ?? null,
+  statsGoalPct: p?.statsGoalPct ?? null,
+});
 
 export const toUserDto = (u: User): UserDto => ({
   id: u.id,
