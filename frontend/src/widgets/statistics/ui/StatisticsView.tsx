@@ -1,7 +1,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useGetHabitsQuery } from "@/entities/habit";
-import { Card, Skeleton } from "@/shared/ui";
+import { Card, Skeleton, Tilt } from "@/shared/ui";
 import { StatsToolbar } from "./StatsToolbar";
 import { MetricCards } from "./MetricCards";
 import { GoalCard } from "./GoalCard";
@@ -58,16 +58,24 @@ export function StatisticsView() {
             як усюди; lg:h-full на картках → однакова висота в ряду. 2 колонки на sm/lg, 4 на xl. */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="min-w-0">
-            <GoalCard />
+            <Tilt>
+              <GoalCard />
+            </Tilt>
           </div>
           <div className="min-w-0">
-            <ProgressCard />
+            <Tilt>
+              <ProgressCard />
+            </Tilt>
           </div>
           <div className="min-w-0">
-            <MoversCard />
+            <Tilt>
+              <MoversCard />
+            </Tilt>
           </div>
           <div className="min-w-0">
-            <WeekdayCard />
+            <Tilt>
+              <WeekdayCard />
+            </Tilt>
           </div>
         </div>
         {/* Графік 2/3, настрій 1/3. На lg обидві картки lg:h-full + grid-stretch → однакова висота
@@ -79,7 +87,9 @@ export function StatisticsView() {
             <ActivityChart />
           </div>
           <div className="min-w-0">
-            <MoodCorrelationCard />
+            <Tilt>
+              <MoodCorrelationCard />
+            </Tilt>
           </div>
         </div>
         <Heatmap />

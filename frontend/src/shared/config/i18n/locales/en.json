@@ -51,6 +51,10 @@
       "title": "Accent color",
       "description": "Choose the accent palette used across the app."
     },
+    "theme": {
+      "title": "Theme",
+      "description": "Switch between light and dark."
+    },
     "language": {
       "title": "Language",
       "description": "Choose the interface language."

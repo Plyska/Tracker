@@ -2,7 +2,6 @@ import { Menu } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useMatches } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ThemeToggle } from "@/features/theme";
 import { MoodMenu } from "@/features/log-mood";
 import { UserMenu } from "@/features/auth";
 import { IconButton } from "@/shared/ui";
@@ -66,7 +65,6 @@ export function Header({ onMenuClick }: HeaderProps) {
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-4 sm:gap-5">
-        <ThemeToggle />
         <UserMenu />
       </div>
     </header>

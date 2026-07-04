@@ -17,6 +17,8 @@ interface TabsProps {
   onValueChange?: (value: string) => void;
   /** Горизонтальне центрування смуги табів. */
   centered?: boolean;
+  /** Масштаб тригера на hover (напр. 1.05). Не задано → без ефекту. Під reduce-motion вимкнено. */
+  hoverScale?: number;
   "aria-label"?: string;
   className?: string;
   children: ReactNode;
@@ -33,11 +35,13 @@ export function Tabs({
   defaultValue,
   onValueChange,
   centered = false,
+  hoverScale,
   "aria-label": ariaLabel,
   className,
   children,
 }: TabsProps) {
   const reduceMotion = useReducedMotion();
+  const canHover = hoverScale != null && !reduceMotion;
   const pillId = useId();
   // Дзеркалимо активне значення локально, щоб знати, під якою кнопкою малювати pill
   // (працює і в контрольованому, і в неконтрольованому режимі).
@@ -56,43 +60,47 @@ export function Tabs({
       onValueChange={handleChange}
       className={className}
     >
-      <RadixTabs.List
-        aria-label={ariaLabel}
-        className={cn(
-          "mb-6 flex w-fit gap-1 rounded-lg border border-border bg-muted p-1",
-          centered && "mx-auto",
-        )}
-      >
-        {items.map((item) => {
-          const isActive = item.value === current;
-          return (
-            <RadixTabs.Trigger
-              key={item.value}
-              value={item.value}
-              className={cn(
-                // min-w + text-center → усі таби однакової ширини (за найширшим), незалежно від довжини тексту.
-                "relative min-w-28 rounded-md px-5 py-2 text-center text-sm font-medium transition-colors",
-                "outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                isActive
-                  ? "text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {isActive && (
-                <motion.span
-                  layoutId={pillId}
-                  className="absolute inset-0 rounded-md bg-primary shadow-card"
-                  transition={
-                    reduceMotion
-                      ? { duration: 0 }
-                      : { type: "spring", stiffness: 420, damping: 34 }
-                  }
-                />
-              )}
-              <span className="relative z-10">{item.label}</span>
-            </RadixTabs.Trigger>
-          );
-        })}
+      {/* Hover-scale — на весь компонент (смугу List), не на окремі тригери. */}
+      <RadixTabs.List asChild aria-label={ariaLabel}>
+        <motion.div
+          whileHover={canHover ? { scale: hoverScale } : undefined}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className={cn(
+            "mb-6 flex w-fit gap-1 rounded-lg border border-border bg-muted p-1",
+            centered && "mx-auto",
+          )}
+        >
+          {items.map((item) => {
+            const isActive = item.value === current;
+            return (
+              <RadixTabs.Trigger
+                key={item.value}
+                value={item.value}
+                className={cn(
+                  // min-w + text-center → усі таби однакової ширини (за найширшим), незалежно від довжини тексту.
+                  "relative min-w-28 rounded-md px-5 py-2 text-center text-sm font-medium transition-colors",
+                  "outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  isActive
+                    ? "text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId={pillId}
+                    className="absolute inset-0 rounded-md bg-primary shadow-card"
+                    transition={
+                      reduceMotion
+                        ? { duration: 0 }
+                        : { type: "spring", stiffness: 420, damping: 34 }
+                    }
+                  />
+                )}
+                <span className="relative z-10">{item.label}</span>
+              </RadixTabs.Trigger>
+            );
+          })}
+        </motion.div>
       </RadixTabs.List>
 
       {children}

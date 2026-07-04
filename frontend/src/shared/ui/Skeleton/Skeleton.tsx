@@ -19,7 +19,7 @@ export function Skeleton({ className, ...props }: HTMLAttributes<HTMLDivElement>
         // shimmer-overlay
         "before:absolute before:inset-0 before:-translate-x-full",
         "before:animate-[shimmer_1.6s_infinite]",
-        "before:bg-gradient-to-r before:from-transparent before:via-primary/20 before:to-transparent",
+        "before:bg-linear-to-r before:from-transparent before:via-primary/20 before:to-transparent",
         "motion-reduce:before:hidden",
         className,
       )}
