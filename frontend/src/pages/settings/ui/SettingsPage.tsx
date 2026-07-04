@@ -20,6 +20,8 @@ function SettingsPage() {
   const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
   const [tab, setTab] = useState("app");
+  // Поки відкрито дропдаун мови — тримаємо картку збільшеною (курсор іде на портальоване меню).
+  const [langOpen, setLangOpen] = useState(false);
 
   const tabs: TabItem[] = [
     { value: "app", label: t("settings.tabs.app") },
@@ -60,6 +62,7 @@ function SettingsPage() {
           value={tab}
           onValueChange={setTab}
           centered
+          hoverScale={1.05}
           aria-label={t("settings.tabsLabel")}
         >
           {/* Перехід між панелями: fade + вертикальний зсув. `mode="popLayout"` (як AuthLayout) —
@@ -77,7 +80,7 @@ function SettingsPage() {
               {tab === "app" ? (
                 // Клієнтські налаштування (акцент, мова, орієнтація таблиці).
                 <div className="space-y-8">
-                  <TiltCard className="flex items-center justify-between gap-4">
+                  <TiltCard maxTilt={0} hoverScale={1.04} className="flex items-center justify-between gap-4">
                     <div>
                       <h3 className="text-lg font-semibold">
                         <AnimatedText>{t("settings.theme.title")}</AnimatedText>
@@ -91,11 +94,16 @@ function SettingsPage() {
                     <ThemeToggle />
                   </TiltCard>
 
-                  <TiltCard>
+                  <TiltCard maxTilt={0} hoverScale={1.04}>
                     <AccentPicker />
                   </TiltCard>
 
-                  <TiltCard className="flex items-center justify-between gap-4">
+                  <TiltCard
+                    maxTilt={0}
+                    hoverScale={1.04}
+                    active={langOpen}
+                    className="flex items-center justify-between gap-4"
+                  >
                     <div>
                       <h3 className="text-lg font-semibold">
                         <AnimatedText>
@@ -108,21 +116,21 @@ function SettingsPage() {
                         </AnimatedText>
                       </p>
                     </div>
-                    <LangSwitcher />
+                    <LangSwitcher onOpenChange={setLangOpen} />
                   </TiltCard>
 
-                  <TiltCard>
+                  <TiltCard maxTilt={0} hoverScale={1.04}>
                     <TableLayoutSwitcher />
                   </TiltCard>
                 </div>
               ) : tab === "profile" ? (
                 // Налаштування юзера.
-                <TiltCard>
+                <TiltCard maxTilt={0} hoverScale={1.04}>
                   <ProfileForm />
                 </TiltCard>
               ) : (
                 // Кошик видалених навичок.
-                <TiltCard>
+                <TiltCard maxTilt={0} hoverScale={1.04}>
                   <HabitTrash />
                 </TiltCard>
               )}

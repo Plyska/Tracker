@@ -6,13 +6,18 @@ import { Button } from "@/shared/ui";
 import { cn } from "@/shared/lib/cn";
 import { setLocale } from "../model/localeSlice";
 
-export function LangSwitcher() {
+export function LangSwitcher({
+  onOpenChange,
+}: {
+  /** Повідомляє про відкриття/закриття меню (напр. щоб картка тримала збільшений стан). */
+  onOpenChange?: (open: boolean) => void;
+}) {
   const locale = useAppSelector((s) => s.locale.value);
   const dispatch = useAppDispatch();
   const current = LOCALES.find((l) => l.value === locale) ?? LOCALES[0];
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root onOpenChange={onOpenChange}>
       <DropdownMenu.Trigger asChild>
         <Button variant="outline">
           <Languages className="h-4 w-4" />

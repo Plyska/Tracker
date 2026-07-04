@@ -1,4 +1,11 @@
-import { type ComponentProps, type MouseEvent, useRef } from "react";
+import {
+  type ComponentProps,
+  type MouseEvent,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   motion,
   useMotionValue,
@@ -6,38 +13,69 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
+import { cn } from "@/shared/lib/cn";
 import { Card } from "./Card";
 
-const MAX_TILT = 7; // градуси нахилу на краях
+const DEFAULT_MAX_TILT = 14; // градуси нахилу на краях (більший → сильніше «тягнеться» до курсора)
 const SPRING = { stiffness: 300, damping: 22 } as const;
 
 /**
- * Картка з легким 3D-нахилом до курсора (perspective + rotateX/rotateY, пружне повернення).
- * Лише для миші (нема `onMouseMove` на тачі) і повністю вимикається під `useReducedMotion`
- * (тоді — звичайна `Card`). API — як у `Card` (className/children/...props).
+ * 3D-нахил вмісту до курсора (perspective + rotateX/rotateY, пружне повернення, легкий підйом).
+ * Без власної поверхні — обгортка для будь-чого (напр. картки-віджета, що вже рендерить `Card`).
+ * Лише для миші (нема `onMouseMove` на тачі); під `useReducedMotion` рендерить вміст без обгорток.
+ * Обгортки `h-full` — щоб не рвати ланцюг вирівнювання висоти в grid-рядах.
  */
-export function TiltCard({
+export function Tilt({
   children,
   className,
-  ...props
-}: ComponentProps<typeof Card>) {
+  maxTilt = DEFAULT_MAX_TILT,
+  hoverScale = 1.01,
+  active = false,
+}: {
+  children: ReactNode;
+  className?: string;
+  maxTilt?: number;
+  hoverScale?: number;
+  active?: boolean;
+}) {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
-  // Нормалізована позиція курсора в межах картки: -0.5..0.5.
+  const lastPointer = useRef<{ x: number; y: number } | null>(null);
+  const [hovered, setHovered] = useState(false);
+  // Нормалізована позиція курсора в межах елемента: -0.5..0.5.
   const px = useMotionValue(0);
   const py = useMotionValue(0);
-  const rotateX = useSpring(useTransform(py, [-0.5, 0.5], [MAX_TILT, -MAX_TILT]), SPRING);
-  const rotateY = useSpring(useTransform(px, [-0.5, 0.5], [-MAX_TILT, MAX_TILT]), SPRING);
+  const rotateX = useSpring(useTransform(py, [-0.5, 0.5], [maxTilt, -maxTilt]), SPRING);
+  const rotateY = useSpring(useTransform(px, [-0.5, 0.5], [-maxTilt, maxTilt]), SPRING);
 
-  if (reduce) {
-    return (
-      <Card className={className} {...props}>
-        {children}
-      </Card>
-    );
-  }
+  // Поки `active` (дропдаун) відкрито, Radix ставить `pointer-events:none` на все поза меню, тож
+  // картка не отримує mouse-подій і hover «залипає». Стежимо за курсором глобально (лише пишемо в
+  // ref), а на закритті (cleanup ефекту) звіряємо реальну позицію з прямокутником картки й
+  // пересинхронізуємо hover — надійніше за залиплий стан.
+  useEffect(() => {
+    if (!active || reduce) return;
+    const el = ref.current; // нода картки стабільна до розмонтування — валідна й у cleanup
+    const onWinMove = (e: PointerEvent) => {
+      lastPointer.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener("pointermove", onWinMove);
+    return () => {
+      window.removeEventListener("pointermove", onWinMove);
+      const p = lastPointer.current;
+      let inside = false;
+      if (el && p) {
+        const r = el.getBoundingClientRect();
+        inside = p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom;
+      }
+      setHovered(inside);
+    };
+  }, [active, reduce]);
+
+  if (reduce) return <>{children}</>;
 
   const onMove = (e: MouseEvent<HTMLDivElement>) => {
+    lastPointer.current = { x: e.clientX, y: e.clientY };
+    setHovered(true);
     const el = ref.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
@@ -45,23 +83,51 @@ export function TiltCard({
     py.set((e.clientY - r.top) / r.height - 0.5);
   };
 
-  const reset = () => {
+  const onLeave = () => {
+    setHovered(false);
     px.set(0);
     py.set(0);
   };
 
   return (
-    <div style={{ perspective: 900 }} onMouseMove={onMove} onMouseLeave={reset}>
+    <div
+      className={cn("h-full", className)}
+      style={{ perspective: 900 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+    >
       <motion.div
         ref={ref}
+        className="h-full"
         style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-        whileHover={{ scale: 1.01 }}
+        animate={{ scale: hovered || active ? hoverScale : 1 }}
         transition={SPRING}
       >
-        <Card className={className} {...props}>
-          {children}
-        </Card>
+        {children}
       </motion.div>
     </div>
+  );
+}
+
+/** Картка з 3D-нахилом (`Tilt` + `Card`). API — як у `Card` + опційні `maxTilt`/`hoverScale`/`active`. */
+export function TiltCard({
+  children,
+  className,
+  maxTilt,
+  hoverScale,
+  active,
+  ...props
+}: ComponentProps<typeof Card> & {
+  maxTilt?: number;
+  hoverScale?: number;
+  active?: boolean;
+}) {
+  return (
+    <Tilt maxTilt={maxTilt} hoverScale={hoverScale} active={active}>
+      <Card className={className} {...props}>
+        {children}
+      </Card>
+    </Tilt>
   );
 }

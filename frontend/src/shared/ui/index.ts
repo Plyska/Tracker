@@ -1,7 +1,7 @@
 export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from "./Button";
 export { IconButton, type IconButtonProps, type IconButtonSize } from "./IconButton";
 export { Card } from "./Card";
-export { TiltCard } from "./TiltCard";
+export { Tilt, TiltCard } from "./TiltCard";
 export { Input } from "./Input";
 export { Field, type FieldProps } from "./Field";
 export { DatePicker } from "./DatePicker";

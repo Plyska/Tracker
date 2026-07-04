@@ -11,7 +11,7 @@ import {
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useStatsData } from "@/features/stats-period";
-import { Card, Skeleton } from "@/shared/ui";
+import { Skeleton, TiltCard } from "@/shared/ui";
 import { DeltaBadge } from "./DeltaBadge";
 
 const GRID = "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6";
@@ -30,7 +30,7 @@ function Metric({
   delta?: ReactNode;
 }) {
   return (
-    <Card className="flex h-full flex-col gap-2 p-4">
+    <TiltCard className="flex h-full flex-col gap-2 p-4">
       <div className="flex items-start gap-2 text-muted-foreground">
         <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
         <span className="text-xs font-medium tracking-wide uppercase leading-tight">
@@ -48,7 +48,7 @@ function Metric({
           )}
         </div>
       )}
-    </Card>
+    </TiltCard>
   );
 }
 
