@@ -31,6 +31,21 @@ export interface MoodVsCompletion {
   sampleDays: number;
 }
 
+export interface HabitSynergy {
+  habitA: string; // якщо виконано A
+  habitB: string; // → частка виконання B
+  rate: number; // P(B | A виконано), 0..1
+  baseline: number; // базова частка B за період, 0..1
+  delta: number; // rate − baseline
+  sampleDays: number;
+}
+
+export interface HabitStreak {
+  habitId: string;
+  current: number; // поточна серія (днів поспіль)
+  longest: number; // найдовша за всю історію
+}
+
 export interface Stats {
   completionRate: number; // 0..1
   currentStreak: number;
@@ -43,4 +58,6 @@ export interface Stats {
   daily: DailyStat[];
   moodCorrelations: MoodCorrelation[];
   moodVsCompletion: MoodVsCompletion | null;
+  habitSynergies: HabitSynergy[];
+  habitStreaks: HabitStreak[];
 }

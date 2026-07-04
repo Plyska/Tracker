@@ -209,9 +209,37 @@
       "progress": "Progress",
       "movers": "What changed",
       "weekday": "Weekdays",
+      "synergy": "Habit synergies",
+      "milestones": "Milestones",
       "activity": "Activity chart",
       "mood": "Mood correlation",
       "heatmap": "Heatmap"
+    },
+    "synergy": {
+      "title": "Habit synergies",
+      "info": "On days you do the first habit, how often you also do the second — vs your usual rate. Reveals which habit pulls the others up.",
+      "baseline": "vs {{pct}} on a usual day",
+      "empty": "Not enough data yet — keep a few habits going together and patterns will show up."
+    },
+    "milestones": {
+      "title": "Milestones",
+      "info": "Personal records and upcoming milestones, based on your streaks and perfect days.",
+      "empty": "Start a streak and your milestones will appear here.",
+      "newRecord": "{{name}} · best streak yet",
+      "newRecordSub": "{{count}} days in a row — your longest ever",
+      "almostRecord": "{{name}} · almost a record",
+      "almostRecordSub": "{{current}} of {{target}} days",
+      "streak": "{{name}} · {{count}}-day streak",
+      "streakSub": "{{current}} of {{target}} days",
+      "streakSubMax": "{{count}} days in a row",
+      "perfectWeek": "Perfect week",
+      "perfectWeekSub": "{{current}} of {{target}} days in a row",
+      "perfectWeekDone": "{{count}} perfect days in a row 🎉",
+      "comeback": "You're back!",
+      "comebackSub": "Back on track after {{count}} days off",
+      "perfectDays": "Perfect days",
+      "perfectDaysSub": "{{current}} of {{target}}",
+      "toGo": "{{count}} to go"
     },
     "scale": {
       "label": "Period",
