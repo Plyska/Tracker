@@ -10,9 +10,16 @@ import { GoalCard } from "./GoalCard";
 import { ProgressCard } from "./ProgressCard";
 import { MoversCard } from "./MoversCard";
 import { WeekdayCard } from "./WeekdayCard";
+import { SynergyCard } from "./SynergyCard";
+import { MilestonesCard } from "./MilestonesCard";
 import { Heatmap } from "./Heatmap";
 import { ActivityChart } from "./ActivityChart";
 import { MoodCorrelationCard } from "./MoodCorrelationCard";
+
+// Елемент ряду інсайтів: до 3 у ряд (1→2→3 колонки), базис = «третина», `grow` заповнює
+// неповний останній ряд (жодних дір при прихованих віджетах; при всіх 6 виходить рівно 3+3).
+const INSIGHT_ITEM =
+  "min-w-0 grow basis-full sm:basis-[calc((100%_-_1rem)/2)] lg:basis-[calc((100%_-_2rem)/3)]";
 
 /** Композитний віджет сторінки Statistics: тулбар + метрики + графіки + heatmap + mood-кореляція. */
 export function StatisticsView() {
@@ -61,48 +68,60 @@ export function StatisticsView() {
         </motion.div>
         {/* Метрики вимикаються поштучно — MetricCards самі ховають приховані плитки (і весь ряд, якщо всі). */}
         <MetricCards />
-        {/* Інсайти: ціль + динаміка vs попередній період + per-habit movers + дні тижня. min-w-0
-            як усюди; lg:h-full на картках → однакова висота в ряду. `auto-fit` → видимі картки
-            заповнюють ширину незалежно від кількості (приховані не лишають дір). */}
-        {(show("goal") ||
-          show("progress") ||
+        {/* Інсайти: сітка 1→2→3 колонки. Порядок такий, щоб на lg вийшло рівно 3+3:
+            верх — Динаміка / Що змінилось / Дні тижня; низ — Ціль / Синергія / Досягнення. */}
+        {(show("progress") ||
           show("movers") ||
-          show("weekday")) && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fit,minmax(min(100%,15rem),1fr))]">
-            {show("goal") && (
-              <div className="min-w-0">
-                <Tilt>
-                  <GoalCard />
-                </Tilt>
-              </div>
-            )}
+          show("weekday") ||
+          show("goal") ||
+          show("synergy") ||
+          show("milestones")) && (
+          <div className="flex flex-wrap gap-4">
             {show("progress") && (
-              <div className="min-w-0">
+              <div className={INSIGHT_ITEM}>
                 <Tilt>
                   <ProgressCard />
                 </Tilt>
               </div>
             )}
             {show("movers") && (
-              <div className="min-w-0">
+              <div className={INSIGHT_ITEM}>
                 <Tilt>
                   <MoversCard />
                 </Tilt>
               </div>
             )}
             {show("weekday") && (
-              <div className="min-w-0">
+              <div className={INSIGHT_ITEM}>
                 <Tilt>
                   <WeekdayCard />
                 </Tilt>
               </div>
             )}
+            {show("goal") && (
+              <div className={INSIGHT_ITEM}>
+                <Tilt>
+                  <GoalCard />
+                </Tilt>
+              </div>
+            )}
+            {show("synergy") && (
+              <div className={INSIGHT_ITEM}>
+                <Tilt>
+                  <SynergyCard />
+                </Tilt>
+              </div>
+            )}
+            {show("milestones") && (
+              <div className={INSIGHT_ITEM}>
+                <Tilt>
+                  <MilestonesCard />
+                </Tilt>
+              </div>
+            )}
           </div>
         )}
-        {/* Графік 2/3, настрій 1/3. На lg обидві картки lg:h-full + grid-stretch → однакова висота
-            (графік заповнює її через flex-1, див. ActivityChart). На мобільному стек — у графіка
-            фіксована висота. min-w-0 на grid-нащадках: інакше колонка графіка (з широким minWidth
-            на рік/весь час) не стискається до треку й розпирає сітку вправо разом із Mood-карткою. */}
+        {/* Графік 2/3 + настрій 1/3 (як було). Одне з двох видиме → на всю ширину. */}
         {(show("activity") || show("mood")) && (
           <div
             className={cn(

@@ -21,6 +21,11 @@ const MIN_CORRELATION_DELTA = 0.3;
 // Мін. днів із настроєм (і total>0) для метрики «виконання ↔ настрій»: медіанний спліт навпіл
 // дає по ≥5 у кожній половині.
 const MIN_SPLIT_DAYS = 10;
+// Синергія звичок (A→B): мін. днів, коли A виконано (в межах спільного «життя» A і B), і мін.
+// помітна різниця vs базове виконання B. Слабші/малі вибірки — шум, ховаємо.
+const MIN_SYNERGY_SAMPLE = 5;
+const MIN_SYNERGY_DELTA = 0.15;
+const TOP_SYNERGIES = 4;
 
 export interface StatsDto {
   completionRate: number; // 0..1 за період
@@ -51,6 +56,18 @@ export interface StatsDto {
     highAvg: number; // … у верхній половині
     sampleDays: number; // скільки днів (із настроєм і total>0) використано
   } | null;
+  // Синергія: у дні виконання A частка виконання B (`rate`) проти базової частки B (`baseline`).
+  // «У дні, коли ти робиш A, ти виконуєш B на rate% (проти baseline% зазвичай)». Топ за |delta|.
+  habitSynergies: {
+    habitA: string; // якщо виконано A
+    habitB: string; // → то B
+    rate: number; // P(B виконано | A виконано), 0..1
+    baseline: number; // базова частка виконання B за період, 0..1
+    delta: number; // rate − baseline
+    sampleDays: number; // днів, коли A виконано (вибірка)
+  }[];
+  // Серії по КОЖНІЙ звичці (вся історія): для «майже рекорд / новий рекорд» у віджеті досягнень.
+  habitStreaks: { habitId: string; current: number; longest: number }[];
 }
 
 // ── date-хелпери (рядкові ISO 'YYYY-MM-DD'; лексикографічно == хронологічно) ──────────────
@@ -211,6 +228,36 @@ export async function computeStats(
     };
   }
 
+  // ── синергія звичок A→B (за період; гейт вибірки й помітної різниці) ───────────────────
+  // Потрібно ≥2 звички; для одиночного перегляду (habitId) не рахуємо. baseline B — з breakdown.
+  const periodRate = new Map(habitBreakdown.map((b) => [b.habitId, b.completionRate]));
+  const habitSynergies: StatsDto["habitSynergies"] = [];
+  if (!habitId && habitIds.length >= 2) {
+    for (const a of habitIds) {
+      for (const b of habitIds) {
+        if (a === b) continue;
+        const baseline = periodRate.get(b);
+        if (baseline === undefined) continue; // B не активна в періоді
+        const common = period.filter((d) => isActive(a, d) && isActive(b, d));
+        const aDone = common.filter((d) => doneByHabit.get(a)!.has(d));
+        if (aDone.length < MIN_SYNERGY_SAMPLE) continue;
+        const bGivenA = aDone.filter((d) => doneByHabit.get(b)!.has(d)).length;
+        const rate = bGivenA / aDone.length;
+        const delta = rate - baseline;
+        if (Math.abs(delta) < MIN_SYNERGY_DELTA) continue;
+        habitSynergies.push({ habitA: a, habitB: b, rate, baseline, delta, sampleDays: aDone.length });
+      }
+    }
+    habitSynergies.sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta));
+  }
+
+  // ── серії по кожній звичці (вся історія) ──────────────────────────────────────────────
+  const habitStreaks: StatsDto["habitStreaks"] = habitIds.map((id) => ({
+    habitId: id,
+    current: currentRun(doneByHabit.get(id)!, to),
+    longest: longestRun(doneByHabit.get(id)!),
+  }));
+
   return {
     completionRate,
     currentStreak,
@@ -218,6 +265,8 @@ export async function computeStats(
     perfectDays,
     bestHabit,
     habitBreakdown,
+    habitSynergies: habitSynergies.slice(0, TOP_SYNERGIES),
+    habitStreaks,
     moodAverage,
     moodDays: logs.length,
     daily,

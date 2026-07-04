@@ -72,6 +72,15 @@ export interface StatsDto {
     highAvg: number;
     sampleDays: number;
   } | null;
+  habitSynergies: {
+    habitA: string;
+    habitB: string;
+    rate: number; // P(B | A виконано), 0..1
+    baseline: number; // базова частка B, 0..1
+    delta: number; // rate − baseline
+    sampleDays: number;
+  }[];
+  habitStreaks: { habitId: string; current: number; longest: number }[];
 }
 
 /**

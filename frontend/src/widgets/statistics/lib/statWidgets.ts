@@ -5,6 +5,7 @@ import {
   CalendarRange,
   Flame,
   HeartPulse,
+  Medal,
   Percent,
   Repeat2,
   Smile,
@@ -12,6 +13,7 @@ import {
   Target,
   Trophy,
   TrendingUp,
+  Waypoints,
   type LucideIcon,
 } from "lucide-react";
 
@@ -43,6 +45,8 @@ export const STAT_WIDGETS: StatWidgetMeta[] = [
   { key: "progress", labelKey: "statistics.widgets.progress", icon: TrendingUp },
   { key: "movers", labelKey: "statistics.widgets.movers", icon: Repeat2 },
   { key: "weekday", labelKey: "statistics.widgets.weekday", icon: CalendarDays },
+  { key: "synergy", labelKey: "statistics.widgets.synergy", icon: Waypoints },
+  { key: "milestones", labelKey: "statistics.widgets.milestones", icon: Medal },
   { key: "activity", labelKey: "statistics.widgets.activity", icon: Activity },
   { key: "mood", labelKey: "statistics.widgets.mood", icon: HeartPulse },
   { key: "heatmap", labelKey: "statistics.widgets.heatmap", icon: CalendarRange },

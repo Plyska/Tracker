@@ -211,9 +211,37 @@
       "progress": "Динаміка",
       "movers": "Що змінилось",
       "weekday": "Дні тижня",
+      "synergy": "Синергія звичок",
+      "milestones": "Досягнення",
       "activity": "Графік активності",
       "mood": "Кореляція настрою",
       "heatmap": "Heatmap"
+    },
+    "synergy": {
+      "title": "Синергія звичок",
+      "info": "У дні, коли ти виконуєш першу звичку, як часто робиш і другу — проти звичайного. Показує, яка звичка тягне інші вгору.",
+      "baseline": "проти {{pct}} у звичайний день",
+      "empty": "Поки замало даних — веди кілька звичок разом, і закономірності проявляться."
+    },
+    "milestones": {
+      "title": "Досягнення",
+      "info": "Особисті рекорди та найближчі віхи — за твоїми серіями та ідеальними днями.",
+      "empty": "Почни серію — і тут з'являться досягнення.",
+      "newRecord": "{{name}} · найкраща серія",
+      "newRecordSub": "{{count}} днів поспіль — найдовша за весь час",
+      "almostRecord": "{{name}} · майже рекорд",
+      "almostRecordSub": "{{current}} з {{target}} днів",
+      "streak": "{{name}} · серія {{count}} днів",
+      "streakSub": "{{current}} з {{target}} днів",
+      "streakSubMax": "{{count}} днів поспіль",
+      "perfectWeek": "Ідеальний тиждень",
+      "perfectWeekSub": "{{current}} з {{target}} днів поспіль",
+      "perfectWeekDone": "{{count}} ідеальних днів поспіль 🎉",
+      "comeback": "Ти повернувся!",
+      "comebackSub": "Знову в строю після {{count}} днів паузи",
+      "perfectDays": "Ідеальні дні",
+      "perfectDaysSub": "{{current}} з {{target}}",
+      "toGo": "ще {{count}}"
     },
     "scale": {
       "label": "Період",

@@ -4,5 +4,7 @@ export type {
   HabitBreakdown,
   MoodCorrelation,
   MoodVsCompletion,
+  HabitSynergy,
+  HabitStreak,
 } from "./model/types";
 export { statsApi, useGetStatsQuery } from "./api/statsApi";
