@@ -10,6 +10,7 @@ import { setTheme, type Theme } from "@/features/theme";
 import { setAccent, type AccentKey } from "@/features/accent";
 import { setLocale } from "@/features/locale";
 import {
+  setHiddenStatWidgets,
   setStatsGoal,
   setTableLayout,
   type TableLayout,
@@ -21,6 +22,12 @@ import type { Locale } from "@/shared/config/i18n";
 // й мінімізує ризик втрати зміни при швидкому закритті вкладки.
 const PUSH_DELAY = 250;
 
+const sameSet = (a?: string[], b?: string[]): boolean => {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  return a.every((x) => b.includes(x));
+};
+
 const samePrefs = (
   a: UpdatePreferencesRequest,
   b: UpdatePreferencesRequest,
@@ -29,7 +36,8 @@ const samePrefs = (
   a.accent === b.accent &&
   a.locale === b.locale &&
   a.tableLayout === b.tableLayout &&
-  a.statsGoalPct === b.statsGoalPct;
+  a.statsGoalPct === b.statsGoalPct &&
+  sameSet(a.hiddenStatWidgets, b.hiddenStatWidgets);
 
 /**
  * Синхронізація клієнтських налаштувань із БД (крос-девайс). Значення персистяться в
@@ -52,6 +60,7 @@ export function PreferencesSync() {
   const locale = useAppSelector((s) => s.locale.value);
   const tableLayout = useAppSelector((s) => s.uiPrefs.tableLayout);
   const statsGoalPct = useAppSelector((s) => s.uiPrefs.statsGoalPct);
+  const hiddenStatWidgets = useAppSelector((s) => s.uiPrefs.hiddenStatWidgets);
 
   const hydrated = useRef(false);
   const lastSynced = useRef<UpdatePreferencesRequest | null>(null);
@@ -77,6 +86,8 @@ export function PreferencesSync() {
     if (data.locale) dispatch(setLocale(data.locale as Locale));
     if (data.tableLayout) dispatch(setTableLayout(data.tableLayout as TableLayout));
     if (data.statsGoalPct !== null) dispatch(setStatsGoal(data.statsGoalPct));
+    if (data.hiddenStatWidgets)
+      dispatch(setHiddenStatWidgets(data.hiddenStatWidgets));
 
     // Значення, що тепер у стані (для непустих — з БД, для null — локальні) = синхронізовані.
     lastSynced.current = {
@@ -85,6 +96,7 @@ export function PreferencesSync() {
       locale: data.locale ?? locale,
       tableLayout: data.tableLayout ?? tableLayout,
       statsGoalPct: data.statsGoalPct ?? statsGoalPct,
+      hiddenStatWidgets: data.hiddenStatWidgets ?? hiddenStatWidgets,
     };
   }, [
     isAuthenticated,
@@ -95,6 +107,7 @@ export function PreferencesSync() {
     locale,
     tableLayout,
     statsGoalPct,
+    hiddenStatWidgets,
   ]);
 
   // Push змін у БД (debounced). Спрацьовує і як seed, коли lastSynced ще null (порожня БД).
@@ -106,6 +119,7 @@ export function PreferencesSync() {
       locale,
       tableLayout,
       statsGoalPct,
+      hiddenStatWidgets,
     };
     if (lastSynced.current && samePrefs(current, lastSynced.current)) return;
 
@@ -121,6 +135,7 @@ export function PreferencesSync() {
     locale,
     tableLayout,
     statsGoalPct,
+    hiddenStatWidgets,
     updatePreferences,
   ]);
 

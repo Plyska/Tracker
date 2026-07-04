@@ -17,12 +17,15 @@ export type UiPrefsState = {
   tableLayout: TableLayout;
   /** Цільовий % виконання для статистики (0..100). null → ціль не задано. */
   statsGoalPct: number | null;
+  /** Ключі прихованих віджетів статистики. Зберігаємо саме приховані → нові картки типово видимі. */
+  hiddenStatWidgets: string[];
 };
 
 const initialState: UiPrefsState = {
   habitColWidth: null,
   tableLayout: "columns",
   statsGoalPct: null,
+  hiddenStatWidgets: [],
 };
 
 /** Клієнтські UI-налаштування, що персистяться (як тема/акцент/мова). */
@@ -45,9 +48,25 @@ const uiPrefsSlice = createSlice({
           ? null
           : Math.min(100, Math.max(0, Math.round(action.payload)));
     },
+    /** Перемкнути видимість віджета статистики за ключем. */
+    toggleStatWidget: (state, action: PayloadAction<string>) => {
+      const key = action.payload;
+      state.hiddenStatWidgets = state.hiddenStatWidgets.includes(key)
+        ? state.hiddenStatWidgets.filter((k) => k !== key)
+        : [...state.hiddenStatWidgets, key];
+    },
+    /** Замінити набір прихованих (гідрація з БД). */
+    setHiddenStatWidgets: (state, action: PayloadAction<string[]>) => {
+      state.hiddenStatWidgets = action.payload;
+    },
   },
 });
 
-export const { setHabitColWidth, setTableLayout, setStatsGoal } =
-  uiPrefsSlice.actions;
+export const {
+  setHabitColWidth,
+  setTableLayout,
+  setStatsGoal,
+  toggleStatWidget,
+  setHiddenStatWidgets,
+} = uiPrefsSlice.actions;
 export default uiPrefsSlice.reducer;

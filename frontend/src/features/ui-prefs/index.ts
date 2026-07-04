@@ -3,6 +3,8 @@ export {
   setHabitColWidth,
   setTableLayout,
   setStatsGoal,
+  toggleStatWidget,
+  setHiddenStatWidgets,
   HABIT_COL_MIN,
   HABIT_COL_MAX,
   type UiPrefsState,

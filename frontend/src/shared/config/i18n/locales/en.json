@@ -66,6 +66,12 @@
       "rows": "Days in rows",
       "rowsHint": "Looks better on phones",
       "proHint": "Choosing a layout is a Pro feature."
+    },
+    "statWidgets": {
+      "title": "Statistics widgets",
+      "description": "Choose which metrics and widgets to show on the Statistics page.",
+      "metricsGroup": "Metrics",
+      "widgetsGroup": "Sections"
     }
   },
   "accents": {
@@ -197,6 +203,16 @@
   },
   "statistics": {
     "title": "Statistics",
+    "widgets": {
+      "metrics": "Metrics",
+      "goal": "Goal",
+      "progress": "Progress",
+      "movers": "What changed",
+      "weekday": "Weekdays",
+      "activity": "Activity chart",
+      "mood": "Mood correlation",
+      "heatmap": "Heatmap"
+    },
     "scale": {
       "label": "Period",
       "week": "Week",

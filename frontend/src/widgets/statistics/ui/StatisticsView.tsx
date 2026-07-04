@@ -1,7 +1,9 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useAppSelector } from "@/app/store/hooks";
 import { useGetHabitsQuery } from "@/entities/habit";
 import { Card, Skeleton, Tilt } from "@/shared/ui";
+import { cn } from "@/shared/lib";
 import { StatsToolbar } from "./StatsToolbar";
 import { MetricCards } from "./MetricCards";
 import { GoalCard } from "./GoalCard";
@@ -17,6 +19,10 @@ export function StatisticsView() {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
   const { data: habits, isLoading } = useGetHabitsQuery();
+  const hidden = useAppSelector((s) => s.uiPrefs.hiddenStatWidgets);
+  const show = (key: string) => !hidden.includes(key);
+  // Графік і настрій ділять ряд лише коли обидва видимі; інакше видиме займає всю ширину.
+  const bothChartMood = show("activity") && show("mood");
 
   if (isLoading) {
     return (
@@ -53,46 +59,72 @@ export function StatisticsView() {
         >
           <StatsToolbar />
         </motion.div>
+        {/* Метрики вимикаються поштучно — MetricCards самі ховають приховані плитки (і весь ряд, якщо всі). */}
         <MetricCards />
         {/* Інсайти: ціль + динаміка vs попередній період + per-habit movers + дні тижня. min-w-0
-            як усюди; lg:h-full на картках → однакова висота в ряду. 2 колонки на sm/lg, 4 на xl. */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="min-w-0">
-            <Tilt>
-              <GoalCard />
-            </Tilt>
+            як усюди; lg:h-full на картках → однакова висота в ряду. `auto-fit` → видимі картки
+            заповнюють ширину незалежно від кількості (приховані не лишають дір). */}
+        {(show("goal") ||
+          show("progress") ||
+          show("movers") ||
+          show("weekday")) && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fit,minmax(min(100%,15rem),1fr))]">
+            {show("goal") && (
+              <div className="min-w-0">
+                <Tilt>
+                  <GoalCard />
+                </Tilt>
+              </div>
+            )}
+            {show("progress") && (
+              <div className="min-w-0">
+                <Tilt>
+                  <ProgressCard />
+                </Tilt>
+              </div>
+            )}
+            {show("movers") && (
+              <div className="min-w-0">
+                <Tilt>
+                  <MoversCard />
+                </Tilt>
+              </div>
+            )}
+            {show("weekday") && (
+              <div className="min-w-0">
+                <Tilt>
+                  <WeekdayCard />
+                </Tilt>
+              </div>
+            )}
           </div>
-          <div className="min-w-0">
-            <Tilt>
-              <ProgressCard />
-            </Tilt>
-          </div>
-          <div className="min-w-0">
-            <Tilt>
-              <MoversCard />
-            </Tilt>
-          </div>
-          <div className="min-w-0">
-            <Tilt>
-              <WeekdayCard />
-            </Tilt>
-          </div>
-        </div>
+        )}
         {/* Графік 2/3, настрій 1/3. На lg обидві картки lg:h-full + grid-stretch → однакова висота
             (графік заповнює її через flex-1, див. ActivityChart). На мобільному стек — у графіка
             фіксована висота. min-w-0 на grid-нащадках: інакше колонка графіка (з широким minWidth
             на рік/весь час) не стискається до треку й розпирає сітку вправо разом із Mood-карткою. */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="min-w-0 lg:col-span-2">
-            <ActivityChart />
+        {(show("activity") || show("mood")) && (
+          <div
+            className={cn(
+              "grid grid-cols-1 gap-4",
+              bothChartMood && "lg:grid-cols-3",
+            )}
+          >
+            {show("activity") && (
+              <div className={cn("min-w-0", bothChartMood && "lg:col-span-2")}>
+                <ActivityChart />
+              </div>
+            )}
+            {show("mood") && (
+              <div className="min-w-0">
+                <Tilt>
+                  <MoodCorrelationCard />
+                </Tilt>
+              </div>
+            )}
           </div>
-          <div className="min-w-0">
-            <Tilt>
-              <MoodCorrelationCard />
-            </Tilt>
-          </div>
-        </div>
-        <Heatmap />
+        )}
+        {show("heatmap") && <Heatmap />}
       </div>
     </AnimatePresence>
   );

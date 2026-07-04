@@ -38,12 +38,13 @@ model User {
 model UserPreferences {
   userId        String   @id
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  theme        String? // 'light' | 'dark'
-  accent       String? // ключ акцентної палітри
-  locale       String? // 'en' | 'uk'
-  tableLayout  String? // 'columns' | 'rows'
-  statsGoalPct Int? // ціль виконання, 0..100 (null = без цілі)
-  updatedAt    DateTime @updatedAt
+  theme             String? // 'light' | 'dark'
+  accent            String? // ключ акцентної палітри
+  locale            String? // 'en' | 'uk'
+  tableLayout       String? // 'columns' | 'rows'
+  statsGoalPct      Int? // ціль виконання, 0..100 (null = без цілі)
+  hiddenStatWidgets String[] @default([]) // ключі прихованих віджетів статистики
+  updatedAt         DateTime @updatedAt
   // Прим.: ширина колонки навичок (habitColWidth) свідомо лишається лише в localStorage
   // (per-device, не крос-девайс) — у БД не переноситься.
 }

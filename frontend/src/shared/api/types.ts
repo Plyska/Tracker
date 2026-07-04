@@ -185,6 +185,7 @@ export interface PreferencesDto {
   locale: string | null;
   tableLayout: string | null;
   statsGoalPct: number | null;
+  hiddenStatWidgets: string[] | null; // null = ще не зберігалось (для seed-логіки)
 }
 
 /** PATCH /me/preferences — часткове оновлення (передаємо лише те, що змінилось). */
@@ -194,4 +195,5 @@ export type UpdatePreferencesRequest = Partial<{
   locale: string;
   tableLayout: string;
   statsGoalPct: number | null;
+  hiddenStatWidgets: string[];
 }>;

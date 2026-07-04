@@ -14,7 +14,12 @@ import {
   useTransform,
 } from "framer-motion";
 import { cn } from "@/shared/lib/cn";
+import { useMediaQuery } from "@/shared/lib/hooks/useMediaQuery";
 import { Card } from "./Card";
+
+// Ефект — лише на десктопі з реальним ховером: на малих екранах і планшетах (touch) hover не має
+// сенсу й «залипає» на тап, тож там рендеримо без нахилу/scale.
+const HOVER_CAPABLE = "(min-width: 1024px) and (hover: hover) and (pointer: fine)";
 
 const DEFAULT_MAX_TILT = 14; // градуси нахилу на краях (більший → сильніше «тягнеться» до курсора)
 const SPRING = { stiffness: 300, damping: 22 } as const;
@@ -39,6 +44,7 @@ export function Tilt({
   active?: boolean;
 }) {
   const reduce = useReducedMotion();
+  const hoverCapable = useMediaQuery(HOVER_CAPABLE);
   const ref = useRef<HTMLDivElement>(null);
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
   const [hovered, setHovered] = useState(false);
@@ -53,7 +59,7 @@ export function Tilt({
   // ref), а на закритті (cleanup ефекту) звіряємо реальну позицію з прямокутником картки й
   // пересинхронізуємо hover — надійніше за залиплий стан.
   useEffect(() => {
-    if (!active || reduce) return;
+    if (!active || reduce || !hoverCapable) return;
     const el = ref.current; // нода картки стабільна до розмонтування — валідна й у cleanup
     const onWinMove = (e: PointerEvent) => {
       lastPointer.current = { x: e.clientX, y: e.clientY };
@@ -69,9 +75,9 @@ export function Tilt({
       }
       setHovered(inside);
     };
-  }, [active, reduce]);
+  }, [active, reduce, hoverCapable]);
 
-  if (reduce) return <>{children}</>;
+  if (reduce || !hoverCapable) return <>{children}</>;
 
   const onMove = (e: MouseEvent<HTMLDivElement>) => {
     lastPointer.current = { x: e.clientX, y: e.clientY };
