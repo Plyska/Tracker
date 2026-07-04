@@ -1,13 +1,21 @@
 import { type CSSProperties, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Check } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { AccentPicker } from "@/features/accent";
 import { ProfileForm } from "@/features/auth";
 import { LangSwitcher } from "@/features/locale";
 import { HabitTrash } from "@/features/manage-habits";
 import { ThemeToggle } from "@/features/theme";
-import { TableLayoutSwitcher } from "@/features/ui-prefs";
+import { TableLayoutSwitcher, toggleStatWidget } from "@/features/ui-prefs";
+import {
+  STAT_METRICS,
+  STAT_WIDGETS,
+  type StatWidgetMeta,
+} from "@/widgets/statistics";
 import { AnimatedText, TiltCard, Tabs, type TabItem } from "@/shared/ui";
+import { cn } from "@/shared/lib";
 
 /** Той самий glow-фон, що на AuthLayout: зсувається залежно від активного таба. */
 const GRADIENT = [
@@ -19,6 +27,8 @@ const GRADIENT = [
 function SettingsPage() {
   const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
+  const dispatch = useAppDispatch();
+  const hiddenStatWidgets = useAppSelector((s) => s.uiPrefs.hiddenStatWidgets);
   const [tab, setTab] = useState("app");
   // Поки відкрито дропдаун мови — тримаємо картку збільшеною (курсор іде на портальоване меню).
   const [langOpen, setLangOpen] = useState(false);
@@ -35,6 +45,35 @@ function SettingsPage() {
     tabs.findIndex((x) => x.value === tab),
   );
   const glowX = `${15 + (activeIndex / (tabs.length - 1)) * 70}%`;
+
+  // Плитки-тумблери видимості (стиль як Accent/Table layout): підсвічені = видимі, приглушені = приховані.
+  const renderWidgetTiles = (items: StatWidgetMeta[]) => (
+    // Мобільний — 1 колонка (плитки на всю ширину → назви не обрізаються); від sm — 3 колонки.
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {items.map(({ key, labelKey, icon: Icon }) => {
+        const visible = !hiddenStatWidgets.includes(key);
+        return (
+          <button
+            key={key}
+            type="button"
+            onClick={() => dispatch(toggleStatWidget(key))}
+            aria-pressed={visible}
+            className={cn(
+              "relative flex items-center gap-2.5 rounded-lg border p-3 text-left text-sm font-medium",
+              "outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+              visible
+                ? "border-primary bg-accent text-accent-foreground"
+                : "border-border text-muted-foreground opacity-70 hover:opacity-100 hover:bg-accent hover:text-accent-foreground",
+            )}
+          >
+            <Icon className="h-5 w-5 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">{t(labelKey)}</span>
+            {visible && <Check className="h-4 w-4 shrink-0 text-primary" />}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
     <section className="relative isolate flex flex-1 flex-col">
@@ -121,6 +160,35 @@ function SettingsPage() {
 
                   <TiltCard maxTilt={0} hoverScale={1.04}>
                     <TableLayoutSwitcher />
+                  </TiltCard>
+
+                  <TiltCard maxTilt={0} hoverScale={1.04}>
+                    <div>
+                      <h3 className="text-lg font-semibold">
+                        <AnimatedText>
+                          {t("settings.statWidgets.title")}
+                        </AnimatedText>
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        <AnimatedText>
+                          {t("settings.statWidgets.description")}
+                        </AnimatedText>
+                      </p>
+                    </div>
+                    <div className="mt-4 space-y-4">
+                      <div>
+                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          {t("settings.statWidgets.metricsGroup")}
+                        </p>
+                        {renderWidgetTiles(STAT_METRICS)}
+                      </div>
+                      <div>
+                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          {t("settings.statWidgets.widgetsGroup")}
+                        </p>
+                        {renderWidgetTiles(STAT_WIDGETS)}
+                      </div>
+                    </div>
                   </TiltCard>
                 </div>
               ) : tab === "profile" ? (

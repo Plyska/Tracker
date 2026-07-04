@@ -10,11 +10,16 @@ import {
 } from "lucide-react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useAppSelector } from "@/app/store/hooks";
 import { useStatsData } from "@/features/stats-period";
 import { Skeleton, TiltCard } from "@/shared/ui";
 import { DeltaBadge } from "./DeltaBadge";
+import { STAT_METRICS } from "../lib/statWidgets";
 
-const GRID = "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6";
+// auto-fit → видимі плитки заповнюють ширину (приховані метрики не лишають порожніх колонок).
+// На мобільному (2 колонки) непарний останній елемент розтягуємо на весь рядок; на sm+ (auto-fit) — скидаємо.
+const GRID =
+  "grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2 sm:grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] sm:[&>*:last-child:nth-child(odd)]:col-span-1";
 
 function Metric({
   Icon,
@@ -63,14 +68,19 @@ function Metric({
 export function MetricCards() {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
+  const hidden = useAppSelector((s) => s.uiPrefs.hiddenStatWidgets);
   const { stats, isLoading, habits, comparison, key } = useStatsData(undefined, {
     withComparison: true,
   });
 
+  // Кількість видимих метрик (для скелетона й раннього виходу, коли всі приховані).
+  const visibleCount = STAT_METRICS.filter((m) => !hidden.includes(m.key)).length;
+  if (visibleCount === 0) return null;
+
   if (isLoading || !stats) {
     return (
       <div className={GRID}>
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: visibleCount }).map((_, i) => (
           <Skeleton key={i} className="h-24 rounded-xl" />
         ))}
       </div>
@@ -151,7 +161,9 @@ export function MetricCards() {
       animate="show"
       className={GRID}
     >
-      {metrics.map((m) => (
+      {metrics
+        .filter((m) => !hidden.includes(m.key))
+        .map((m) => (
         <motion.div key={m.key} variants={item}>
           <Metric
             Icon={m.Icon}
