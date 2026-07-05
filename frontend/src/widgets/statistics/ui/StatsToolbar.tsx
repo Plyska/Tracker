@@ -13,8 +13,9 @@ import {
 import { Button } from "@/shared/ui";
 import { cn, useEntitlement } from "@/shared/lib";
 
-const SCALES: StatsScale[] = ["week", "month", "year", "all"];
-// Розширені масштаби — за Pro (advanced-stats). На релізі MOCK_PLAN='pro' → відкрито всім.
+const SCALES: StatsScale[] = ["week", "month", "quarter", "year", "all"];
+// Розширені масштаби — за Pro (advanced-stats). Квартал лишаємо у базовому тарифі (щоденний
+// горизонт), Pro-апсел — глибока історія (рік / весь час). На релізі MOCK_PLAN='pro' → відкрито всім.
 const ADVANCED_SCALES = new Set<StatsScale>(["year", "all"]);
 
 const itemClass = cn(
