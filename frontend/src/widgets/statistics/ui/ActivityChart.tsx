@@ -28,7 +28,9 @@ export function ActivityChart() {
     () =>
       (stats?.daily ?? []).map((d) => ({
         date: d.date,
-        rate: d.total > 0 ? Math.round((d.completed / d.total) * 100) : 0,
+        // total === 0 → звички ще не існувало: це не «0% виконано», а відсутність даних.
+        // Малюємо як розрив (null), а не нуль, інакше лінія фальшиво приклеюється до осі 0%.
+        rate: d.total > 0 ? Math.round((d.completed / d.total) * 100) : null,
       })),
     [stats],
   );
@@ -56,9 +58,10 @@ export function ActivityChart() {
       </div>
       {/* Мобільний/планшет (стек): фіксована висота — ResponsiveContainer height="100%" мусить
           міряти сталий контейнер, інакше ResizeObserver зациклюється й графік мерехтить.
-          lg (поруч із «Настрій»): flex-1 заповнює картку, яку grid-stretch тягне до висоти Mood-
-          картки → однакова висота. overflow-x-auto — горизонт. скрол на довгих періодах. */}
-      <div className="h-64 overflow-x-auto overflow-y-hidden sm:h-72 lg:h-auto lg:min-h-0 lg:flex-1 [&_*:focus-visible]:outline-none [&_*:focus]:outline-none">
+          lg: flex-1 заповнює картку (grid-stretch тягне її до висоти Mood-картки, коли поруч),
+          але min-h тримає читабельну висоту, коли графік на всю ширину сам — інакше flex-1 схлопує
+          лінію майже до нуля. overflow-x-auto — горизонт. скрол на довгих періодах. */}
+      <div className="h-56 overflow-x-auto overflow-y-hidden sm:h-64 lg:h-auto lg:min-h-64 lg:flex-1 [&_*:focus-visible]:outline-none [&_*:focus]:outline-none">
         <div className="h-full w-full" style={{ minWidth }}>
           <ResponsiveContainer width="100%" height="100%">
           <AreaChart
@@ -82,6 +85,10 @@ export function ActivityChart() {
             />
             <YAxis
               domain={[0, 100]}
+              // Фіксовані поділки 0–100% завжди (інакше recharts підбирає їх під дані й на
+              // пласких/порожніх періодах лишається сама «100%»). interval={0} — не викидати.
+              ticks={[0, 25, 50, 75, 100]}
+              interval={0}
               tickFormatter={(v) => `${v}%`}
               tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
               stroke="var(--border)"
@@ -108,6 +115,11 @@ export function ActivityChart() {
               stroke="var(--primary)"
               strokeWidth={2}
               fill="url(#activityFill)"
+              // Крапки на кожній точці з даними: інакше поодинокі дні (оточені розривами —
+              // напр. єдиний виконаний день чи сьогоднішній 0%) не мали б жодного сегмента й
+              // були б невидимі. connectNulls лишаємо вимкненим — дні без звички = розрив.
+              dot={{ r: 2, fill: "var(--primary)", strokeWidth: 0 }}
+              connectNulls={false}
             />
           </AreaChart>
         </ResponsiveContainer>
