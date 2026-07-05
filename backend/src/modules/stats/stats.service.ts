@@ -5,8 +5,10 @@ import { prisma } from "../../prisma.js";
  * (raw SQL — лише якщо виросте, docs/data-models.md).
  *
  * Інваріанти (docs/api-contract.md, data-models.md):
- * - «Активна» звичка в день D = не архівована і `createdAt <= D` (майбутні дні / дні до створення
- *   не входять у `total`, інакше completionRate бреше для пізно доданих звичок).
+ * - «Активна» звичка = не архівована й день D в межах [день появи .. кінець періоду], де день
+ *   появи = `min(createdAt, найраніша відмітка)`. Бек-дейт (вів звичку тиждень, а завів сьогодні)
+ *   тягне появу назад → відмічені дні й пропуски між ними враховуються (пропуск = 0%). Дні до
+ *   появи (звички не було) не входять у `total`, інакше completionRate бреше для пізно доданих.
  * - Streak-метрики — це «now»-факти: рахуються по ВСІЙ історії (не по вибраному періоді),
  *   а «сьогодні» = `to` (локальна дата клієнта; так уникаємо TZ-дрейфу від серверного UTC).
  * - Mood-кореляція — лише по днях із оцінкою настрою і в межах життя звички; за гейтом
@@ -147,8 +149,19 @@ export async function computeStats(
   const doneByHabit = new Map<string, Set<string>>(habitIds.map((id) => [id, new Set()]));
   for (const e of entries) doneByHabit.get(e.habitId)!.add(e.date);
 
-  // Активна звичка в день D: createdAt <= D.
-  const isActive = (id: string, day: string): boolean => createdISO.get(id)! <= day;
+  // Активна звичка суцільно від дня «появи» до кінця періоду. День появи = min(createdAt,
+  // найраніша відмітка): бек-дейт (вів звичку тиждень, а завів сьогодні) тягне появу назад, тож
+  // відмічені дні — І пропуски між ними/до сьогодні — входять у total (невиконаний день = чесний
+  // 0%, видно як спад на графіку). Дні ДО появи (звички не існувало) у total НЕ входять, інакше
+  // completionRate бреше для пізно доданих звичок.
+  const activeSinceISO = new Map(
+    habitIds.map((id) => {
+      let since = createdISO.get(id)!;
+      for (const d of doneByHabit.get(id)!) if (d < since) since = d;
+      return [id, since];
+    }),
+  );
+  const isActive = (id: string, day: string): boolean => activeSinceISO.get(id)! <= day;
 
   // ── daily[] + completion / perfect days (за період) ──────────────────────────────────
   const period = enumerateDates(from, to);
