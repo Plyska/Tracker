@@ -8,6 +8,7 @@ import {
   cn,
   entryKey,
   isFutureDay,
+  isPastDay,
   isToday,
   isWeekend,
   toISODate,
@@ -25,6 +26,8 @@ type Props = {
   boundHeight?: boolean;
   /** Завантаження відміток періоду → скелетон-клітинки замість галочок. */
   loading?: boolean;
+  /** Дозволити редагувати минулі дні (uiPrefs). Типово false → редаговне лише сьогодні. */
+  allowEditingPastDays?: boolean;
 };
 
 /**
@@ -40,11 +43,12 @@ export function RowsGrid({
   dateLocale,
   boundHeight,
   loading,
+  allowEditingPastDays,
 }: Props) {
   return (
     <div
       className={cn(
-        "overflow-auto rounded-xl border border-border bg-card shadow-card",
+        "no-scrollbar overflow-auto rounded-xl border border-border bg-card shadow-card",
         boundHeight && BOUND_HEIGHT_CLASS,
       )}
     >
@@ -97,6 +101,7 @@ export function RowsGrid({
         {days.map((day) => {
           const today = isToday(day);
           const future = isFutureDay(day);
+          const pastLocked = !allowEditingPastDays && isPastDay(day);
           const weekend = isWeekend(day);
           const date = toISODate(day);
           return (
@@ -131,7 +136,9 @@ export function RowsGrid({
                         date={date}
                         done={done}
                         color={habit.color}
-                        disabled={future}
+                        // Заблоковано: майбутнє та минулі дні, якщо редагування минулого не
+                        // ввімкнено в налаштуваннях. Бекфіл минулого дозволено. Див. HabitTable.
+                        disabled={future || pastLocked}
                         label={`${habit.name} — ${format(day, "PP", { locale: dateLocale })}`}
                       />
                     )}

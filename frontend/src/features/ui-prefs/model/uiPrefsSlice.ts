@@ -19,6 +19,8 @@ export type UiPrefsState = {
   statsGoalPct: number | null;
   /** Ключі прихованих віджетів статистики. Зберігаємо саме приховані → нові картки типово видимі. */
   hiddenStatWidgets: string[];
+  /** Дозволити редагувати відмітки за минулі дні. Типово false → змінювати можна лише сьогодні. */
+  allowEditingPastDays: boolean;
 };
 
 const initialState: UiPrefsState = {
@@ -26,6 +28,7 @@ const initialState: UiPrefsState = {
   tableLayout: "columns",
   statsGoalPct: null,
   hiddenStatWidgets: [],
+  allowEditingPastDays: false,
 };
 
 /** Клієнтські UI-налаштування, що персистяться (як тема/акцент/мова). */
@@ -59,6 +62,9 @@ const uiPrefsSlice = createSlice({
     setHiddenStatWidgets: (state, action: PayloadAction<string[]>) => {
       state.hiddenStatWidgets = action.payload;
     },
+    setAllowEditingPastDays: (state, action: PayloadAction<boolean>) => {
+      state.allowEditingPastDays = action.payload;
+    },
   },
 });
 
@@ -68,5 +74,6 @@ export const {
   setStatsGoal,
   toggleStatWidget,
   setHiddenStatWidgets,
+  setAllowEditingPastDays,
 } = uiPrefsSlice.actions;
 export default uiPrefsSlice.reducer;

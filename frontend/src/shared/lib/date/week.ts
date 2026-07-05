@@ -6,6 +6,7 @@ import {
   endOfMonth,
   format,
   isAfter,
+  isBefore,
   isSameDay,
   isWeekend as isWeekendFns,
   parseISO,
@@ -59,6 +60,12 @@ export function isWeekend(date: Date): boolean {
 /** Майбутній день (після сьогодні) — такі клітинки в таблиці заблоковані. */
 export function isFutureDay(date: Date): boolean {
   return isAfter(startOfDay(date), startOfDay(new Date()));
+}
+
+/** Минулий день (до сьогодні). Типово такі клітинки заблоковані для редагування — зняти
+ *  блокування можна в налаштуваннях (uiPrefs.allowEditingPastDays). */
+export function isPastDay(date: Date): boolean {
+  return isBefore(startOfDay(date), startOfDay(new Date()));
 }
 
 /** ISO 'YYYY-MM-DD' → Date (локальна, опівночі). Зворотне до `toISODate`. */
