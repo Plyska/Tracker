@@ -28,6 +28,7 @@ const TABLE_LAYOUT_KEY = "tracker-table-layout";
 const STATS_GOAL_KEY = "tracker-stats-goal";
 const HIDDEN_STAT_WIDGETS_KEY = "tracker-hidden-stat-widgets";
 const PERIOD_SCALE_KEY = "tracker-period-scale";
+const ALLOW_EDIT_PAST_KEY = "tracker-allow-edit-past";
 const AUTH_KEY = "tracker-auth";
 
 type PersistedState = {
@@ -39,6 +40,7 @@ type PersistedState = {
     tableLayout: TableLayout;
     statsGoalPct: number | null;
     hiddenStatWidgets: string[];
+    allowEditingPastDays: boolean;
   };
   // anchor — session-only (завжди стартує з «сьогодні»); персиститься лише scale.
   period: { anchor: string; scale: Scale };
@@ -79,6 +81,7 @@ function loadPersistedState(): PersistedState | undefined {
       tableLayout: read<TableLayout>(TABLE_LAYOUT_KEY, "columns"),
       statsGoalPct: read<number | null>(STATS_GOAL_KEY, null),
       hiddenStatWidgets: read<string[]>(HIDDEN_STAT_WIDGETS_KEY, []),
+      allowEditingPastDays: read<boolean>(ALLOW_EDIT_PAST_KEY, false),
     },
     period: {
       anchor: todayISODate(),
@@ -140,6 +143,10 @@ store.subscribe(() => {
     localStorage.setItem(
       HIDDEN_STAT_WIDGETS_KEY,
       JSON.stringify(state.uiPrefs.hiddenStatWidgets),
+    );
+    localStorage.setItem(
+      ALLOW_EDIT_PAST_KEY,
+      JSON.stringify(state.uiPrefs.allowEditingPastDays),
     );
     localStorage.setItem(
       PERIOD_SCALE_KEY,

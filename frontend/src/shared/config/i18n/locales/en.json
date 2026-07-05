@@ -55,6 +55,10 @@
       "title": "Theme",
       "description": "Switch between light and dark."
     },
+    "editPastDays": {
+      "title": "Edit past days",
+      "description": "Allow changing habit marks for days that have already passed. By default only today can be edited."
+    },
     "language": {
       "title": "Language",
       "description": "Choose the interface language."

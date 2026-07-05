@@ -8,7 +8,11 @@ import { ProfileForm } from "@/features/auth";
 import { LangSwitcher } from "@/features/locale";
 import { HabitTrash } from "@/features/manage-habits";
 import { ThemeToggle } from "@/features/theme";
-import { TableLayoutSwitcher, toggleStatWidget } from "@/features/ui-prefs";
+import {
+  TableLayoutSwitcher,
+  EditPastDaysToggle,
+  toggleStatWidget,
+} from "@/features/ui-prefs";
 import {
   STAT_METRICS,
   STAT_WIDGETS,
@@ -131,6 +135,22 @@ function SettingsPage() {
                       </p>
                     </div>
                     <ThemeToggle />
+                  </TiltCard>
+
+                  <TiltCard maxTilt={0} hoverScale={1.04} className="flex items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">
+                        <AnimatedText>
+                          {t("settings.editPastDays.title")}
+                        </AnimatedText>
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        <AnimatedText>
+                          {t("settings.editPastDays.description")}
+                        </AnimatedText>
+                      </p>
+                    </div>
+                    <EditPastDaysToggle />
                   </TiltCard>
 
                   <TiltCard maxTilt={0} hoverScale={1.04}>
