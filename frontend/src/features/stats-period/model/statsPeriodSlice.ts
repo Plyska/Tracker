@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 /** Масштаб статистики. Незалежний від Dashboard-періоду (свій стан). */
-export type StatsScale = "week" | "month" | "year" | "all";
+export type StatsScale = "week" | "month" | "quarter" | "year" | "all";
 
 type StatsPeriodState = {
   scale: StatsScale;

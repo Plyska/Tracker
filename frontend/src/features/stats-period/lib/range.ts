@@ -10,6 +10,7 @@ export interface StatsRange {
 const SPAN_DAYS: Record<Exclude<StatsScale, "all">, number> = {
   week: 7,
   month: 30,
+  quarter: 90,
   year: 365,
 };
 
