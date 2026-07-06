@@ -13,7 +13,7 @@ import {
   useUpdateHabitMutation,
   type Habit,
 } from "@/entities/habit";
-import { Button, IconButton } from "@/shared/ui";
+import { Button, IconButton, InfoHint } from "@/shared/ui";
 import { cn, useEntitlement } from "@/shared/lib";
 import { habitFormSchema, type HabitFormValues } from "../model/schema";
 import { ColorPicker } from "./ColorPicker";
@@ -30,6 +30,110 @@ const inputClass = cn(
   "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none",
   "placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring",
 );
+
+/**
+ * Частота звички: «Щоденна» (weeklyTarget=null) або «N разів на тиждень» (1..6; 7× = щодня → окрема
+ * опція). Тижнева ціль впливає на те, як рахується статистика (ADR 0010) — пояснення в тултіпі біля поля.
+ */
+function FrequencyField({
+  value,
+  onChange,
+}: {
+  value: number | null;
+  onChange: (v: number | null) => void;
+}) {
+  const { t } = useTranslation();
+  const reduce = useReducedMotion();
+  const isWeekly = value != null;
+
+  const segClass = (active: boolean) =>
+    cn(
+      "h-9 rounded-md border text-sm font-medium transition-colors",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+      active
+        ? "border-primary bg-primary/10 text-foreground"
+        : "border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+    );
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-1.5">
+        <span className="text-sm font-medium">{t("habits.form.frequency")}</span>
+        <AnimatePresence initial={false}>
+          {isWeekly && (
+            <motion.span
+              key="freq-hint"
+              initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
+              animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="flex"
+            >
+              <InfoHint
+                label={t("habits.form.freqWeeklyHint", { count: value ?? 0 })}
+              />
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          aria-pressed={!isWeekly}
+          onClick={() => onChange(null)}
+          className={segClass(!isWeekly)}
+        >
+          {t("habits.form.freqDaily")}
+        </button>
+        <button
+          type="button"
+          aria-pressed={isWeekly}
+          onClick={() => onChange(value ?? 3)}
+          className={segClass(isWeekly)}
+        >
+          {t("habits.form.freqWeekly")}
+        </button>
+      </div>
+
+      <AnimatePresence initial={false}>
+        {isWeekly && (
+          <motion.div
+            key="weekly-picker"
+            initial={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            animate={reduce ? { opacity: 1 } : { height: "auto", opacity: 1 }}
+            exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="overflow-hidden"
+          >
+            <div
+              className="grid grid-cols-6 gap-1.5 pt-1"
+              role="group"
+              aria-label={t("habits.form.freqTimesPerWeek")}
+            >
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  aria-pressed={value === n}
+                  onClick={() => onChange(n)}
+                  className={cn(
+                    "flex h-8 w-full items-center justify-center rounded-md border text-sm transition-colors",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    value === n
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  )}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function HabitForm({
   mode,
@@ -50,8 +154,18 @@ function HabitForm({
       resolver: zodResolver(habitFormSchema),
       defaultValues:
         mode === "edit" && habit
-          ? { name: habit.name, color: habit.color, icon: habit.icon ?? null }
-          : { name: "", color: randomHabitColor(), icon: null },
+          ? {
+              name: habit.name,
+              color: habit.color,
+              icon: habit.icon ?? null,
+              weeklyTarget: habit.weeklyTarget,
+            }
+          : {
+              name: "",
+              color: randomHabitColor(),
+              icon: null,
+              weeklyTarget: null,
+            },
     });
 
   // Pro: чи перевизначив користувач іконку вручну. На edit вважаємо встановленою.
@@ -60,6 +174,7 @@ function HabitForm({
   const name = useWatch({ control, name: "name" });
   const color = useWatch({ control, name: "color" });
   const icon = useWatch({ control, name: "icon" });
+  const weeklyTarget = useWatch({ control, name: "weeklyTarget" });
 
   // Auto-suggest: Free — завжди похідна від назви; Pro — поки не перевизначено.
   useEffect(() => {
@@ -74,14 +189,16 @@ function HabitForm({
         name: values.name,
         color: values.color,
         icon: values.icon,
+        weeklyTarget: values.weeklyTarget,
       });
     } else if (habit) {
-      // Часткове оновлення одним PATCH (§5.2 контракту): name + color + icon.
+      // Часткове оновлення одним PATCH (§5.2 контракту): name + color + icon + weeklyTarget.
       void updateHabit({
         id: habit.id,
         name: values.name,
         color: values.color,
         icon: values.icon,
+        weeklyTarget: values.weeklyTarget,
       });
     }
     onDone();
@@ -124,6 +241,11 @@ function HabitForm({
           {name || t("habits.form.preview")}
         </span>
       </div>
+
+      <FrequencyField
+        value={weeklyTarget}
+        onChange={(v) => setValue("weeklyTarget", v)}
+      />
 
       {canCustomize ? (
         <>

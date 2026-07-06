@@ -3,11 +3,14 @@ import { z } from "zod";
 // Колір — hex-токен рядка (фронт шле значення палітри). icon — lucide-назва або null.
 const color = z.string().trim().min(1).max(32);
 const icon = z.string().trim().min(1).max(64).nullable();
+// Тижнева ціль: null = щоденна звичка; 1..6 = «N разів на тиждень» (ADR 0010).
+const weeklyTarget = z.number().int().min(1).max(6).nullable();
 
 export const createHabitSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120),
   color,
   icon: icon.optional(),
+  weeklyTarget: weeklyTarget.optional(),
 });
 
 // PATCH — часткове оновлення; хоча б одне поле.
@@ -17,6 +20,7 @@ export const updateHabitSchema = z
     name: z.string().trim().min(1).max(120),
     color,
     icon,
+    weeklyTarget,
   })
   .partial()
   .refine((v) => Object.keys(v).length > 0, {

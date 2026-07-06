@@ -14,8 +14,10 @@ import {
   toISODate,
 } from "@/shared/lib";
 import { CheckboxCell } from "./CheckboxCell";
+import { HabitWeekBadge } from "./HabitWeekBadge";
 import { SkeletonCell } from "./skeleton";
 import { BOUND_HEIGHT_CLASS } from "./styles";
+import { countDoneInDays } from "../lib/weekProgress";
 
 type Props = {
   habits: Habit[];
@@ -28,6 +30,8 @@ type Props = {
   loading?: boolean;
   /** Дозволити редагувати минулі дні (uiPrefs). Типово false → редаговне лише сьогодні. */
   allowEditingPastDays?: boolean;
+  /** Тижневий масштаб → показати бейдж прогресу тижневої цілі (days = поточний Пн–Нд-тиждень). */
+  showWeekBadge?: boolean;
 };
 
 /**
@@ -44,6 +48,7 @@ export function RowsGrid({
   boundHeight,
   loading,
   allowEditingPastDays,
+  showWeekBadge,
 }: Props) {
   return (
     <div
@@ -91,6 +96,12 @@ export function RowsGrid({
                     {/* Відʼємний margin → стрілка не зміщує центрування тексту, лише прилягає праворуч. */}
                     <ChevronDown className="-mr-3.5 ml-0.5 h-3 w-3 shrink-0 text-muted-foreground opacity-60 transition-transform group-data-[state=open]:rotate-180" />
                   </span>
+                  {showWeekBadge && habit.weeklyTarget != null && (
+                    <HabitWeekBadge
+                      count={countDoneInDays(habit.id, days, byKey)}
+                      target={habit.weeklyTarget}
+                    />
+                  )}
                 </button>
               }
             />

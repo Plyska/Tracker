@@ -56,6 +56,9 @@ model Habit {
   name      String
   color     String
   icon      String?
+  // Тижнева ціль частоти: null = щоденна звичка (метрики рахують кожен день); 1..6 = «N разів
+  // на тиждень» (статистика рахує по Пн–Нд-тижнях, знаменник = повна ціль). Деталі — ADR 0010.
+  weeklyTarget Int?
   // Soft-delete (кошик): null = активна; не-null = у кошику, остаточне видалення через
   // TRASH_RETENTION_DAYS (lib/habitTrash). Замінює колишній `archived`-прапорець.
   deletedAt DateTime?

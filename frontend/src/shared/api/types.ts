@@ -12,6 +12,7 @@ export interface HabitDto {
   name: string;
   color: string;
   icon: string | null;
+  weeklyTarget: number | null; // null = щоденна; 1..6 = «N разів на тиждень» (ADR 0010)
   createdAt: string; // ISO 'YYYY-MM-DD'
 }
 
@@ -49,7 +50,12 @@ export interface StatsDto {
   perfectDays: number;
   bestHabit: { habitId: string; completionRate: number } | null;
   // Частка виконання по кожній звичці за період (активні ≥1 день) — для «movers».
-  habitBreakdown: { habitId: string; completionRate: number; activeDays: number }[];
+  habitBreakdown: {
+    habitId: string;
+    completionRate: number;
+    activeDays: number;
+    weeklyTarget: number | null;
+  }[];
   moodAverage: number | null;
   moodDays: number;
   daily: {
@@ -111,12 +117,14 @@ export interface CreateHabitRequest {
   name: string;
   color: string;
   icon?: string | null;
+  weeklyTarget?: number | null; // null / відсутнє = щоденна; 1..6 = тижнева ціль
 }
 
 export type UpdateHabitRequest = Partial<{
   name: string;
   color: string;
   icon: string | null;
+  weeklyTarget: number | null;
 }>;
 
 export interface ToggleEntryRequest {

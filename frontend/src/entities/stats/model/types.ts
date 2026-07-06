@@ -13,6 +13,7 @@ export interface HabitBreakdown {
   habitId: string;
   completionRate: number; // 0..1 за період
   activeDays: number; // днів, коли звичка була активна (для гейту вибірки)
+  weeklyTarget: number | null; // null = щоденна; 1..6 = тижнева ціль (для підписів/гейту в тижнях)
 }
 
 export interface MoodCorrelation {

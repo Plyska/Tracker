@@ -3,6 +3,7 @@ export interface Habit {
   name: string;
   color: string;
   icon?: string;
+  weeklyTarget: number | null; // null = щоденна; 1..6 = «N разів на тиждень» (ADR 0010)
   createdAt: string; // ISO 'YYYY-MM-DD'
 }
 

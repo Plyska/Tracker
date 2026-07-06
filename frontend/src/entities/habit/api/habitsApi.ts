@@ -13,6 +13,7 @@ const toHabit = (dto: HabitDto): Habit => ({
   name: dto.name,
   color: dto.color,
   icon: dto.icon ?? undefined,
+  weeklyTarget: dto.weeklyTarget,
   createdAt: dto.createdAt,
 });
 
@@ -54,8 +55,8 @@ export const habitsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Перейменування/колір/іконка — не чіпають набір активних навичок → Stats не інвалідуємо
-    // (breakdown резолвить ім'я зі списку навичок). Видалення/відновлення — окремі мутації нижче.
+    // Перейменування/колір/іконка самі по собі статистику не міняють, але `weeklyTarget` міняє
+    // (знаменник метрик), тож інвалідуємо ще й `Stats/LIST` — простіше й безпечніше, ніж дифити патч.
     updateHabit: build.mutation<Habit, { id: string } & UpdateHabitRequest>({
       query: ({ id, ...patch }) => ({
         url: `/habits/${id}`,
@@ -66,6 +67,7 @@ export const habitsApi = baseApi.injectEndpoints({
       invalidatesTags: (_r, _e, { id }) => [
         { type: "Habit" as const, id },
         { type: "Habit" as const, id: "LIST" },
+        { type: "Stats" as const, id: "LIST" },
       ],
     }),
 

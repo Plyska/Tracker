@@ -27,9 +27,11 @@ import {
 } from "@/shared/lib";
 import { useDelayedFlag } from "@/shared/lib/hooks/useDelayedFlag";
 import { CheckboxCell } from "./CheckboxCell";
+import { HabitWeekBadge } from "./HabitWeekBadge";
 import { RowsGrid } from "./RowsGrid";
 import { SkeletonCell, TableSkeleton } from "./skeleton";
 import { BOUND_HEIGHT_CLASS } from "./styles";
+import { countDoneInDays } from "../lib/weekProgress";
 
 // Адаптивний дефолт для ТИЖНЯ (7 колонок). Місяць/ручна ширина — через inline-style
 // з динамічним repeat(days.length), бо кількість колонок змінна.
@@ -143,6 +145,7 @@ export function HabitTable() {
         boundHeight={boundHeight}
         loading={gridLoading}
         allowEditingPastDays={allowEditingPastDays}
+        showWeekBadge={scale === "week"}
       />
     );
   }
@@ -238,6 +241,12 @@ export function HabitTable() {
               <span className="flex-1 truncate text-sm font-medium">
                 {habit.name}
               </span>
+              {scale === "week" && habit.weeklyTarget != null && (
+                <HabitWeekBadge
+                  count={countDoneInDays(habit.id, days, byKey)}
+                  target={habit.weeklyTarget}
+                />
+              )}
               <HabitRowMenu habit={habit} />
             </div>
             {days.map((day) => {
