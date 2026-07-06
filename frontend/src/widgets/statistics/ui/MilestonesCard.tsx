@@ -50,6 +50,7 @@ export function MilestonesCard() {
         return t("statistics.milestones.streak", {
           name: m.habitName,
           count: m.badge,
+          context: m.unit,
         });
       case "almostRecord":
         return t("statistics.milestones.almostRecord", { name: m.habitName });
@@ -65,18 +66,26 @@ export function MilestonesCard() {
   const subOf = (m: Milestone) => {
     switch (m.kind) {
       case "newRecord":
-        return t("statistics.milestones.newRecordSub", { count: m.current });
+        return t("statistics.milestones.newRecordSub", {
+          count: m.current,
+          context: m.unit,
+        });
       case "streak":
         return m.target
           ? t("statistics.milestones.streakSub", {
               current: m.current,
               target: m.target,
+              context: m.unit,
             })
-          : t("statistics.milestones.streakSubMax", { count: m.current });
+          : t("statistics.milestones.streakSubMax", {
+              count: m.current,
+              context: m.unit,
+            });
       case "almostRecord":
         return t("statistics.milestones.almostRecordSub", {
           current: m.current,
           target: m.target,
+          context: m.unit,
         });
       case "perfectWeek":
         return m.achieved

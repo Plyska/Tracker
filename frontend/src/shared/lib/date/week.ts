@@ -40,6 +40,11 @@ export function getWeekDays(anchor: Date): Date[] {
   return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 }
 
+/** ISO-дата понеділка тижня (Пн–Нд), що містить `iso`. Ключ тижня для тижневих цілей/вирівнювання. */
+export function startOfISOWeek(iso: string): string {
+  return toISODate(startOfWeek(parseISO(iso), { weekStartsOn: 1 }));
+}
+
 /** Усі календарні дні місяця (1 → останній), що містить `anchor`. */
 export function getMonthDays(anchor: Date): Date[] {
   return eachDayOfInterval({

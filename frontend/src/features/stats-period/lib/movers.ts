@@ -16,6 +16,7 @@ export interface Movers {
 
 // Гейти проти шуму: досить активних днів у ОБОХ вікнах + помітна зміна.
 const MIN_ACTIVE_DAYS = 3;
+const MIN_ACTIVE_WEEKS = 2; // для тижневих цілей вибірку міряємо в тижнях (2 тижні ≈ 14 активних днів)
 const MIN_DELTA = 0.1; // 10 в.п.
 const TOP = 3;
 
@@ -39,7 +40,10 @@ export function buildMovers(
     if (!name) continue; // звички немає в поточному списку (видалена/гонка рефетчів) → пропускаємо
     const before = prevById.get(cur.habitId);
     if (!before) continue; // немає в попередньому вікні (нова звичка) → не рухомець
-    if (cur.activeDays < MIN_ACTIVE_DAYS || before.activeDays < MIN_ACTIVE_DAYS) continue;
+    // Тижнева ціль → достатня вибірка міряється в тижнях (activeDays усе одно в днях).
+    const minActive =
+      cur.weeklyTarget != null ? MIN_ACTIVE_WEEKS * 7 : MIN_ACTIVE_DAYS;
+    if (cur.activeDays < minActive || before.activeDays < minActive) continue;
     const delta = cur.completionRate - before.completionRate;
     if (Math.abs(delta) < MIN_DELTA) continue;
     movers.push({

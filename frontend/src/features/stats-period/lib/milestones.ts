@@ -19,11 +19,16 @@ export interface Milestone {
   badge?: number; // досягнутий поріг серії (для streak)
   achieved?: boolean; // ціль уже виконано (ідеальний тиждень)
   daysOff?: number; // днів паузи перед поверненням (comeback)
+  unit?: "day" | "week"; // одиниця серії: щоденна звичка → дні; тижнева ціль → тижні
 }
 
-const RECORD_MIN = 5; // мін. довжина серії, щоб вважати рекордом
+// Пороги серій — окремі для щоденних (у днях) і тижневих цілей (у тижнях: місяць/квартал/півроку/рік).
+const RECORD_MIN = 5; // мін. довжина серії, щоб вважати рекордом (днів)
 const NEAR_RECORD = 7; // «майже рекорд», якщо до нього ≤ стільки днів
-const STREAK_BADGES = [7, 30, 100, 200, 365]; // абсолютні віхи серії
+const STREAK_BADGES = [7, 30, 100, 200, 365]; // абсолютні віхи серії (днів)
+const RECORD_MIN_WEEKS = 3;
+const NEAR_RECORD_WEEKS = 3;
+const STREAK_BADGES_WEEKS = [4, 12, 26, 52];
 const PERFECT_MILESTONES = [7, 14, 30, 50, 100, 150, 200, 300, 365, 500, 730, 1000];
 const PERFECT_WEEK = 7;
 const COMEBACK_MAX_RUN = 3; // «щойно повернувся» — коротка нова серія…
@@ -67,19 +72,29 @@ function activeRunAndGap(daily: DailyStat[]): { run: number; gap: number } {
 export function buildMilestones(stats: Stats, habits: Habit[]): Milestone[] {
   const nameOf = (id: string) => habits.find((h) => h.id === id)?.name ?? "—";
 
+  const weeklyById = new Map(habits.map((h) => [h.id, h.weeklyTarget != null]));
+
   const newRecords: Milestone[] = [];
   const streaks: Milestone[] = [];
   const almost: Milestone[] = [];
   for (const s of stats.habitStreaks) {
     if (s.current <= 0) continue;
-    if (s.current >= s.longest && s.current >= RECORD_MIN) {
+    // Тижнева ціль → серія рахується в тижнях, тож і пороги/підписи тижневі.
+    const isWeekly = weeklyById.get(s.habitId) ?? false;
+    const unit: Milestone["unit"] = isWeekly ? "week" : "day";
+    const recordMin = isWeekly ? RECORD_MIN_WEEKS : RECORD_MIN;
+    const nearRecord = isWeekly ? NEAR_RECORD_WEEKS : NEAR_RECORD;
+    const badges = isWeekly ? STREAK_BADGES_WEEKS : STREAK_BADGES;
+
+    if (s.current >= s.longest && s.current >= recordMin) {
       newRecords.push({
         id: `nr-${s.habitId}`,
         kind: "newRecord",
         habitName: nameOf(s.habitId),
         current: s.current,
+        unit,
       });
-    } else if (s.longest >= RECORD_MIN && s.longest - s.current <= NEAR_RECORD) {
+    } else if (s.longest >= recordMin && s.longest - s.current <= nearRecord) {
       almost.push({
         id: `ar-${s.habitId}`,
         kind: "almostRecord",
@@ -87,11 +102,12 @@ export function buildMilestones(stats: Stats, habits: Habit[]): Milestone[] {
         current: s.current,
         target: s.longest,
         remaining: s.longest - s.current,
+        unit,
       });
     } else {
-      const badge = [...STREAK_BADGES].reverse().find((b) => s.current >= b);
+      const badge = [...badges].reverse().find((b) => s.current >= b);
       if (badge != null) {
-        const next = STREAK_BADGES.find((b) => b > s.current);
+        const next = badges.find((b) => b > s.current);
         streaks.push({
           id: `st-${s.habitId}`,
           kind: "streak",
@@ -100,6 +116,7 @@ export function buildMilestones(stats: Stats, habits: Habit[]): Milestone[] {
           badge,
           target: next,
           remaining: next != null ? next - s.current : undefined,
+          unit,
         });
       }
     }

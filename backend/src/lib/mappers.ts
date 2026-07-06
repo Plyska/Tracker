@@ -27,6 +27,7 @@ export interface HabitDto {
   name: string;
   color: string;
   icon: string | null;
+  weeklyTarget: number | null; // null = щоденна; 1..6 = «N разів на тиждень» (ADR 0010)
   createdAt: string;
 }
 
@@ -97,6 +98,7 @@ export const toHabitDto = (h: Habit): HabitDto => ({
   name: h.name,
   color: h.color,
   icon: h.icon ?? null,
+  weeklyTarget: h.weeklyTarget ?? null,
   createdAt: toISODate(h.createdAt),
 });
 

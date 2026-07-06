@@ -4,6 +4,7 @@ export {
   toISODate,
   entryKey,
   getWeekDays,
+  startOfISOWeek,
   getMonthDays,
   isToday,
   isWeekend,
