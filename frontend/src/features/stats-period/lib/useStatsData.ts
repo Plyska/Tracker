@@ -48,15 +48,20 @@ export function useStatsData(
     : undefined;
   const range = getStatsRange(scale, earliest);
 
-  const { data, isLoading, isFetching } = useGetStatsQuery({
-    ...range,
-    habitId: habitId ?? undefined,
-  });
+  // refetchOnMountOrArgChange: перевідмітки на Dashboard інвалідують `Stats/LIST`, але поки сторінка
+  // статистики не змонтована (немає підписника), рефетч за тегом не спрацьовує — і в межах
+  // keepUnusedDataFor при поверненні віддавалося б застаріле. Тож тягнемо свіже при кожному відкритті
+  // (stale-while-revalidate: старі дані показуються без скелета, доки не прийдуть нові).
+  const { data, isLoading, isFetching } = useGetStatsQuery(
+    { ...range, habitId: habitId ?? undefined },
+    { refetchOnMountOrArgChange: true },
+  );
 
   // Попереднє вікно — лише коли явно попросили порівняння (і не «весь час»).
   const prevRange = opts?.withComparison ? getPreviousStatsRange(scale, range) : null;
   const { data: prev } = useGetStatsQuery(
     prevRange ? { ...prevRange, habitId: habitId ?? undefined } : skipToken,
+    { refetchOnMountOrArgChange: true },
   );
 
   const comparison =
