@@ -6,7 +6,7 @@ import { MainLayout } from "@/app/layouts/MainLayout";
 import { LoginPage } from "@/pages/login";
 import { RegisterPage } from "@/pages/register";
 import { DashboardPage } from "@/pages/dashboard";
-import { PlannerPage } from "@/pages/planner";
+import { PlannerPage, DayDetailPage } from "@/pages/planner";
 import { SettingsPage } from "@/pages/settings";
 import { NotFoundPage } from "@/pages/not-found";
 
@@ -44,8 +44,14 @@ export const router = createBrowserRouter([
           },
           {
             path: "planner",
-            element: <PlannerPage />,
             handle: { titleKey: "nav.planner" },
+            children: [
+              { index: true, element: <PlannerPage /> },
+              // «Загальна» картка (задачі без дати) — статичний сегмент має пріоритет над `:date`.
+              { path: "general", element: <DayDetailPage /> },
+              // Конкретний день; `:date` — ISO 'YYYY-MM-DD'.
+              { path: ":date", element: <DayDetailPage /> },
+            ],
           },
           {
             path: "statistics",
