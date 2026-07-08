@@ -107,6 +107,11 @@
   "planner": {
     "general": "General",
     "doneSection": "Done ({{count}})",
+    "showDone": "Show completed",
+    "hideDone": "Hide completed",
+    "back": "Back to planner",
+    "prevDay": "Previous day",
+    "nextDay": "Next day",
     "deleteCard": "Delete card",
     "deleteCardConfirm": "Delete \"{{name}}\" and all its {{count}} tasks? This can't be undone.",
     "dayEmpty": "No tasks here yet.",

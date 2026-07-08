@@ -30,6 +30,8 @@ interface DatePickerProps {
   clearable?: boolean;
   /** Текст тригера, коли дата не задана. */
   placeholder?: string;
+  /** date-fns формат тексту тригера для обраної дати (типово 'd MMM yyyy'). */
+  triggerFormat?: string;
 }
 
 /** Понеділок-зміщення для дня (date-fns: Нд=0…Сб=6 → Пн=0…Нд=6). */
@@ -42,6 +44,7 @@ export function DatePicker({
   className,
   clearable,
   placeholder,
+  triggerFormat = "d MMM yyyy",
 }: DatePickerProps) {
   const { t, i18n } = useTranslation();
   const locale = getDateFnsLocale(i18n.language);
@@ -90,7 +93,7 @@ export function DatePicker({
             )}
           >
             {selected
-              ? format(selected, "d MMM yyyy", { locale })
+              ? format(selected, triggerFormat, { locale })
               : (placeholder ?? t("datePicker.noDay"))}
           </span>
         </button>

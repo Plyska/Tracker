@@ -3,8 +3,8 @@ import { DayPlan, DayPlanToolbar, type PlannerTab } from "@/widgets/day-plan";
 import { todayISODate } from "@/shared/lib";
 
 /**
- * Розпорядок дня / список справ. Таби Active/Archived; задачі без дати — у «Загальній» картці.
- * День задачі обирається в модалці. Архів — картки днів, що вже минули.
+ * Розпорядок дня / список справ (сітка-огляд). Таби Active/Archived; задачі без дати — у
+ * «Загальній» картці. Клік по картці → сторінка дня (`/planner/:date`). Архів — минулі дні.
  */
 function PlannerPage() {
   const today = todayISODate();
