@@ -203,6 +203,7 @@ export interface PreferencesDto {
   tableLayout: string | null;
   statsGoalPct: number | null;
   hiddenStatWidgets: string[] | null; // null = ще не зберігалось (для seed-логіки)
+  editorScale: number | null;
 }
 
 /** PATCH /me/preferences — часткове оновлення (передаємо лише те, що змінилось). */
@@ -213,4 +214,5 @@ export type UpdatePreferencesRequest = Partial<{
   tableLayout: string;
   statsGoalPct: number | null;
   hiddenStatWidgets: string[];
+  editorScale: number;
 }>;

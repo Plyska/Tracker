@@ -4,12 +4,24 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 export const HABIT_COL_MIN = 140;
 export const HABIT_COL_MAX = 480;
 
+/** Межі масштабу тексту редактора дня (zoom). */
+export const EDITOR_SCALE_MIN = 0.8;
+export const EDITOR_SCALE_MAX = 1.5;
+
 /**
  * Орієнтація таблиці навичок (і для тижня, і для місяця):
  *  - `columns` — дні в колонках (горизонтальний скрол при місяці);
  *  - `rows`    — дні в рядках, навички в колонках (вертикальний скрол).
  */
 export type TableLayout = "columns" | "rows";
+
+/**
+ * Вигляд рядків у редакторі задач дня:
+ *  - `checkbox`  — чекбокси;
+ *  - `numbered`  — нумерований список (1, 2, 3);
+ *  - `timeline`  — чекбокс + редагована година (розклад дня).
+ */
+export type TaskListStyle = "checkbox" | "numbered" | "timeline";
 
 export type UiPrefsState = {
   /** null → адаптивний дефолт (CSS-сітка), користувач ще не міняв ширину. */
@@ -21,6 +33,10 @@ export type UiPrefsState = {
   hiddenStatWidgets: string[];
   /** Дозволити редагувати відмітки за минулі дні. Типово false → змінювати можна лише сьогодні. */
   allowEditingPastDays: boolean;
+  /** Маркер рядків у редакторі задач дня. */
+  taskListStyle: TaskListStyle;
+  /** Масштаб тексту редактора дня (zoom), 0.8–1.5. */
+  editorScale: number;
 };
 
 const initialState: UiPrefsState = {
@@ -29,6 +45,8 @@ const initialState: UiPrefsState = {
   statsGoalPct: null,
   hiddenStatWidgets: [],
   allowEditingPastDays: false,
+  taskListStyle: "checkbox",
+  editorScale: 1,
 };
 
 /** Клієнтські UI-налаштування, що персистяться (як тема/акцент/мова). */
@@ -65,6 +83,15 @@ const uiPrefsSlice = createSlice({
     setAllowEditingPastDays: (state, action: PayloadAction<boolean>) => {
       state.allowEditingPastDays = action.payload;
     },
+    setTaskListStyle: (state, action: PayloadAction<TaskListStyle>) => {
+      state.taskListStyle = action.payload;
+    },
+    setEditorScale: (state, action: PayloadAction<number>) => {
+      state.editorScale = Math.min(
+        EDITOR_SCALE_MAX,
+        Math.max(EDITOR_SCALE_MIN, action.payload),
+      );
+    },
   },
 });
 
@@ -75,5 +102,7 @@ export const {
   toggleStatWidget,
   setHiddenStatWidgets,
   setAllowEditingPastDays,
+  setTaskListStyle,
+  setEditorScale,
 } = uiPrefsSlice.actions;
 export default uiPrefsSlice.reducer;

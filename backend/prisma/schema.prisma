@@ -44,6 +44,7 @@ model UserPreferences {
   tableLayout       String? // 'columns' | 'rows'
   statsGoalPct      Int? // ціль виконання, 0..100 (null = без цілі)
   hiddenStatWidgets String[] @default([]) // ключі прихованих віджетів статистики
+  editorScale       Float? // масштаб тексту редактора дня (zoom), 0.8..1.5 (null = дефолт 1)
   updatedAt         DateTime @updatedAt
   // Прим.: ширина колонки навичок (habitColWidth) свідомо лишається лише в localStorage
   // (per-device, не крос-девайс) — у БД не переноситься.

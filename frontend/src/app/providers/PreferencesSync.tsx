@@ -10,6 +10,7 @@ import { setTheme, type Theme } from "@/features/theme";
 import { setAccent, type AccentKey } from "@/features/accent";
 import { setLocale } from "@/features/locale";
 import {
+  setEditorScale,
   setHiddenStatWidgets,
   setStatsGoal,
   setTableLayout,
@@ -37,6 +38,7 @@ const samePrefs = (
   a.locale === b.locale &&
   a.tableLayout === b.tableLayout &&
   a.statsGoalPct === b.statsGoalPct &&
+  a.editorScale === b.editorScale &&
   sameSet(a.hiddenStatWidgets, b.hiddenStatWidgets);
 
 /**
@@ -61,6 +63,7 @@ export function PreferencesSync() {
   const tableLayout = useAppSelector((s) => s.uiPrefs.tableLayout);
   const statsGoalPct = useAppSelector((s) => s.uiPrefs.statsGoalPct);
   const hiddenStatWidgets = useAppSelector((s) => s.uiPrefs.hiddenStatWidgets);
+  const editorScale = useAppSelector((s) => s.uiPrefs.editorScale);
 
   const hydrated = useRef(false);
   const lastSynced = useRef<UpdatePreferencesRequest | null>(null);
@@ -88,6 +91,7 @@ export function PreferencesSync() {
     if (data.statsGoalPct !== null) dispatch(setStatsGoal(data.statsGoalPct));
     if (data.hiddenStatWidgets)
       dispatch(setHiddenStatWidgets(data.hiddenStatWidgets));
+    if (data.editorScale !== null) dispatch(setEditorScale(data.editorScale));
 
     // Значення, що тепер у стані (для непустих — з БД, для null — локальні) = синхронізовані.
     lastSynced.current = {
@@ -97,6 +101,7 @@ export function PreferencesSync() {
       tableLayout: data.tableLayout ?? tableLayout,
       statsGoalPct: data.statsGoalPct ?? statsGoalPct,
       hiddenStatWidgets: data.hiddenStatWidgets ?? hiddenStatWidgets,
+      editorScale: data.editorScale ?? editorScale,
     };
   }, [
     isAuthenticated,
@@ -108,6 +113,7 @@ export function PreferencesSync() {
     tableLayout,
     statsGoalPct,
     hiddenStatWidgets,
+    editorScale,
   ]);
 
   // Push змін у БД (debounced). Спрацьовує і як seed, коли lastSynced ще null (порожня БД).
@@ -120,6 +126,7 @@ export function PreferencesSync() {
       tableLayout,
       statsGoalPct,
       hiddenStatWidgets,
+      editorScale,
     };
     if (lastSynced.current && samePrefs(current, lastSynced.current)) return;
 
@@ -136,6 +143,7 @@ export function PreferencesSync() {
     tableLayout,
     statsGoalPct,
     hiddenStatWidgets,
+    editorScale,
     updatePreferences,
   ]);
 

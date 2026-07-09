@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { AddTaskButton } from "@/features/manage-tasks";
+import { AddTasksButton } from "./AddTasksButton";
 import { cn } from "@/shared/lib";
 import type { PlannerTab } from "./DayPlan";
 
@@ -57,7 +57,7 @@ export function DayPlanToolbar({ tab, onTabChange }: DayPlanToolbarProps) {
         })}
       </div>
 
-      <AddTaskButton className="w-full sm:ml-auto sm:w-auto" />
+      <AddTasksButton className="w-full sm:ml-auto sm:w-auto" />
     </div>
   );
 }

@@ -6,6 +6,7 @@ export { Input } from "./Input";
 export { Field, type FieldProps } from "./Field";
 export { DatePicker } from "./DatePicker";
 export { TimePicker } from "./TimePicker";
+export { Range } from "./Range";
 export { AnimatedText } from "./AnimatedText";
 export { Toaster, toast } from "./Toast";
 export { Skeleton } from "./Skeleton";

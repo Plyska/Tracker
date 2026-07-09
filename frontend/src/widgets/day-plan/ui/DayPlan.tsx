@@ -1,7 +1,7 @@
 import { CalendarClock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useGetTasksQuery, type Task } from "@/entities/task";
-import { AddTaskButton } from "@/features/manage-tasks";
+import { AddTasksButton } from "./AddTasksButton";
 import { Skeleton } from "@/shared/ui";
 import { useDelayedFlag } from "@/shared/lib/hooks/useDelayedFlag";
 import { DaySticker } from "./DaySticker";
@@ -87,7 +87,7 @@ export function DayPlan({ tab, today }: DayPlanProps) {
             {t("planner.activeEmpty.subtitle")}
           </p>
         </div>
-        <AddTaskButton />
+        <AddTasksButton />
       </div>
     );
   }
