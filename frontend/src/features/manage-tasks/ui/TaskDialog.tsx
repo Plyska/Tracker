@@ -213,6 +213,7 @@ export function TaskDialog({
             </Dialog.Overlay>
             <Dialog.Content asChild forceMount>
               <motion.div
+                aria-describedby={undefined}
                 className={cn(
                   "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md",
                   "rounded-xl border border-border bg-card p-6 text-card-foreground shadow-card",
@@ -223,18 +224,13 @@ export function TaskDialog({
                 transition={{ duration: 0.32, ease: "easeOut" }}
               >
                 <div className="mb-4 flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <Dialog.Title className="text-lg font-semibold">
-                      {t(
-                        mode === "create"
-                          ? "tasks.form.addTitle"
-                          : "tasks.form.editTitle",
-                      )}
-                    </Dialog.Title>
-                    <Dialog.Description className="text-sm text-muted-foreground">
-                      {t("tasks.form.subtitle")}
-                    </Dialog.Description>
-                  </div>
+                  <Dialog.Title className="text-lg font-semibold">
+                    {t(
+                      mode === "create"
+                        ? "tasks.form.addTitle"
+                        : "tasks.form.editTitle",
+                    )}
+                  </Dialog.Title>
                   <Dialog.Close asChild>
                     <IconButton aria-label={t("common.close")}>
                       <X className="h-4 w-4" />

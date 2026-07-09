@@ -1,13 +1,25 @@
 import { useState } from "react";
-import { AlertDialog } from "radix-ui";
+import { AlertDialog, Popover } from "radix-ui";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { format } from "date-fns";
-import { ArrowLeft, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  ALargeSmall,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useClearTasksMutation, type Task } from "@/entities/task";
-import { AddTaskButton } from "@/features/manage-tasks";
-import { Button, DatePicker, IconButton } from "@/shared/ui";
+import {
+  EDITOR_SCALE_MAX,
+  EDITOR_SCALE_MIN,
+  setEditorScale,
+  TaskListStyleSwitcher,
+} from "@/features/ui-prefs";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
+import { Button, DatePicker, IconButton, Range } from "@/shared/ui";
 import { paths } from "@/shared/config/paths";
 import {
   addDaysISO,
@@ -17,7 +29,7 @@ import {
   isToday,
   todayISODate,
 } from "@/shared/lib";
-import { TaskList } from "./TaskList";
+import { DayEditor } from "./DayEditor";
 
 interface DayViewProps {
   /** ISO 'YYYY-MM-DD' або null — «Загальна» картка (задачі без дати). */
@@ -35,8 +47,11 @@ export function DayView({ date, tasks }: DayViewProps) {
   const locale = getDateFnsLocale(i18n.language);
   const reduceMotion = useReducedMotion();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const editorScale = useAppSelector((s) => s.uiPrefs.editorScale);
   const [clearTasks] = useClearTasksMutation();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [sizeOpen, setSizeOpen] = useState(false);
 
   const general = date === null;
   const day = general ? null : fromISODate(date);
@@ -67,58 +82,121 @@ export function DayView({ date, tasks }: DayViewProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
-      <Link
-        to={paths.planner}
-        className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("planner.back")}
-      </Link>
+      {/* Єдиний тулбар в один рядок: назад + навігація дня + налаштування + очищення */}
+      <div className="flex items-center gap-1 overflow-x-auto">
+        <IconButton
+          size="sm"
+          aria-label={t("planner.back")}
+          title={t("planner.back")}
+          onClick={() => navigate(paths.planner)}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </IconButton>
 
-      {/* Навігатор дня + дії */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-1.5">
-          {general ? (
-            <h1 className="text-xl font-semibold sm:text-2xl">{heading}</h1>
-          ) : (
-            <>
-              <IconButton
-                size="sm"
-                aria-label={t("planner.prevDay")}
-                onClick={() => goToDay(addDaysISO(date, -1))}
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </IconButton>
-              <DatePicker
-                value={date}
-                onChange={(v) => v && goToDay(v)}
-                triggerFormat="EEEE, d MMMM"
-                className="h-10 text-base font-semibold capitalize"
-              />
-              <IconButton
-                size="sm"
-                aria-label={t("planner.nextDay")}
-                onClick={() => goToDay(addDaysISO(date, 1))}
-              >
-                <ChevronRight className="h-5 w-5" />
-              </IconButton>
-            </>
-          )}
-          {today && (
-            <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-              {t("toolbar.today")}
-            </span>
-          )}
-        </div>
+        <span className="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden />
 
-        <div className="flex items-center gap-1">
-          {!general && !today && (
-            <Button variant="outline" size="sm" onClick={() => goToDay(todayISODate())}>
-              {t("toolbar.today")}
-            </Button>
-          )}
+        {general ? (
+          <h1 className="truncate text-base font-semibold sm:text-lg">{heading}</h1>
+        ) : (
+          <>
+            <IconButton
+              size="sm"
+              aria-label={t("planner.prevDay")}
+              onClick={() => goToDay(addDaysISO(date, -1))}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </IconButton>
+            <DatePicker
+              value={date}
+              onChange={(v) => v && goToDay(v)}
+              triggerFormat="EEE, d MMM"
+              className="shrink-0 font-medium capitalize"
+            />
+            <IconButton
+              size="sm"
+              aria-label={t("planner.nextDay")}
+              onClick={() => goToDay(addDaysISO(date, 1))}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </IconButton>
+            {!today && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() => goToDay(todayISODate())}
+              >
+                {t("toolbar.today")}
+              </Button>
+            )}
+          </>
+        )}
+        {today && (
+          <span className="ml-1 shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+            {t("toolbar.today")}
+          </span>
+        )}
+
+        {/* Праворуч: вигляд списку + очищення */}
+        <div className="ml-auto flex shrink-0 items-center gap-1 pl-1">
+          <TaskListStyleSwitcher layoutId="planner-style-pill" />
+
+          {/* Масштаб тексту редактора */}
+          <Popover.Root open={sizeOpen} onOpenChange={setSizeOpen}>
+            <Popover.Trigger asChild>
+              <button
+                type="button"
+                aria-label={t("planner.textSize")}
+                title={t("planner.textSize")}
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-md outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                  sizeOpen
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground/70 hover:text-foreground",
+                )}
+              >
+                <ALargeSmall className="h-5 w-5" />
+              </button>
+            </Popover.Trigger>
+            <Popover.Portal forceMount>
+              <AnimatePresence>
+                {sizeOpen && (
+                  <Popover.Content asChild forceMount align="end" sideOffset={6}>
+                    <motion.div
+                      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+                      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+                      exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+                      transition={{ duration: 0.16, ease: "easeOut" }}
+                      style={{
+                        transformOrigin:
+                          "var(--radix-popover-content-transform-origin)",
+                      }}
+                      className="z-50 w-56 rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-card"
+                    >
+                      <div className="mb-2 flex items-center justify-between text-xs font-medium text-muted-foreground">
+                        <span>{t("planner.textSize")}</span>
+                        <span className="tabular-nums">
+                          {Math.round(editorScale * 100)}%
+                        </span>
+                      </div>
+                      <Range
+                        aria-label={t("planner.textSize")}
+                        value={editorScale}
+                        min={EDITOR_SCALE_MIN}
+                        max={EDITOR_SCALE_MAX}
+                        step={0.05}
+                        onValueChange={(v) => dispatch(setEditorScale(v))}
+                      />
+                    </motion.div>
+                  </Popover.Content>
+                )}
+              </AnimatePresence>
+            </Popover.Portal>
+          </Popover.Root>
+
           {tasks.length > 0 && (
             <IconButton
+              size="sm"
               aria-label={t("planner.deleteCard")}
               title={t("planner.deleteCard")}
               onClick={() => setConfirmOpen(true)}
@@ -130,11 +208,9 @@ export function DayView({ date, tasks }: DayViewProps) {
         </div>
       </div>
 
-      <TaskList tasks={tasks} />
-
-      <div>
-        <AddTaskButton date={date ?? undefined} />
-      </div>
+      {/* Редактор у стилі щоденної нотатки (курсор + пиши). `TaskList` лишається для
+          майбутнього перемикача «Список / Редактор». */}
+      <DayEditor date={date} tasks={tasks} />
 
       <AlertDialog.Root open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AnimatePresence>

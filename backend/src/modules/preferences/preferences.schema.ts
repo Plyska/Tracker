@@ -13,6 +13,7 @@ export const updatePreferencesSchema = z
     tableLayout: z.enum(["columns", "rows"]),
     statsGoalPct: z.number().int().min(0).max(100).nullable(),
     hiddenStatWidgets: z.array(z.string().trim().min(1).max(64)).max(50),
+    editorScale: z.number().min(0.8).max(1.5),
   })
   .partial();
 

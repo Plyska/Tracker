@@ -69,6 +69,7 @@ export interface PreferencesDto {
   statsGoalPct: number | null;
   // null = рядка налаштувань ще немає (щоб клієнт відрізняв «не задано» від «нічого не приховано»).
   hiddenStatWidgets: string[] | null;
+  editorScale: number | null;
 }
 
 const toISODate = (d: Date): string => d.toISOString().slice(0, 10);
@@ -81,6 +82,7 @@ export const toPreferencesDto = (p: UserPreferences | null): PreferencesDto => (
   tableLayout: p?.tableLayout ?? null,
   statsGoalPct: p?.statsGoalPct ?? null,
   hiddenStatWidgets: p?.hiddenStatWidgets ?? null,
+  editorScale: p?.editorScale ?? null,
 });
 
 export const toUserDto = (u: User): UserDto => ({

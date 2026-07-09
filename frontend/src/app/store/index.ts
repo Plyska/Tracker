@@ -10,7 +10,11 @@ import {
   type AccentKey,
 } from "@/features/accent";
 import { localeReducer } from "@/features/locale";
-import { uiPrefsReducer, type TableLayout } from "@/features/ui-prefs";
+import {
+  uiPrefsReducer,
+  type TableLayout,
+  type TaskListStyle,
+} from "@/features/ui-prefs";
 import { periodReducer, type Scale } from "@/features/period-navigation";
 import { statsPeriodReducer } from "@/features/stats-period";
 import { authReducer, initialAuthState, type AuthState } from "@/features/auth";
@@ -29,6 +33,8 @@ const STATS_GOAL_KEY = "tracker-stats-goal";
 const HIDDEN_STAT_WIDGETS_KEY = "tracker-hidden-stat-widgets";
 const PERIOD_SCALE_KEY = "tracker-period-scale";
 const ALLOW_EDIT_PAST_KEY = "tracker-allow-edit-past";
+const TASK_LIST_STYLE_KEY = "tracker-task-list-style";
+const EDITOR_SCALE_KEY = "tracker-editor-scale";
 const AUTH_KEY = "tracker-auth";
 
 type PersistedState = {
@@ -41,6 +47,8 @@ type PersistedState = {
     statsGoalPct: number | null;
     hiddenStatWidgets: string[];
     allowEditingPastDays: boolean;
+    taskListStyle: TaskListStyle;
+    editorScale: number;
   };
   // anchor — session-only (завжди стартує з «сьогодні»); персиститься лише scale.
   period: { anchor: string; scale: Scale };
@@ -82,6 +90,8 @@ function loadPersistedState(): PersistedState | undefined {
       statsGoalPct: read<number | null>(STATS_GOAL_KEY, null),
       hiddenStatWidgets: read<string[]>(HIDDEN_STAT_WIDGETS_KEY, []),
       allowEditingPastDays: read<boolean>(ALLOW_EDIT_PAST_KEY, false),
+      taskListStyle: read<TaskListStyle>(TASK_LIST_STYLE_KEY, "checkbox"),
+      editorScale: read<number>(EDITOR_SCALE_KEY, 1),
     },
     period: {
       anchor: todayISODate(),
@@ -147,6 +157,14 @@ store.subscribe(() => {
     localStorage.setItem(
       ALLOW_EDIT_PAST_KEY,
       JSON.stringify(state.uiPrefs.allowEditingPastDays),
+    );
+    localStorage.setItem(
+      TASK_LIST_STYLE_KEY,
+      JSON.stringify(state.uiPrefs.taskListStyle),
+    );
+    localStorage.setItem(
+      EDITOR_SCALE_KEY,
+      JSON.stringify(state.uiPrefs.editorScale),
     );
     localStorage.setItem(
       PERIOD_SCALE_KEY,

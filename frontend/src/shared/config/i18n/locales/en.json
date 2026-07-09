@@ -112,6 +112,16 @@
     "back": "Back to planner",
     "prevDay": "Previous day",
     "nextDay": "Next day",
+    "newTask": "New task…",
+    "tasksPerLine": "One task per line. Enter starts a new one.",
+    "tasksLabel": "Tasks",
+    "listStyle": "List style",
+    "textSize": "Text size",
+    "style": {
+      "checkbox": "Checkboxes",
+      "numbered": "Numbered list",
+      "timeline": "Schedule (hours)"
+    },
     "deleteCard": "Delete card",
     "deleteCardConfirm": "Delete \"{{name}}\" and all its {{count}} tasks? This can't be undone.",
     "dayEmpty": "No tasks here yet.",
