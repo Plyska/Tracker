@@ -7,8 +7,8 @@ import { HabitRowMenu } from "@/features/manage-habits";
 import {
   cn,
   entryKey,
+  isCurrentWeek,
   isFutureDay,
-  isPastDay,
   isToday,
   isWeekend,
   toISODate,
@@ -28,8 +28,6 @@ type Props = {
   boundHeight?: boolean;
   /** Завантаження відміток періоду → скелетон-клітинки замість галочок. */
   loading?: boolean;
-  /** Дозволити редагувати минулі дні (uiPrefs). Типово false → редаговне лише сьогодні. */
-  allowEditingPastDays?: boolean;
   /** Тижневий масштаб → показати бейдж прогресу тижневої цілі (days = поточний Пн–Нд-тиждень). */
   showWeekBadge?: boolean;
 };
@@ -47,7 +45,6 @@ export function RowsGrid({
   dateLocale,
   boundHeight,
   loading,
-  allowEditingPastDays,
   showWeekBadge,
 }: Props) {
   return (
@@ -112,7 +109,8 @@ export function RowsGrid({
         {days.map((day) => {
           const today = isToday(day);
           const future = isFutureDay(day);
-          const pastLocked = !allowEditingPastDays && isPastDay(day);
+          // Редаговний лише поточний тиждень; майбутні дні заблоковані.
+          const outsideWeek = !isCurrentWeek(day);
           const weekend = isWeekend(day);
           const date = toISODate(day);
           return (
@@ -147,9 +145,8 @@ export function RowsGrid({
                         date={date}
                         done={done}
                         color={habit.color}
-                        // Заблоковано: майбутнє та минулі дні, якщо редагування минулого не
-                        // ввімкнено в налаштуваннях. Бекфіл минулого дозволено. Див. HabitTable.
-                        disabled={future || pastLocked}
+                        // Заблоковано: майбутнє та будь-який день поза поточним тижнем. Див. HabitTable.
+                        disabled={future || outsideWeek}
                         label={`${habit.name} — ${format(day, "PP", { locale: dateLocale })}`}
                       />
                     )}

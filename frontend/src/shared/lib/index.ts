@@ -10,6 +10,7 @@ export {
   isWeekend,
   isFutureDay,
   isPastDay,
+  isCurrentWeek,
   fromISODate,
   todayISODate,
   addDaysISO,
