@@ -25,14 +25,17 @@ interface DayEditorProps {
   bare?: boolean;
 }
 
-/** Порядок рядків: виконані вниз; далі за часом (якщо є), за створенням / id. */
+/**
+ * Порядок рядків: виконані вниз; далі за часом. Без tiebreak за `id` — задачі одного дня лишаємо
+ * як прийшло з сервера (createdAt-повний-timestamp asc), стабільне сортування зберігає порядок
+ * додавання (інакше сортування за id його «перемішує»).
+ */
 const byOrder = (a: Task, b: Task): number => {
   if (!!a.done !== !!b.done) return a.done ? 1 : -1;
   if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
   if (a.startTime) return -1;
   if (b.startTime) return 1;
-  if (a.createdAt !== b.createdAt) return a.createdAt.localeCompare(b.createdAt);
-  return a.id.localeCompare(b.id);
+  return a.createdAt.localeCompare(b.createdAt);
 };
 
 /** Курсор у кінець textarea. */

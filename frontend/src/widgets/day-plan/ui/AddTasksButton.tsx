@@ -96,17 +96,17 @@ export function AddTasksButton({ className }: { className?: string }) {
     const d = date === "" ? null : date;
     const valid = lines.filter((l) => l.title.trim() !== "");
     if (valid.length === 0) return;
-    valid.forEach((l) => {
-      const title = l.title.trim();
-      const parsed = style === "timeline" ? parseTimeInput(l.time) : "";
-      const startTime = parsed && parsed !== "" ? parsed : undefined;
-      // Обрано зі списку — беремо; інакше автолінк за точним збігом назви.
-      const matched = habits.find(
-        (h) => h.name.trim().toLowerCase() === title.toLowerCase(),
-      );
-      const habitId = l.habitId || matched?.id || undefined;
-      const done = l.done;
-      void (async () => {
+    // Створюємо ПОСЛІДОВНО, щоб серверний createdAt ішов у порядку введення (інакше порядок «стрибає»).
+    void (async () => {
+      for (const l of valid) {
+        const title = l.title.trim();
+        const parsed = style === "timeline" ? parseTimeInput(l.time) : "";
+        const startTime = parsed && parsed !== "" ? parsed : undefined;
+        // Обрано зі списку — беремо; інакше автолінк за точним збігом назви.
+        const matched = habits.find(
+          (h) => h.name.trim().toLowerCase() === title.toLowerCase(),
+        );
+        const habitId = l.habitId || matched?.id || undefined;
         try {
           const created = await addTask({
             date: d,
@@ -114,12 +114,12 @@ export function AddTasksButton({ className }: { className?: string }) {
             habitId,
             startTime,
           }).unwrap();
-          if (done) await updateTask({ id: created.id, done: true }).unwrap();
+          if (l.done) await updateTask({ id: created.id, done: true }).unwrap();
         } catch {
           // помилку покаже глобальний тост-мідлвар
         }
-      })();
-    });
+      }
+    })();
     close();
   };
 
