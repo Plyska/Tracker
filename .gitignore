@@ -13,6 +13,8 @@ dist-ssr
 *.local
 
 # Claude Code local settings & context
+.claude/settings.json
+**/.claude/settings.json
 .claude/settings.local.json
 **/.claude/settings.local.json
 CLAUDE.md
