@@ -18,8 +18,8 @@ import {
   getDateFnsLocale,
   getMonthDays,
   getWeekDays,
+  isCurrentWeek,
   isFutureDay,
-  isPastDay,
   isToday,
   isWeekend,
   toISODate,
@@ -54,10 +54,6 @@ export function HabitTable() {
   // Орієнтація таблиці (columns/rows) — персиститься в ui-prefs, спільна для week/month.
   // `rows` під Pro: без права форсуємо `columns` (persisted-стан міг лишитись від Pro).
   const tableLayout = useAppSelector((s) => s.uiPrefs.tableLayout);
-  // Дозвіл редагувати минулі дні (типово false → лише сьогодні). Перемикається в налаштуваннях.
-  const allowEditingPastDays = useAppSelector(
-    (s) => s.uiPrefs.allowEditingPastDays,
-  );
   const canChooseLayout = useEntitlement("table-layout");
   const effectiveLayout = canChooseLayout ? tableLayout : "columns";
   const dispatch = useAppDispatch();
@@ -144,7 +140,6 @@ export function HabitTable() {
         dateLocale={dateLocale}
         boundHeight={boundHeight}
         loading={gridLoading}
-        allowEditingPastDays={allowEditingPastDays}
         showWeekBadge={scale === "week"}
       />
     );
@@ -268,12 +263,9 @@ export function HabitTable() {
                       date={date}
                       done={done}
                       color={habit.color}
-                      // Заблоковано: майбутні дні та минулі дні, якщо в налаштуваннях не дозволено
-                      // їх редагувати (типово редаговне лише сьогодні). Бекфіл минулого дозволено.
-                      disabled={
-                        isFutureDay(day) ||
-                        (!allowEditingPastDays && isPastDay(day))
-                      }
+                      // Редагувати можна лише поточний тиждень: майбутні дні заблоковані,
+                      // як і будь-який день поза поточним Пн–Нд-тижнем.
+                      disabled={isFutureDay(day) || !isCurrentWeek(day)}
                       label={`${habit.name} — ${format(day, "PP", { locale: dateLocale })}`}
                     />
                   )}

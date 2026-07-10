@@ -67,10 +67,18 @@ export function isFutureDay(date: Date): boolean {
   return isAfter(startOfDay(date), startOfDay(new Date()));
 }
 
-/** Минулий день (до сьогодні). Типово такі клітинки заблоковані для редагування — зняти
- *  блокування можна в налаштуваннях (uiPrefs.allowEditingPastDays). */
+/** Минулий день (до сьогодні). */
 export function isPastDay(date: Date): boolean {
   return isBefore(startOfDay(date), startOfDay(new Date()));
+}
+
+/** День належить поточному тижню (Пн–Нд, що містить сьогодні). Редагувати відмітки
+ *  дозволено лише в межах поточного тижня (майбутні дні тижня все одно заблоковані). */
+export function isCurrentWeek(date: Date): boolean {
+  return isSameDay(
+    startOfWeek(date, { weekStartsOn: 1 }),
+    startOfWeek(new Date(), { weekStartsOn: 1 }),
+  );
 }
 
 /** ISO 'YYYY-MM-DD' → Date (локальна, опівночі). Зворотне до `toISODate`. */

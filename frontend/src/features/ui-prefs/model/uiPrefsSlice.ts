@@ -31,8 +31,6 @@ export type UiPrefsState = {
   statsGoalPct: number | null;
   /** Ключі прихованих віджетів статистики. Зберігаємо саме приховані → нові картки типово видимі. */
   hiddenStatWidgets: string[];
-  /** Дозволити редагувати відмітки за минулі дні. Типово false → змінювати можна лише сьогодні. */
-  allowEditingPastDays: boolean;
   /** Маркер рядків у редакторі задач дня. */
   taskListStyle: TaskListStyle;
   /** Масштаб тексту редактора дня (zoom), 0.8–1.5. */
@@ -44,7 +42,6 @@ const initialState: UiPrefsState = {
   tableLayout: "columns",
   statsGoalPct: null,
   hiddenStatWidgets: [],
-  allowEditingPastDays: false,
   taskListStyle: "checkbox",
   editorScale: 1,
 };
@@ -80,9 +77,6 @@ const uiPrefsSlice = createSlice({
     setHiddenStatWidgets: (state, action: PayloadAction<string[]>) => {
       state.hiddenStatWidgets = action.payload;
     },
-    setAllowEditingPastDays: (state, action: PayloadAction<boolean>) => {
-      state.allowEditingPastDays = action.payload;
-    },
     setTaskListStyle: (state, action: PayloadAction<TaskListStyle>) => {
       state.taskListStyle = action.payload;
     },
@@ -101,7 +95,6 @@ export const {
   setStatsGoal,
   toggleStatWidget,
   setHiddenStatWidgets,
-  setAllowEditingPastDays,
   setTaskListStyle,
   setEditorScale,
 } = uiPrefsSlice.actions;
