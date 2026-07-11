@@ -64,6 +64,15 @@ export const router = createBrowserRouter([
             handle: { titleKey: "nav.statistics" },
           },
           {
+            path: "diary",
+            // Ліниво (важкий TipTap-редактор) — окремий чанк, поза основним бандлом.
+            lazy: async () => {
+              const { DiaryPage } = await import("@/pages/diary");
+              return { Component: DiaryPage };
+            },
+            handle: { titleKey: "nav.diary" },
+          },
+          {
             path: "settings",
             element: <SettingsPage />,
             handle: { titleKey: "nav.settings" },

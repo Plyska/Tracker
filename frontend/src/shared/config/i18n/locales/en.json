@@ -7,6 +7,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "planner": "Planner",
+    "diary": "Diary",
     "statistics": "Statistics",
     "settings": "Settings"
   },
@@ -97,6 +98,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "close": "Close",
+    "edit": "Edit",
+    "delete": "Delete",
     "pro": "Pro",
     "loading": "Loading…"
   },
@@ -370,6 +373,7 @@
     "menuLabel": "Log your mood",
     "tooltip": "Track your daily mood",
     "notePlaceholder": "Add a note (optional)",
+    "noteLabel": "Write in your diary",
     "scale": {
       "awful": "Awful",
       "bad": "Bad",
@@ -377,6 +381,45 @@
       "good": "Good",
       "great": "Great"
     }
+  },
+  "diary": {
+    "newEntry": "New entry",
+    "addEntry": "Add entry",
+    "placeholder": "Write about your day…",
+    "emptyTitle": "Your diary is empty",
+    "empty": "Pick a mood and jot down your thoughts to start your diary.",
+    "deleteConfirm": "Delete this entry?",
+    "prevEntry": "Previous entry",
+    "nextEntry": "Next entry"
+  },
+  "editor": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "strike": "Strikethrough",
+    "h1": "Heading 1",
+    "h2": "Heading 2",
+    "h3": "Heading 3",
+    "fontFamily": "Font",
+    "fontSize": "Size",
+    "font": { "default": "Default font" },
+    "size": { "default": "Default size" },
+    "color": "Text color",
+    "highlight": "Highlight",
+    "bulletList": "Bullet list",
+    "orderedList": "Numbered list",
+    "taskList": "Checklist",
+    "blockquote": "Quote",
+    "link": "Link",
+    "linkPrompt": "Enter a URL",
+    "alignLeft": "Align left",
+    "alignCenter": "Align center",
+    "alignRight": "Align right",
+    "alignJustify": "Justify",
+    "undo": "Undo",
+    "redo": "Redo",
+    "hideToolbar": "Hide toolbar",
+    "showToolbar": "Formatting"
   },
   "auth": {
     "login": "Login",

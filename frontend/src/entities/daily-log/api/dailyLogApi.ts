@@ -26,6 +26,13 @@ export const dailyLogApi = baseApi.injectEndpoints({
       providesTags: [{ type: "DailyLog", id: "LIST" }],
     }),
 
+    /** Стрічка щоденника: усі записи з нотаткою, новіші зверху. */
+    getDiaryFeed: build.query<DailyLog[], void>({
+      query: () => ({ url: "/daily-logs/feed" }),
+      transformResponse: (dtos: DailyLogDto[]) => dtos.map(toDailyLog),
+      providesTags: [{ type: "DailyLog", id: "LIST" }],
+    }),
+
     upsertDailyLog: build.mutation<DailyLog, UpsertDailyLogRequest>({
       query: (body) => ({ url: "/daily-logs", method: "PUT", body }),
       transformResponse: toDailyLog,
@@ -37,4 +44,8 @@ export const dailyLogApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetDailyLogsQuery, useUpsertDailyLogMutation } = dailyLogApi;
+export const {
+  useGetDailyLogsQuery,
+  useGetDiaryFeedQuery,
+  useUpsertDailyLogMutation,
+} = dailyLogApi;

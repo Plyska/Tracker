@@ -20,6 +20,30 @@ export const listDailyLogs = async (
 };
 
 /**
+ * GET /daily-logs/feed — стрічка щоденника: усі записи з непорожньою нотаткою, новіші зверху.
+ * Дні лише з настроєм (без тексту) у стрічку не потрапляють.
+ */
+export const listDiaryFeed = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const logs = await prisma.dailyLog.findMany({
+    where: { userId: req.userId!, notes: { not: null } },
+    orderBy: { date: "desc" },
+  });
+  // Відсіюємо порожні/пробільні нотатки (порожній HTML міг лишитись після очищення тексту).
+  const withNotes = logs.filter((l) => l.notes && stripHtml(l.notes).length > 0);
+  res.json(withNotes.map(toDailyLogDto));
+};
+
+/** Грубе зведення HTML до тексту — лише щоб відсіяти «порожні» нотатки (напр. `<p></p>`). */
+const stripHtml = (html: string): string =>
+  html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+
+/**
  * PUT /daily-logs — upsert денного логу (sparse, один на день). mood 1–5; notes опційні.
  * Унікальний ключ — (userId, date).
  */

@@ -1,24 +1,17 @@
-import { Angry, Frown, Meh, Smile, Laugh, type LucideIcon } from "lucide-react";
+import { Link } from "react-router-dom";
+import { NotebookPen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
+  MoodPicker,
   useGetDailyLogsQuery,
   useUpsertDailyLogMutation,
 } from "@/entities/daily-log";
+import { paths } from "@/shared/config/paths";
 import { cn, todayISODate } from "@/shared/lib";
 
-/** 1–5 → іконка-обличчя + ключ підпису (mood.scale.*). */
-const MOODS: { value: number; Icon: LucideIcon; key: string }[] = [
-  { value: 1, Icon: Angry, key: "awful" },
-  { value: 2, Icon: Frown, key: "bad" },
-  { value: 3, Icon: Meh, key: "okay" },
-  { value: 4, Icon: Smile, key: "good" },
-  { value: 5, Icon: Laugh, key: "great" },
-];
-
 /**
- * Логування денного настрою — статичний ряд із 5 облич (без анімацій/поповерів), як перший варіант.
- * Живе у DashboardToolbar. Один лог на сьогодні (sparse, upsert). На статистику впливає лише
- * значення настрою (1–5), тож нотатки немає.
+ * Швидке логування денного настрою — ряд із 5 облич (у хедері). Один лог на сьогодні (upsert).
+ * Зміна настрою зберігає наявну нотатку. Кнопка-олівець веде в «Щоденник» для розгорнутого запису.
  */
 export function MoodMenu() {
   const { t } = useTranslation();
@@ -27,6 +20,7 @@ export function MoodMenu() {
   const { data: logs } = useGetDailyLogsQuery({ from: today, to: today });
   const [upsert, { isLoading }] = useUpsertDailyLogMutation();
   const current = logs?.[0];
+  const hasNote = !!current?.notes?.trim();
 
   return (
     <div className="flex items-center gap-2">
@@ -34,35 +28,28 @@ export function MoodMenu() {
       <span className="hidden text-sm text-muted-foreground lg:inline">
         {t("mood.prompt")}
       </span>
-      <div
-        role="group"
-        aria-label={t("mood.prompt")}
-        className="flex items-center gap-0.5"
+      <MoodPicker
+        value={current?.mood}
+        disabled={isLoading}
+        // Зберігаємо наявну нотатку, щоб зміна настрою її не стирала.
+        onChange={(mood) =>
+          void upsert({ date: today, mood, notes: current?.notes })
+        }
+      />
+      <Link
+        to={paths.diary}
+        aria-label={t("mood.noteLabel")}
+        title={t("mood.noteLabel")}
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
+          "outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          hasNote
+            ? "text-primary hover:bg-accent"
+            : "text-muted-foreground hover:bg-accent hover:text-foreground",
+        )}
       >
-        {MOODS.map(({ value, Icon, key }) => {
-          const active = current?.mood === value;
-          return (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={active}
-              aria-label={t(`mood.scale.${key}`)}
-              title={t(`mood.scale.${key}`)}
-              disabled={isLoading}
-              onClick={() => void upsert({ date: today, mood: value })}
-              className={cn(
-                "flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
-                "outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
-              )}
-            >
-              <Icon className="h-5 w-5" />
-            </button>
-          );
-        })}
-      </div>
+        <NotebookPen className="h-5 w-5" />
+      </Link>
     </div>
   );
 }
