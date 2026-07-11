@@ -11,10 +11,12 @@ export const dailyLogRangeSchema = z.object({
 });
 
 // PUT /daily-logs — upsert денного настрою (userId+date — унікальний ключ).
+// notes — HTML із rich-text-редактора щоденника (санітизується на клієнті при рендері);
+// ліміт великий, бо це форматований текст, а не сирий рядок.
 export const upsertDailyLogSchema = z.object({
   date: isoDate,
   mood: z.number().int().min(1).max(5),
-  notes: z.string().max(2000).optional(),
+  notes: z.string().max(20000).optional(),
 });
 
 export type DailyLogRangeInput = z.infer<typeof dailyLogRangeSchema>;

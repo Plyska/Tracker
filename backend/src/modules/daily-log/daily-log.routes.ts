@@ -13,6 +13,9 @@ export const dailyLogsRouter = Router();
 
 dailyLogsRouter.use(requireAuth, requireCsrf);
 
+// Статичний сегмент /feed — до параметризованих/кореневих роутів.
+dailyLogsRouter.get("/feed", asyncHandler(ctrl.listDiaryFeed));
+
 dailyLogsRouter.get(
   "/",
   validate(dailyLogRangeSchema, "query"),

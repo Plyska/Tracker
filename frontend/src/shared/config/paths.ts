@@ -8,5 +8,6 @@ export const paths = {
   /** Сторінка конкретного дня. `date` — ISO 'YYYY-MM-DD'. */
   plannerDay: (date: string) => `/planner/${date}`,
   statistics: "/statistics",
+  diary: "/diary",
   settings: "/settings",
 } as const;

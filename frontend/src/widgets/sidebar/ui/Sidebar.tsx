@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart3,
+  BookOpen,
   CalendarClock,
   LayoutDashboard,
   PanelLeftClose,
@@ -18,6 +19,7 @@ import type { NavItem, SidebarProps } from "../model/types";
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
   { href: "/planner", labelKey: "nav.planner", icon: CalendarClock },
+  { href: "/diary", labelKey: "nav.diary", icon: BookOpen },
   { href: "/statistics", labelKey: "nav.statistics", icon: BarChart3 },
 ];
 
