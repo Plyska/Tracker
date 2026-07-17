@@ -36,7 +36,7 @@ export function CheckboxCell({
     : ({ type: "spring", stiffness: 600, damping: 26 } as const);
 
   return (
-    <div className="flex items-center justify-center p-1.5">
+    <div className="flex items-center justify-center p-1 sm:p-1.5">
       <Checkbox.Root
         asChild
         checked={done}
