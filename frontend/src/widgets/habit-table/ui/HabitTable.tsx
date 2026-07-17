@@ -1,8 +1,9 @@
-import { useMemo, useRef, type PointerEvent } from "react";
+import { useMemo, useRef, useState, type PointerEvent } from "react";
 import { format } from "date-fns";
+import { useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { ListChecks } from "lucide-react";
+import { ListChecks, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { HabitGlyph, useGetHabitsQuery } from "@/entities/habit";
 import { useGetEntriesQuery, type HabitEntry } from "@/entities/habit-entry";
 import { AddHabitButton, HabitRowMenu } from "@/features/manage-habits";
@@ -36,10 +37,22 @@ import { countDoneInDays } from "../lib/weekProgress";
 // Адаптивний дефолт для ТИЖНЯ (7 колонок). Місяць/ручна ширина — через inline-style
 // з динамічним repeat(days.length), бо кількість колонок змінна.
 // Мобільний: вужча колонка назв (116px), щоб дні-колонки лишали менше горизонтального скролу.
-const GRID_COLS =
-  "grid-cols-[minmax(116px,1.4fr)_repeat(7,minmax(44px,1fr))] " +
-  "sm:grid-cols-[minmax(160px,1.6fr)_repeat(7,minmax(46px,1fr))] " +
-  "md:grid-cols-[minmax(184px,1.84fr)_repeat(7,minmax(46px,1fr))]";
+// sm+: колонка назви — `auto` (за вмістом, під найдовшу назву), дні (1fr) заповнюють решту
+// ширини. Верхня межа задана max-width на самому span (`max-w-[18rem]`, ~зараз): довші назви
+// обрізаються, а не розтягують колонку. Важливо: клітинка назви НЕ використовує flex-1
+// (basis:0 колапсує intrinsic-ширину треку) — див. span з `min-w-0 mr-auto truncate` нижче.
+const GRID_COLS_SM_UP =
+  "sm:grid-cols-[auto_repeat(7,minmax(46px,1fr))] " +
+  "md:grid-cols-[auto_repeat(7,minmax(46px,1fr))]";
+// Мобільні шаблони: колонка назв — ФІКСОВАНА ширина (px), дні — minmax(0,1fr). Обидва стани
+// відрізняються лише шириною 1-ї колонки (60px ↔ 176px) → grid-template-columns інтерполюється,
+// тож перехід плавно анімується (inline-transition на сітці). Ширина `w-max min-w-full`:
+// згорнуто (вміст < екран) → min-w-full розтягує, 1fr дні заповнюють екран без скролу;
+// розгорнуто (176px + дні) → вміст > екран → w-max → гориз. скрол.
+const GRID_COLS_MOBILE_EXPANDED =
+  "grid-cols-[11rem_repeat(7,minmax(0,1fr))]";
+const GRID_COLS_MOBILE_COLLAPSED =
+  "grid-cols-[3.75rem_repeat(7,minmax(0,1fr))]";
 
 export function HabitTable() {
   const { t, i18n } = useTranslation();
@@ -57,6 +70,20 @@ export function HabitTable() {
   const canChooseLayout = useEntitlement("table-layout");
   const effectiveLayout = canChooseLayout ? tableLayout : "columns";
   const dispatch = useAppDispatch();
+
+  // Малі екрани: колонка назв за дефолтом згорнута (лише іконки) — тижневу сітку видно цілком
+  // без скролу. Кнопка в шапці розгортає її. На sm+ назви показуються завжди (стан ігнорується
+  // через `sm:`-класи). Ефемерний стан (скидається при перезавантаженні) — свідомо, це view-тумблер.
+  const [namesExpanded, setNamesExpanded] = useState(false);
+
+  // Анімація «виїжджання» колонки (як ширина сайдбару). Inline-transition, бо глобальне
+  // правило `* { transition-property: background-color, border-color }` (для зміни теми)
+  // перебиває Tailwind-класи transition-*. Поважаємо prefers-reduced-motion.
+  const reduce = useReducedMotion();
+  const gridAnim = reduce
+    ? undefined
+    : { transition: "grid-template-columns 200ms ease-in-out" };
+  const fadeAnim = reduce ? undefined : { transition: "opacity 200ms ease-in-out" };
 
   const dateLocale = getDateFnsLocale(i18n.language);
   const days = useMemo(() => {
@@ -153,10 +180,26 @@ export function HabitTable() {
       )}
     >
       <div
-        className={cn("grid w-max min-w-full", useDefaultGrid && GRID_COLS)}
+        className={cn(
+          "grid min-w-full",
+          // Ширина: місяць → w-max. Тиждень: sm+ → w-full (заповнює екран). Мобільний тиждень —
+          // згорнуто → w-full (весь тиждень точно влазить), розгорнуто → w-max (широкі назви +
+          // гориз. скрол). Перехід колонки анімує inline-transition на grid-template-columns.
+          scale === "week"
+            ? cn(namesExpanded ? "w-max" : "w-full", "sm:w-full")
+            : "w-max",
+          // Колонки: на sm+ — контентна колонка назв; на мобільному — згорнута (іконка) чи широка.
+          useDefaultGrid &&
+            cn(
+              namesExpanded
+                ? GRID_COLS_MOBILE_EXPANDED
+                : GRID_COLS_MOBILE_COLLAPSED,
+              GRID_COLS_SM_UP,
+            ),
+        )}
         style={
           useDefaultGrid
-            ? undefined
+            ? gridAnim
             : {
                 gridTemplateColumns: `${
                   colWidth !== null ? `${colWidth}px` : "minmax(160px, 1.6fr)"
@@ -171,10 +214,35 @@ export function HabitTable() {
         {/* --- Рядок заголовка --- */}
         <div
           ref={headerRef}
-          className="sticky left-0 top-0 z-20 flex items-center border-b border-border bg-muted px-4 py-3 text-sm font-semibold"
+          className="sticky left-0 top-0 z-20 flex items-center gap-1 overflow-hidden border-b border-border bg-muted px-4 py-3 text-sm font-semibold sm:overflow-visible"
         >
-          {t("habits.columnTitle")}
-          {/* Перетягуваний роздільник ширини колонки. Подвійний клік — скидання. */}
+          {/* Тумблер згортання колонки назв — лише на мобільному (sm+ назви завжди видно). */}
+          <button
+            type="button"
+            onClick={() => setNamesExpanded((v) => !v)}
+            aria-label={t(
+              namesExpanded ? "habits.collapseNames" : "habits.expandNames",
+            )}
+            aria-expanded={namesExpanded}
+            title={t(namesExpanded ? "habits.collapseNames" : "habits.expandNames")}
+            className="-ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:hidden"
+          >
+            {namesExpanded ? (
+              <PanelLeftClose className="h-4 w-4" />
+            ) : (
+              <PanelLeftOpen className="h-4 w-4" />
+            )}
+          </button>
+          <span
+            style={fadeAnim}
+            className={cn(
+              "whitespace-nowrap",
+              !namesExpanded && "max-sm:opacity-0",
+            )}
+          >
+            {t("habits.columnTitle")}
+          </span>
+          {/* Перетягуваний роздільник ширини колонки (лише десктоп). Подвійний клік — скидання. */}
           <div
             role="separator"
             aria-orientation="vertical"
@@ -190,7 +258,7 @@ export function HabitTable() {
               else if (e.key === "ArrowRight")
                 dispatch(setHabitColWidth(clamp(currentWidth() + 16)));
             }}
-            className="group absolute -right-1 top-0 z-30 flex h-full w-2 cursor-col-resize touch-none items-stretch outline-none"
+            className="group absolute -right-1 top-0 z-30 hidden h-full w-2 cursor-col-resize touch-none items-stretch outline-none sm:flex"
           >
             <span className="pointer-events-none absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-primary opacity-0 transition-opacity group-hover:opacity-60 group-focus-visible:opacity-100" />
           </div>
@@ -225,7 +293,9 @@ export function HabitTable() {
         {/* --- Рядки навичок --- */}
         {habits.map((habit) => (
           <div key={habit.id} className="contents">
-            <div className="group sticky left-0 z-10 flex items-center gap-2.5 border-b border-border bg-card px-4 py-2">
+            {/* min-h фіксує висоту рядка (= висота кнопки-меню h-8), щоб при згортанні назв
+                на мобільному (меню ховається) таблиця не «стрибала» по висоті. */}
+            <div className="group sticky left-0 z-10 flex min-h-12.25 min-w-0 items-center gap-2.5 overflow-hidden border-b border-border bg-card px-4 py-2 sm:overflow-visible">
               <HabitGlyph
                 name={habit.name}
                 color={habit.color}
@@ -233,16 +303,31 @@ export function HabitTable() {
                 className="h-7 w-7"
                 iconClassName="h-4 w-4"
               />
-              <span className="flex-1 truncate text-sm font-medium">
+              <span
+                style={fadeAnim}
+                className={cn(
+                  "mr-auto min-w-0 max-w-[18rem] truncate text-sm font-medium",
+                  !namesExpanded && "max-sm:opacity-0",
+                )}
+              >
                 {habit.name}
               </span>
-              {scale === "week" && habit.weeklyTarget != null && (
-                <HabitWeekBadge
-                  count={countDoneInDays(habit.id, days, byKey)}
-                  target={habit.weeklyTarget}
-                />
-              )}
-              <HabitRowMenu habit={habit} />
+              {/* Бейдж + меню згасають разом із назвою, коли колонку згорнуто на мобільному. */}
+              <div
+                style={fadeAnim}
+                className={cn(
+                  "flex items-center gap-2.5",
+                  !namesExpanded && "max-sm:opacity-0",
+                )}
+              >
+                {scale === "week" && habit.weeklyTarget != null && (
+                  <HabitWeekBadge
+                    count={countDoneInDays(habit.id, days, byKey)}
+                    target={habit.weeklyTarget}
+                  />
+                )}
+                <HabitRowMenu habit={habit} />
+              </div>
             </div>
             {days.map((day) => {
               const date = toISODate(day);

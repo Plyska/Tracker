@@ -179,6 +179,8 @@
   "habits": {
     "columnTitle": "Habit",
     "resizeColumn": "Resize the Habit column (drag, or double-click to reset)",
+    "expandNames": "Show habit names",
+    "collapseNames": "Hide habit names",
     "add": "Add habit",
     "emptyTitle": "No habits yet",
     "empty": "Add your first habit to start tracking.",
