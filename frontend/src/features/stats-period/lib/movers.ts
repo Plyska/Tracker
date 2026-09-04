@@ -40,9 +40,9 @@ export function buildMovers(
     if (!name) continue; // звички немає в поточному списку (видалена/гонка рефетчів) → пропускаємо
     const before = prevById.get(cur.habitId);
     if (!before) continue; // немає в попередньому вікні (нова звичка) → не рухомець
-    // Тижнева ціль → достатня вибірка міряється в тижнях (activeDays усе одно в днях).
-    const minActive =
-      cur.weeklyTarget != null ? MIN_ACTIVE_WEEKS * 7 : MIN_ACTIVE_DAYS;
+    // Тижневі за природою (count- або часова ціль) → вибірку міряємо в тижнях (activeDays у днях).
+    const isWeekly = cur.weeklyTarget != null || cur.weeklyMinutesTarget != null;
+    const minActive = isWeekly ? MIN_ACTIVE_WEEKS * 7 : MIN_ACTIVE_DAYS;
     if (cur.activeDays < minActive || before.activeDays < minActive) continue;
     const delta = cur.completionRate - before.completionRate;
     if (Math.abs(delta) < MIN_DELTA) continue;

@@ -16,3 +16,19 @@ export function countDoneInDays(
   }
   return n;
 }
+
+/**
+ * Сума хвилин часової навички серед заданих днів — для тижневого бейджа «Nгод/ціль» (ADR 0011).
+ * У тижневому масштабі `days` = поточний Пн–Нд-тиждень, тож це прогрес тижня до хвилинної цілі.
+ */
+export function sumMinutesInDays(
+  habitId: string,
+  days: Date[],
+  byKey: Record<string, HabitEntry | undefined>,
+): number {
+  let sum = 0;
+  for (const day of days) {
+    sum += byKey[entryKey(habitId, toISODate(day))]?.minutes ?? 0;
+  }
+  return sum;
+}

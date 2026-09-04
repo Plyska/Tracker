@@ -14,6 +14,8 @@ export const toggleEntrySchema = z.object({
   habitId: z.string().min(1),
   date: isoDate,
   done: z.boolean(),
+  // Часова навичка (ADR 0011): хвилини за день, 0..1440. Для бінарних — не передавати (сервер форсує null).
+  minutes: z.number().int().min(0).max(1440).nullable().optional(),
 });
 
 export type EntriesRangeInput = z.infer<typeof entriesRangeSchema>;

@@ -1,19 +1,34 @@
 import { useTranslation } from "react-i18next";
-import { cn } from "@/shared/lib";
+import { cn, minutesToHoursLabel } from "@/shared/lib";
 
 /**
- * Тижневий бейдж прогресу для звички з ціллю частоти: «N/ціль» за поточний тиждень.
- * Досягнуто (N ≥ ціль) → акцентна заливка; перевиконання показуємо як є (напр. «4/3» — ривок).
+ * Тижневий бейдж прогресу для звички з ціллю (ADR 0010 + 0011). За поточний тиждень:
+ *  - count-ціль: «N/ціль» (напр. «2/3»);
+ *  - часова (`hours`): «Nгод/ціль» у годинах (current/target — у ХВИЛИНАХ, форматуються).
+ * Досягнуто (current ≥ target) → акцентна заливка; перевиконання показуємо як є (ривок).
  */
 export function HabitWeekBadge({
-  count,
+  current,
   target,
+  hours = false,
 }: {
-  count: number;
+  current: number;
   target: number;
+  hours?: boolean;
 }) {
   const { t } = useTranslation();
-  const reached = count >= target;
+  const reached = current >= target;
+
+  const text = hours
+    ? `${minutesToHoursLabel(current)}/${minutesToHoursLabel(target)}${t("habits.hoursSuffix")}`
+    : `${current}/${target}`;
+  const title = hours
+    ? t("habits.weekProgressHours", {
+        current: minutesToHoursLabel(current),
+        target: minutesToHoursLabel(target),
+      })
+    : t("habits.weekProgress", { count: current, target });
+
   return (
     <span
       className={cn(
@@ -22,10 +37,10 @@ export function HabitWeekBadge({
           ? "bg-primary/15 text-primary"
           : "bg-muted text-muted-foreground",
       )}
-      title={t("habits.weekProgress", { count, target })}
-      aria-label={t("habits.weekProgress", { count, target })}
+      title={title}
+      aria-label={title}
     >
-      {count}/{target}
+      {text}
     </span>
   );
 }

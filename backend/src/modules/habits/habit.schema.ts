@@ -5,13 +5,27 @@ const color = z.string().trim().min(1).max(32);
 const icon = z.string().trim().min(1).max(64).nullable();
 // Тижнева ціль: null = щоденна звичка; 1..6 = «N разів на тиждень» (ADR 0010).
 const weeklyTarget = z.number().int().min(1).max(6).nullable();
+// Часова ціль: null = не часова навичка; >0 = хвилини/тиждень (ADR 0011). 10080 = хвилин у тижні.
+const weeklyMinutesTarget = z.number().int().min(1).max(10080).nullable();
 
-export const createHabitSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(120),
-  color,
-  icon: icon.optional(),
-  weeklyTarget: weeklyTarget.optional(),
-});
+// Взаємовиключність: навичка не може бути одночасно count-тижневою і часовою.
+const notBothTargets = (v: {
+  weeklyTarget?: number | null;
+  weeklyMinutesTarget?: number | null;
+}): boolean => !(v.weeklyTarget != null && v.weeklyMinutesTarget != null);
+const bothTargetsMsg = {
+  message: "weeklyTarget and weeklyMinutesTarget are mutually exclusive",
+} as const;
+
+export const createHabitSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required").max(120),
+    color,
+    icon: icon.optional(),
+    weeklyTarget: weeklyTarget.optional(),
+    weeklyMinutesTarget: weeklyMinutesTarget.optional(),
+  })
+  .refine(notBothTargets, bothTargetsMsg);
 
 // PATCH — часткове оновлення; хоча б одне поле.
 // Архів/видалення — окремі ендпоінти (DELETE = у кошик, POST /:id/restore = назад), не через PATCH.
@@ -21,11 +35,13 @@ export const updateHabitSchema = z
     color,
     icon,
     weeklyTarget,
+    weeklyMinutesTarget,
   })
   .partial()
   .refine((v) => Object.keys(v).length > 0, {
     message: "At least one field must be provided",
-  });
+  })
+  .refine(notBothTargets, bothTargetsMsg);
 
 export const habitParamsSchema = z.object({ id: z.string().min(1) });
 

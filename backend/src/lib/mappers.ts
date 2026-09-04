@@ -28,6 +28,7 @@ export interface HabitDto {
   color: string;
   icon: string | null;
   weeklyTarget: number | null; // null = щоденна; 1..6 = «N разів на тиждень» (ADR 0010)
+  weeklyMinutesTarget: number | null; // null = не часова; >0 = ціль хвилин/тиждень (ADR 0011)
   createdAt: string;
 }
 
@@ -41,6 +42,7 @@ export interface HabitEntryDto {
   habitId: string;
   date: string;
   done: boolean;
+  minutes: number | null; // null для бінарних; хвилини за день для часових (ADR 0011)
 }
 
 export interface DailyLogDto {
@@ -101,6 +103,7 @@ export const toHabitDto = (h: Habit): HabitDto => ({
   color: h.color,
   icon: h.icon ?? null,
   weeklyTarget: h.weeklyTarget ?? null,
+  weeklyMinutesTarget: h.weeklyMinutesTarget ?? null,
   createdAt: toISODate(h.createdAt),
 });
 
@@ -115,6 +118,7 @@ export const toHabitEntryDto = (e: HabitEntry): HabitEntryDto => ({
   habitId: e.habitId,
   date: e.date,
   done: e.done,
+  minutes: e.minutes ?? null,
 });
 
 export const toDailyLogDto = (l: DailyLog): DailyLogDto => ({

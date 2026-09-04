@@ -60,6 +60,9 @@ model Habit {
   // Тижнева ціль частоти: null = щоденна звичка (метрики рахують кожен день); 1..6 = «N разів
   // на тиждень» (статистика рахує по Пн–Нд-тижнях, знаменник = повна ціль). Деталі — ADR 0010.
   weeklyTarget Int?
+  // Часова навичка: null = не часова; >0 = тижнева ціль у ХВИЛИНАХ (у формі задається в годинах).
+  // Взаємовиключне з weeklyTarget (гарантує форма+zod). `done` за день = minutes>0. Деталі — ADR 0011.
+  weeklyMinutesTarget Int?
   // Soft-delete (кошик): null = активна; не-null = у кошику, остаточне видалення через
   // TRASH_RETENTION_DAYS (lib/habitTrash). Замінює колишній `archived`-прапорець.
   deletedAt DateTime?
@@ -78,6 +81,9 @@ model HabitEntry {
   habit   Habit   @relation(fields: [habitId], references: [id], onDelete: Cascade)
   date    String // 'YYYY-MM-DD' — рядок, матчить ISO-інваріант контракту (без TZ-пасток)
   done    Boolean @default(true)
+  // Хвилини за день для часової навички (ADR 0011): null для бінарних; 0..1440 для часових.
+  // Рядок існує лише поки minutes>0 (для часових) або done (для бінарних) — sparse-модель.
+  minutes Int?
 
   // Унікальний ключ запису (habitId+date) — основа upsert у PUT /entries
   @@unique([habitId, date])

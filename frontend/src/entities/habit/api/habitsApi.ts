@@ -14,6 +14,7 @@ const toHabit = (dto: HabitDto): Habit => ({
   color: dto.color,
   icon: dto.icon ?? undefined,
   weeklyTarget: dto.weeklyTarget,
+  weeklyMinutesTarget: dto.weeklyMinutesTarget,
   createdAt: dto.createdAt,
 });
 

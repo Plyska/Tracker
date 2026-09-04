@@ -41,9 +41,16 @@ export const entriesApi = baseApi.injectEndpoints({
                   const idx = draft.findIndex(
                     (e) => e.habitId === arg.habitId && e.date === arg.date,
                   );
+                  // Часова навичка шле done=minutes>0 + minutes; бінарна — лише done (minutes→null).
+                  const next: HabitEntry = {
+                    habitId: arg.habitId,
+                    date: arg.date,
+                    done: arg.done,
+                    minutes: arg.minutes ?? null,
+                  };
                   if (arg.done) {
-                    if (idx === -1) draft.push({ ...arg });
-                    else draft[idx] = { ...arg };
+                    if (idx === -1) draft.push(next);
+                    else draft[idx] = next;
                   } else if (idx !== -1) {
                     draft.splice(idx, 1);
                   }

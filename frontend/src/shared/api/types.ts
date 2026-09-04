@@ -13,6 +13,7 @@ export interface HabitDto {
   color: string;
   icon: string | null;
   weeklyTarget: number | null; // null = щоденна; 1..6 = «N разів на тиждень» (ADR 0010)
+  weeklyMinutesTarget: number | null; // null = не часова; >0 = ціль хвилин/тиждень (ADR 0011)
   createdAt: string; // ISO 'YYYY-MM-DD'
 }
 
@@ -26,6 +27,7 @@ export interface HabitEntryDto {
   habitId: string;
   date: string; // 'YYYY-MM-DD'
   done: boolean;
+  minutes: number | null; // null для бінарних; хвилини за день для часових (ADR 0011)
 }
 
 export interface UserDto {
@@ -55,6 +57,8 @@ export interface StatsDto {
     completionRate: number;
     activeDays: number;
     weeklyTarget: number | null;
+    weeklyMinutesTarget: number | null; // null = не часова; >0 = ціль хвилин/тиждень (ADR 0011)
+    totalMinutes: number; // сумарно хвилин за період (0 для бінарних)
   }[];
   moodAverage: number | null;
   moodDays: number;
@@ -63,6 +67,7 @@ export interface StatsDto {
     completed: number;
     total: number;
     mood: number | null;
+    minutes: number; // сума хвилин часових навичок за день (ADR 0011)
   }[];
   moodCorrelations: {
     habitId: string;
@@ -118,6 +123,7 @@ export interface CreateHabitRequest {
   color: string;
   icon?: string | null;
   weeklyTarget?: number | null; // null / відсутнє = щоденна; 1..6 = тижнева ціль
+  weeklyMinutesTarget?: number | null; // >0 = часова навичка (ціль хвилин/тиждень); ADR 0011
 }
 
 export type UpdateHabitRequest = Partial<{
@@ -125,12 +131,14 @@ export type UpdateHabitRequest = Partial<{
   color: string;
   icon: string | null;
   weeklyTarget: number | null;
+  weeklyMinutesTarget: number | null;
 }>;
 
 export interface ToggleEntryRequest {
   habitId: string;
   date: string;
   done: boolean;
+  minutes?: number | null; // часова навичка: хвилини за день (сервер виводить done); ADR 0011
 }
 
 export interface UpsertDailyLogRequest {
