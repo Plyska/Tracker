@@ -31,6 +31,8 @@ model User {
   dailyLogs     DailyLog[]
   tasks         Task[]
   preferences   UserPreferences?
+  aiReflections AiReflection[]
+  aiUsage       AiUsage[]
 }
 
 // Клієнтські налаштування, перенесені з localStorage у БД (per-user, крос-девайс).
@@ -45,6 +47,10 @@ model UserPreferences {
   statsGoalPct      Int? // ціль виконання, 0..100 (null = без цілі)
   hiddenStatWidgets String[] @default([]) // ключі прихованих віджетів статистики
   editorScale       Float? // масштаб тексту редактора дня (zoom), 0.8..1.5 (null = дефолт 1)
+  // AI-помічник (ADR 0012). Усі null = не задано → фронт трактує як false.
+  aiEnabled    Boolean? // помічник увімкнено (гейт /ai/*; вмикається через екран згоди)
+  aiDiaryOptIn Boolean? // ОКРЕМИЙ дозвіл читати щоденник (OFF за замовч.; без нього notes не потрапляють у контекст)
+  aiConsentAt  DateTime? // момент згоди — ставить сервер при першому aiEnabled=true (GDPR-доказ)
   updatedAt         DateTime @updatedAt
   // Прим.: ширина колонки навичок (habitColWidth) свідомо лишається лише в localStorage
   // (per-device, не крос-девайс) — у БД не переноситься.
@@ -123,6 +129,39 @@ model Task {
 
   @@index([userId, date])
   @@index([habitId])
+}
+
+// AI-компаньйон (ADR 0012): кеш згенерованих підсумків. Один рядок на (user, period, periodKey):
+// повторне відкриття віддає з кешу (0 токенів), а історія підсумків — побічний ефект кешу.
+// `content` — structured output листа; ЧУТЛИВЕ (може містити переказ щоденника) — ніколи в логи.
+model AiReflection {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  period       String // 'week' | 'month'
+  periodKey    String // ISO-тиждень '2026-W36' або місяць '2026-09'
+  locale       String // 'en' | 'uk' — лист генерується мовою локалі на момент генерації
+  content      Json // {headline, highlights[], slips[], pattern, question}
+  model        String // id моделі-генератора (аудит/порівняння якості)
+  inputTokens  Int
+  outputTokens Int
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, period, periodKey])
+  @@index([userId])
+}
+
+// Квоти AI на день (ADR 0012): лічильник запитів/токенів на користувача. Перевищення ліміту →
+// 429 AI_QUOTA_EXCEEDED. `day` — локальна дата клієнта (як `to` у /stats), без TZ-дрейфу.
+model AiUsage {
+  userId       String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day          String // 'YYYY-MM-DD'
+  messages     Int    @default(0)
+  inputTokens  Int    @default(0)
+  outputTokens Int    @default(0)
+
+  @@id([userId, day])
 }
 
 // Refresh-токени: ротація + reuse-detection. Зберігаємо лише SHA-256 хеш непрозорого токена.

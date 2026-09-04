@@ -1,4 +1,4 @@
-import rateLimit, { type Options } from "express-rate-limit";
+import rateLimit, { ipKeyGenerator, type Options } from "express-rate-limit";
 import { Errors } from "../lib/errors.js";
 
 /**
@@ -35,4 +35,16 @@ export const authLimiter = rateLimit({
   windowMs: 15 * 60_000, // 15 хв
   limit: 10,
   skipSuccessfulRequests: true,
+});
+
+/**
+ * AI-ендпоінти (ADR 0012): ліміт PER-USER, не per-IP — ключ = `req.userId` (ставить `requireAuth`,
+ * тому монтувати ПІСЛЯ нього). Це стеля проти циклів/скриптів у хвилину; денна квота на LLM-виклики —
+ * окремо в `AiUsage` (429 AI_QUOTA_EXCEEDED). Фолбек на IP — лише для типобезпеки (IPv6-safe helper).
+ */
+export const aiLimiter = rateLimit({
+  ...base,
+  windowMs: 60_000, // 1 хв
+  limit: 30,
+  keyGenerator: (req) => req.userId ?? ipKeyGenerator(req.ip ?? ""),
 });

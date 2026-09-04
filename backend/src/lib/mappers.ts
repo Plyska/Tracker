@@ -72,6 +72,11 @@ export interface PreferencesDto {
   // null = рядка налаштувань ще немає (щоб клієнт відрізняв «не задано» від «нічого не приховано»).
   hiddenStatWidgets: string[] | null;
   editorScale: number | null;
+  // AI-компаньйон (ADR 0012): null = не задано → клієнт трактує як false. aiConsentAt — ISO datetime
+  // моменту згоди (ставить сервер при першому aiEnabled=true), read-only для клієнта.
+  aiEnabled: boolean | null;
+  aiDiaryOptIn: boolean | null;
+  aiConsentAt: string | null;
 }
 
 const toISODate = (d: Date): string => d.toISOString().slice(0, 10);
@@ -85,6 +90,9 @@ export const toPreferencesDto = (p: UserPreferences | null): PreferencesDto => (
   statsGoalPct: p?.statsGoalPct ?? null,
   hiddenStatWidgets: p?.hiddenStatWidgets ?? null,
   editorScale: p?.editorScale ?? null,
+  aiEnabled: p?.aiEnabled ?? null,
+  aiDiaryOptIn: p?.aiDiaryOptIn ?? null,
+  aiConsentAt: p?.aiConsentAt?.toISOString() ?? null,
 });
 
 export const toUserDto = (u: User): UserDto => ({

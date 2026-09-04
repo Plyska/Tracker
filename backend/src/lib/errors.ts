@@ -31,6 +31,13 @@ export const Errors = {
     new AppError(404, "TASK_NOT_FOUND", message),
   tooManyRequests: (message = "Too many requests, please try again later") =>
     new AppError(429, "RATE_LIMITED", message),
+  // AI-компаньйон (ADR 0012)
+  aiDisabled: (message = "AI assistant is not enabled for this account") =>
+    new AppError(403, "AI_DISABLED", message),
+  aiQuotaExceeded: (message = "Daily AI quota exceeded, try again tomorrow") =>
+    new AppError(429, "AI_QUOTA_EXCEEDED", message),
+  aiUnavailable: (message = "AI assistant is temporarily unavailable") =>
+    new AppError(503, "AI_UNAVAILABLE", message),
   notImplemented: (message = "Not implemented") =>
     new AppError(501, "NOT_IMPLEMENTED", message),
   internal: (message = "Internal server error") =>

@@ -23,6 +23,20 @@ const schema = z.object({
     .default("development"),
   // Кома-розділений список дозволених origin-ів для CORS.
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
+
+  // ── AI-компаньйон (ADR 0012) ─────────────────────────────────────────────────────────────
+  // Провайдер — за швом `AiProvider` (modules/ai/ai.client.ts); зміна = env, не код.
+  AI_PROVIDER: z.enum(["gemini", "anthropic"]).default("gemini"),
+  // Ключ ОПЦІЙНИЙ локально (без нього /ai/* віддає 503 AI_UNAVAILABLE), у проді — обов'язковий
+  // (guard нижче, фейл-фаст як для JWT-секретів).
+  GEMINI_API_KEY: z.string().min(1).optional(),
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  // Модель провайдера; без значення — дефолт за провайдером (див. export `aiModel`).
+  AI_MODEL: z.string().min(1).optional(),
+  // Денна квота запитів до LLM на користувача (лист/чек-ін/чат) → 429 AI_QUOTA_EXCEEDED.
+  AI_DAILY_MESSAGE_LIMIT: z.coerce.number().int().positive().default(20),
+  // Стеля розміру контекст-паку (токени, орієнтовно) — щоб рахунок не ріс із історією.
+  AI_CONTEXT_MAX_TOKENS: z.coerce.number().int().positive().default(6000),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -51,10 +65,35 @@ if (
   process.exit(1);
 }
 
+// AI: ключ активного провайдера. Локально може бути відсутній (фіча деградує до 503),
+// у проді — фейл-фаст: тихий деплой без AI гірший за помітну помилку старту.
+const aiApiKey =
+  raw.AI_PROVIDER === "gemini" ? raw.GEMINI_API_KEY : raw.ANTHROPIC_API_KEY;
+if (raw.NODE_ENV === "production" && !aiApiKey) {
+  // eslint-disable-next-line no-console
+  console.error(
+    `Refusing to start: AI_PROVIDER=${raw.AI_PROVIDER} but its API key is not set ` +
+      `(${raw.AI_PROVIDER === "gemini" ? "GEMINI_API_KEY" : "ANTHROPIC_API_KEY"}).`,
+  );
+  process.exit(1);
+}
+
+// Дефолтна модель за провайдером. Gemini — Flash на free tier (ADR 0012 / план §3.5);
+// Anthropic — Opus 5 (поточна рекомендація). Перекривається AI_MODEL.
+const AI_DEFAULT_MODEL: Record<typeof raw.AI_PROVIDER, string> = {
+  gemini: "gemini-3.8-flash",
+  anthropic: "claude-opus-5",
+};
+
 export const env = {
   ...raw,
   isProd: raw.NODE_ENV === "production",
   corsOrigins: raw.CORS_ORIGIN.split(",")
     .map((s) => s.trim())
     .filter(Boolean),
+  aiProvider: raw.AI_PROVIDER,
+  aiApiKey, // undefined → AI недоступний (503), сервер працює
+  aiModel: raw.AI_MODEL ?? AI_DEFAULT_MODEL[raw.AI_PROVIDER],
+  aiDailyMessageLimit: raw.AI_DAILY_MESSAGE_LIMIT,
+  aiContextMaxTokens: raw.AI_CONTEXT_MAX_TOKENS,
 };
