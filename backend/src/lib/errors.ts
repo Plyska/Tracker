@@ -38,6 +38,9 @@ export const Errors = {
     new AppError(429, "AI_QUOTA_EXCEEDED", message),
   aiUnavailable: (message = "AI assistant is temporarily unavailable") =>
     new AppError(503, "AI_UNAVAILABLE", message),
+  // Не помилка провайдера, а стан даних: писати лист нема з чого (мало відміток/днів).
+  aiNotEnoughData: (message = "Not enough tracked data to write a reflection yet") =>
+    new AppError(422, "AI_NOT_ENOUGH_DATA", message),
   notImplemented: (message = "Not implemented") =>
     new AppError(501, "NOT_IMPLEMENTED", message),
   internal: (message = "Internal server error") =>

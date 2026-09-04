@@ -4,7 +4,12 @@ import { requireAuth } from "../../middleware/auth.js";
 import { requireCsrf } from "../../lib/csrf.js";
 import { validate } from "../../middleware/validate.js";
 import { aiLimiter } from "../../middleware/rateLimit.js";
-import { insightsQuerySchema } from "./ai.schema.js";
+import {
+  insightsQuerySchema,
+  quotaQuerySchema,
+  reflectionBodySchema,
+  reflectionsQuerySchema,
+} from "./ai.schema.js";
 import * as ctrl from "./ai.controller.js";
 
 export const aiRouter = Router();
@@ -19,3 +24,22 @@ aiRouter.get(
   validate(insightsQuerySchema, "query"),
   asyncHandler(ctrl.getInsights),
 );
+
+// Лист-підсумок. POST (а не GET), бо генерація — операція зі спонукальним ефектом:
+// створює рядок і витрачає квоту. Повторний виклик у межах періоду віддає кеш.
+aiRouter.post(
+  "/reflection",
+  validate(reflectionBodySchema),
+  asyncHandler(ctrl.postReflection),
+);
+aiRouter.get(
+  "/reflections",
+  validate(reflectionsQuerySchema, "query"),
+  asyncHandler(ctrl.getReflections),
+);
+
+aiRouter.get("/quota", validate(quotaQuerySchema, "query"), asyncHandler(ctrl.getAiQuota));
+
+// GDPR-готовність: експорт і видалення AI-шару.
+aiRouter.get("/data", asyncHandler(ctrl.exportAiData));
+aiRouter.delete("/data", asyncHandler(ctrl.deleteAiData));
