@@ -4,6 +4,7 @@ export interface Habit {
   color: string;
   icon?: string;
   weeklyTarget: number | null; // null = щоденна; 1..6 = «N разів на тиждень» (ADR 0010)
+  weeklyMinutesTarget: number | null; // null = не часова; >0 = ціль хвилин/тиждень (ADR 0011)
   createdAt: string; // ISO 'YYYY-MM-DD'
 }
 

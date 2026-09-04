@@ -14,10 +14,11 @@ import {
   toISODate,
 } from "@/shared/lib";
 import { CheckboxCell } from "./CheckboxCell";
+import { TimeCell } from "./TimeCell";
 import { HabitWeekBadge } from "./HabitWeekBadge";
 import { SkeletonCell } from "./skeleton";
 import { BOUND_HEIGHT_CLASS } from "./styles";
-import { countDoneInDays } from "../lib/weekProgress";
+import { countDoneInDays, sumMinutesInDays } from "../lib/weekProgress";
 
 type Props = {
   habits: Habit[];
@@ -95,8 +96,15 @@ export function RowsGrid({
                   </span>
                   {showWeekBadge && habit.weeklyTarget != null && (
                     <HabitWeekBadge
-                      count={countDoneInDays(habit.id, days, byKey)}
+                      current={countDoneInDays(habit.id, days, byKey)}
                       target={habit.weeklyTarget}
+                    />
+                  )}
+                  {showWeekBadge && habit.weeklyMinutesTarget != null && (
+                    <HabitWeekBadge
+                      current={sumMinutesInDays(habit.id, days, byKey)}
+                      target={habit.weeklyMinutesTarget}
+                      hours
                     />
                   )}
                 </button>
@@ -128,7 +136,11 @@ export function RowsGrid({
                 <span>{format(day, "d", { locale: dateLocale })}</span>
               </div>
               {habits.map((habit) => {
-                const done = byKey[entryKey(habit.id, date)]?.done ?? false;
+                const entry = byKey[entryKey(habit.id, date)];
+                const isTimed = habit.weeklyMinutesTarget != null;
+                // Заблоковано: майбутнє та будь-який день поза поточним тижнем. Див. HabitTable.
+                const cellDisabled = future || outsideWeek;
+                const cellLabel = `${habit.name} — ${format(day, "PP", { locale: dateLocale })}`;
                 return (
                   <div
                     key={habit.id}
@@ -139,15 +151,23 @@ export function RowsGrid({
                   >
                     {loading ? (
                       <SkeletonCell />
+                    ) : isTimed ? (
+                      <TimeCell
+                        habitId={habit.id}
+                        date={date}
+                        minutes={entry?.minutes ?? 0}
+                        color={habit.color}
+                        disabled={cellDisabled}
+                        label={cellLabel}
+                      />
                     ) : (
                       <CheckboxCell
                         habitId={habit.id}
                         date={date}
-                        done={done}
+                        done={entry?.done ?? false}
                         color={habit.color}
-                        // Заблоковано: майбутнє та будь-який день поза поточним тижнем. Див. HabitTable.
-                        disabled={future || outsideWeek}
-                        label={`${habit.name} — ${format(day, "PP", { locale: dateLocale })}`}
+                        disabled={cellDisabled}
+                        label={cellLabel}
                       />
                     )}
                   </div>

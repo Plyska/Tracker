@@ -42,10 +42,14 @@ export interface StatsDto {
     completionRate: number;
     activeDays: number;
     weeklyTarget: number | null; // null = щоденна; 1..6 = тижнева ціль (для підписів/гейту на клієнті)
+    weeklyMinutesTarget: number | null; // null = не часова; >0 = ціль хвилин/тиждень (ADR 0011)
+    totalMinutes: number; // сумарно хвилин за період (0 для бінарних)
   }[];
   moodAverage: number | null; // середній настрій за період (null = немає логів)
   moodDays: number; // скільки днів із настроєм лягло в moodAverage
-  daily: { date: string; completed: number; total: number; mood: number | null }[];
+  // `minutes` — сума хвилин ЧАСОВИХ навичок за день (окрема серія для тренду/час↔настрій, ADR 0011);
+  // completed/total лишаються по щоденних бінарних (у часових денного очікування немає).
+  daily: { date: string; completed: number; total: number; mood: number | null; minutes: number }[];
   moodCorrelations: {
     habitId: string;
     moodWith: number; // середній настрій у дні, коли звичку виконано
@@ -130,6 +134,33 @@ export const habitPeriodUnits = (
   return { achieved, targetUnits };
 };
 
+/**
+ * Одиниці ЧАСОВОЇ навички (ADR 0011) — хвилини як одиниці, кап 100%/тиждень. Дзеркалить
+ * `habitPeriodUnits` для count-цілі, але в хвилинах. `weeks` = к-сть активних Пн–Нд-тижнів
+ * (вага навички у глобальному completionRate — 1 «week-goal»/тиждень, щоб хвилини не свампили count).
+ */
+export const habitTimedUnits = (
+  activeDays: string[],
+  minutesByDate: Map<string, number>,
+  weeklyMinutesTarget: number,
+): { achieved: number; targetUnits: number; weeks: number } => {
+  const perWeekMin = new Map<string, number>();
+  const activeWeeks = new Set<string>();
+  for (const d of activeDays) {
+    const wk = mondayISO(d);
+    activeWeeks.add(wk);
+    const m = minutesByDate.get(d) ?? 0;
+    if (m > 0) perWeekMin.set(wk, (perWeekMin.get(wk) ?? 0) + m);
+  }
+  let achieved = 0;
+  let targetUnits = 0;
+  for (const wk of activeWeeks) {
+    targetUnits += weeklyMinutesTarget;
+    achieved += Math.min(perWeekMin.get(wk) ?? 0, weeklyMinutesTarget);
+  }
+  return { achieved, targetUnits, weeks: activeWeeks.size };
+};
+
 const avg = (xs: number[]): number =>
   xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
 
@@ -172,6 +203,22 @@ export const hitWeeks = (doneDays: Set<string>, target: number): Set<string> => 
   return hits;
 };
 
+// Тижні з досягнутою ХВИЛИННОЮ ціллю (ADR 0011): Σхвилин у Пн–Нд-бакеті >= target.
+export const hitWeeksByMinutes = (
+  minutesByDate: Map<string, number>,
+  target: number,
+): Set<string> => {
+  const perWeek = new Map<string, number>();
+  for (const [d, m] of minutesByDate) {
+    if (m <= 0) continue;
+    const wk = mondayISO(d);
+    perWeek.set(wk, (perWeek.get(wk) ?? 0) + m);
+  }
+  const hits = new Set<string>();
+  for (const [wk, sum] of perWeek) if (sum >= target) hits.add(wk);
+  return hits;
+};
+
 export const longestWeekRun = (hits: Set<string>): number => {
   const sorted = [...hits].sort();
   let best = 0;
@@ -207,19 +254,27 @@ export async function computeStats(
   // Scope-звички: усі активні (або одна, якщо habitId). У кошику (deletedAt != null) не входять у «активні».
   const habits = await prisma.habit.findMany({
     where: { userId, deletedAt: null, ...(habitId ? { id: habitId } : {}) },
-    select: { id: true, weeklyTarget: true },
+    select: { id: true, weeklyTarget: true, weeklyMinutesTarget: true },
   });
   const habitIds = habits.map((h) => h.id);
   // Тижнева ціль по звичці: null = щоденна (метрики per-day), 1..6 = тижнева (метрики по Пн–Нд-тижнях).
   const weeklyTargetOf = new Map<string, number | null>(habits.map((h) => [h.id, h.weeklyTarget]));
-  // Щоденні звички — для денних метрик (daily[]/perfectDays); у тижневих денного очікування немає.
-  const dailyHabitIds = habitIds.filter((id) => weeklyTargetOf.get(id) == null);
+  // Часова ціль (хвилини/тиждень): null = не часова, >0 = часова навичка (ADR 0011).
+  const weeklyMinutesTargetOf = new Map<string, number | null>(
+    habits.map((h) => [h.id, h.weeklyMinutesTarget]),
+  );
+  const timedHabitIds = habitIds.filter((id) => weeklyMinutesTargetOf.get(id) != null);
+  // Щоденні бінарні звички — для денних метрик (daily[]/perfectDays); у тижневих і ЧАСОВИХ денного
+  // очікування немає (обидва — тижневі за природою, тож поза денним total).
+  const dailyHabitIds = habitIds.filter(
+    (id) => weeklyTargetOf.get(id) == null && weeklyMinutesTargetOf.get(id) == null,
+  );
 
   // Усі відмітки scope-звичок (для streak — по всій історії; період фільтруємо в пам'яті).
   const entries = habitIds.length
     ? await prisma.habitEntry.findMany({
         where: { habitId: { in: habitIds }, done: true },
-        select: { habitId: true, date: true },
+        select: { habitId: true, date: true, minutes: true },
       })
     : [];
 
@@ -230,9 +285,13 @@ export async function computeStats(
   });
   const moodByDate = new Map(logs.map((l) => [l.date, l.mood]));
 
-  // done[habitId] = Set дат, коли виконано (вся історія).
+  // done[habitId] = Set дат, коли виконано (вся історія). minutesByHabit[habitId] = дата→хвилини (часові).
   const doneByHabit = new Map<string, Set<string>>(habitIds.map((id) => [id, new Set()]));
-  for (const e of entries) doneByHabit.get(e.habitId)!.add(e.date);
+  const minutesByHabit = new Map<string, Map<string, number>>(habitIds.map((id) => [id, new Map()]));
+  for (const e of entries) {
+    doneByHabit.get(e.habitId)!.add(e.date);
+    if (e.minutes != null) minutesByHabit.get(e.habitId)!.set(e.date, e.minutes);
+  }
 
   // День «старту» звички = найперша відмітка (не createdAt): користувач може створити звичку
   // наперед («завтра почну»), тож до першого треку днів у total нема. Без жодної відмітки звичка
@@ -258,7 +317,10 @@ export async function computeStats(
   const daily = period.map((date) => {
     const activeIds = dailyHabitIds.filter((id) => isActive(id, date));
     const completed = activeIds.filter((id) => doneByHabit.get(id)!.has(date)).length;
-    return { date, completed, total: activeIds.length, mood: moodByDate.get(date) ?? null };
+    // Хвилини за день = сума по всіх ЧАСОВИХ навичках (окрема серія, не змішується з completion).
+    let minutes = 0;
+    for (const id of timedHabitIds) minutes += minutesByHabit.get(id)!.get(date) ?? 0;
+    return { date, completed, total: activeIds.length, mood: moodByDate.get(date) ?? null, minutes };
   });
   const perfectDays = daily.filter((d) => d.total > 0 && d.completed === d.total).length;
 
@@ -287,15 +349,33 @@ export async function computeStats(
     dayFreq.set(id, doneInPeriod / activeInPeriod.length);
 
     const wt = weeklyTargetOf.get(id) ?? null;
-    const { achieved, targetUnits } = habitPeriodUnits(activeInPeriod, done, wt);
-    const rate = targetUnits ? achieved / targetUnits : 0;
-    totalAchieved += achieved;
-    totalTarget += targetUnits;
+    const wmt = weeklyMinutesTargetOf.get(id) ?? null;
+    const mins = minutesByHabit.get(id)!;
+    const totalMinutes = activeInPeriod.reduce((s, d) => s + (mins.get(d) ?? 0), 0);
+
+    // rate — частка виконання 0..1 (для breakdown/bestHabit); weight — вага у глобальному
+    // completionRate у count-сумірних одиницях: щоденна = дні, count = target/тиждень, часова = 1/тиждень
+    // (щоб хвилини не свампили count). Для не-часових rate*weight === achieved → тотожно старій формулі.
+    let rate: number;
+    let weight: number;
+    if (wmt != null) {
+      const timed = habitTimedUnits(activeInPeriod, mins, wmt);
+      rate = timed.targetUnits ? timed.achieved / timed.targetUnits : 0;
+      weight = timed.weeks;
+    } else {
+      const { achieved, targetUnits } = habitPeriodUnits(activeInPeriod, done, wt);
+      rate = targetUnits ? achieved / targetUnits : 0;
+      weight = targetUnits;
+    }
+    totalAchieved += rate * weight;
+    totalTarget += weight;
     habitBreakdown.push({
       habitId: id,
       completionRate: rate,
       activeDays: activeInPeriod.length,
       weeklyTarget: wt,
+      weeklyMinutesTarget: wmt,
+      totalMinutes,
     });
     if (!bestHabit || rate > bestHabit.completionRate) bestHabit = { habitId: id, completionRate: rate };
   }
@@ -378,6 +458,12 @@ export async function computeStats(
   const habitStreaks: StatsDto["habitStreaks"] = habitIds.map((id) => {
     const done = doneByHabit.get(id)!;
     const wt = weeklyTargetOf.get(id) ?? null;
+    const wmt = weeklyMinutesTargetOf.get(id) ?? null;
+    // Часова → тижні поспіль із досягнутою хвилинною ціллю (Σхвилин ≥ target).
+    if (wmt != null) {
+      const hits = hitWeeksByMinutes(minutesByHabit.get(id)!, wmt);
+      return { habitId: id, current: currentWeekRun(hits, to), longest: longestWeekRun(hits) };
+    }
     if (wt == null) return { habitId: id, current: currentRun(done, to), longest: longestRun(done) };
     const hits = hitWeeks(done, wt);
     return { habitId: id, current: currentWeekRun(hits, to), longest: longestWeekRun(hits) };

@@ -33,6 +33,7 @@ export const createHabit = async (req: Request, res: Response): Promise<void> =>
       color: body.color,
       icon: body.icon ?? null,
       weeklyTarget: body.weeklyTarget ?? null,
+      weeklyMinutesTarget: body.weeklyMinutesTarget ?? null,
     },
   });
   res.status(201).json(toHabitDto(habit));

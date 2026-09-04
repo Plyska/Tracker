@@ -7,6 +7,7 @@ export interface DailyStat {
   completed: number;
   total: number;
   mood: number | null;
+  minutes: number; // сума хвилин часових навичок за день (ADR 0011)
 }
 
 export interface HabitBreakdown {
@@ -14,6 +15,8 @@ export interface HabitBreakdown {
   completionRate: number; // 0..1 за період
   activeDays: number; // днів, коли звичка була активна (для гейту вибірки)
   weeklyTarget: number | null; // null = щоденна; 1..6 = тижнева ціль (для підписів/гейту в тижнях)
+  weeklyMinutesTarget: number | null; // null = не часова; >0 = ціль хвилин/тиждень (ADR 0011)
+  totalMinutes: number; // сумарно хвилин за період (0 для бінарних)
 }
 
 export interface MoodCorrelation {

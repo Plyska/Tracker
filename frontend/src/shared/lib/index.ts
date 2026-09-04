@@ -27,3 +27,8 @@ export {
   MAX_AVATAR_BYTES,
   type ImageError,
 } from "./image";
+export {
+  formatCellDuration,
+  minutesToHoursLabel,
+  hoursToMinutes,
+} from "./duration";

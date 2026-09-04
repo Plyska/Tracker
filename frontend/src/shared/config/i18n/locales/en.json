@@ -146,6 +146,13 @@
     "placeholder": "--:--",
     "clear": "Clear"
   },
+  "timeCell": {
+    "increase": "Add 15 minutes",
+    "decrease": "Remove 15 minutes",
+    "clear": "Clear",
+    "done": "Done",
+    "none": "None"
+  },
   "tasks": {
     "add": "Add task",
     "toggleDone": "Mark \"{{title}}\" done",
@@ -185,6 +192,8 @@
     "emptyTitle": "No habits yet",
     "empty": "Add your first habit to start tracking.",
     "weekProgress": "{{count}} of {{target}} this week",
+    "weekProgressHours": "{{current}}h of {{target}}h this week",
+    "hoursSuffix": "h",
     "menu": {
       "label": "Habit options",
       "edit": "Edit",
@@ -198,11 +207,20 @@
       "namePlaceholder": "e.g. Read 20 pages",
       "nameRequired": "Enter a habit name.",
       "preview": "Preview",
+      "customizeAppearance": "Appearance",
       "frequency": "Frequency",
       "freqDaily": "Daily",
-      "freqWeekly": "Times per week",
+      "freqWeekly": "Times/week",
+      "freqWeeklyShort": "×/wk",
+      "freqHours": "Hours/week",
+      "freqHoursShort": "h/wk",
       "freqTimesPerWeek": "Times per week",
+      "freqHoursPerWeek": "Hours per week",
       "freqWeeklyHint": "Counts as done when you hit it {{count}}× in a Mon–Sun week — any days.",
+      "freqHoursHint": "Timed habit — log minutes each day; the cell shows hours. Goal: {{hours}}h in a Mon–Sun week.",
+      "hoursShort": "{{count}}h",
+      "customHours": "Custom:",
+      "hoursUnit": "h/week",
       "color": "Color",
       "customColor": "Custom color",
       "icon": "Icon",
@@ -237,9 +255,16 @@
       "weekday": "Weekdays",
       "synergy": "Habit synergies",
       "milestones": "Milestones",
+      "time": "Time spent",
       "activity": "Activity chart",
       "mood": "Mood correlation",
       "heatmap": "Heatmap"
+    },
+    "time": {
+      "title": "Time spent",
+      "info": "Total time logged per timed habit over the period, its split across habits, and your average per active day.",
+      "empty": "No time logged yet. Create an “Hours/week” habit and log minutes on the tracker.",
+      "avgPerDay": "· {{value}}/active day"
     },
     "synergy": {
       "title": "Habit synergies",

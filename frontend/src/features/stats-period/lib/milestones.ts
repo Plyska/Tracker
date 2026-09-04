@@ -72,7 +72,10 @@ function activeRunAndGap(daily: DailyStat[]): { run: number; gap: number } {
 export function buildMilestones(stats: Stats, habits: Habit[]): Milestone[] {
   const nameOf = (id: string) => habits.find((h) => h.id === id)?.name ?? "—";
 
-  const weeklyById = new Map(habits.map((h) => [h.id, h.weeklyTarget != null]));
+  // Тижневі за природою — count-ціль (weeklyTarget) І часові (weeklyMinutesTarget): серія в тижнях.
+  const weeklyById = new Map(
+    habits.map((h) => [h.id, h.weeklyTarget != null || h.weeklyMinutesTarget != null]),
+  );
 
   const newRecords: Milestone[] = [];
   const streaks: Milestone[] = [];

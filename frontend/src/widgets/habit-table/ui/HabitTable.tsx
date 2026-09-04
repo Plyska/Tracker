@@ -28,11 +28,12 @@ import {
 } from "@/shared/lib";
 import { useDelayedFlag } from "@/shared/lib/hooks/useDelayedFlag";
 import { CheckboxCell } from "./CheckboxCell";
+import { TimeCell } from "./TimeCell";
 import { HabitWeekBadge } from "./HabitWeekBadge";
 import { RowsGrid } from "./RowsGrid";
 import { SkeletonCell, TableSkeleton } from "./skeleton";
 import { BOUND_HEIGHT_CLASS } from "./styles";
-import { countDoneInDays } from "../lib/weekProgress";
+import { countDoneInDays, sumMinutesInDays } from "../lib/weekProgress";
 
 // Адаптивний дефолт для ТИЖНЯ (7 колонок). Місяць/ручна ширина — через inline-style
 // з динамічним repeat(days.length), бо кількість колонок змінна.
@@ -322,8 +323,15 @@ export function HabitTable() {
               >
                 {scale === "week" && habit.weeklyTarget != null && (
                   <HabitWeekBadge
-                    count={countDoneInDays(habit.id, days, byKey)}
+                    current={countDoneInDays(habit.id, days, byKey)}
                     target={habit.weeklyTarget}
+                  />
+                )}
+                {scale === "week" && habit.weeklyMinutesTarget != null && (
+                  <HabitWeekBadge
+                    current={sumMinutesInDays(habit.id, days, byKey)}
+                    target={habit.weeklyMinutesTarget}
+                    hours
                   />
                 )}
                 <HabitRowMenu habit={habit} />
@@ -331,7 +339,12 @@ export function HabitTable() {
             </div>
             {days.map((day) => {
               const date = toISODate(day);
-              const done = byKey[entryKey(habit.id, date)]?.done ?? false;
+              const entry = byKey[entryKey(habit.id, date)];
+              const isTimed = habit.weeklyMinutesTarget != null;
+              // Редагувати можна лише поточний тиждень: майбутні дні заблоковані,
+              // як і будь-який день поза поточним Пн–Нд-тижнем.
+              const cellDisabled = isFutureDay(day) || !isCurrentWeek(day);
+              const cellLabel = `${habit.name} — ${format(day, "PP", { locale: dateLocale })}`;
               return (
                 <div
                   key={day.toISOString()}
@@ -342,16 +355,23 @@ export function HabitTable() {
                 >
                   {gridLoading ? (
                     <SkeletonCell />
+                  ) : isTimed ? (
+                    <TimeCell
+                      habitId={habit.id}
+                      date={date}
+                      minutes={entry?.minutes ?? 0}
+                      color={habit.color}
+                      disabled={cellDisabled}
+                      label={cellLabel}
+                    />
                   ) : (
                     <CheckboxCell
                       habitId={habit.id}
                       date={date}
-                      done={done}
+                      done={entry?.done ?? false}
                       color={habit.color}
-                      // Редагувати можна лише поточний тиждень: майбутні дні заблоковані,
-                      // як і будь-який день поза поточним Пн–Нд-тижнем.
-                      disabled={isFutureDay(day) || !isCurrentWeek(day)}
-                      label={`${habit.name} — ${format(day, "PP", { locale: dateLocale })}`}
+                      disabled={cellDisabled}
+                      label={cellLabel}
                     />
                   )}
                 </div>

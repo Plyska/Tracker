@@ -12,6 +12,7 @@ import { MoversCard } from "./MoversCard";
 import { WeekdayCard } from "./WeekdayCard";
 import { SynergyCard } from "./SynergyCard";
 import { MilestonesCard } from "./MilestonesCard";
+import { TimeByHabitCard } from "./TimeByHabitCard";
 import { Heatmap } from "./Heatmap";
 import { ActivityChart } from "./ActivityChart";
 import { MoodCorrelationCard } from "./MoodCorrelationCard";
@@ -75,7 +76,8 @@ export function StatisticsView() {
           show("weekday") ||
           show("goal") ||
           show("synergy") ||
-          show("milestones")) && (
+          show("milestones") ||
+          show("time")) && (
           <div className="flex flex-wrap gap-4">
             {show("progress") && (
               <div className={INSIGHT_ITEM}>
@@ -116,6 +118,13 @@ export function StatisticsView() {
               <div className={INSIGHT_ITEM}>
                 <Tilt>
                   <MilestonesCard />
+                </Tilt>
+              </div>
+            )}
+            {show("time") && (
+              <div className={INSIGHT_ITEM}>
+                <Tilt>
+                  <TimeByHabitCard />
                 </Tilt>
               </div>
             )}
