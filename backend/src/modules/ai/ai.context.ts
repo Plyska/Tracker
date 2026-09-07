@@ -66,17 +66,27 @@ export interface PeriodBounds {
 }
 
 /**
- * Межі періоду, **вирівняні на Пн–Нд** (ADR 0010): тижнева математика цілей інакше бреше на
- * краях вікна. `week` = поточний тиждень від понеділка до «сьогодні»; `month` = 4 цілі тижні.
+ * Межі періоду — **завершені** Пн–Нд-тижні (ADR 0010: тижнева математика цілей інакше бреше на
+ * краях вікна).
+ *
+ * Свідомо НЕ поточний тиждень: лист — це ретроспектива. Про поточний у понеділок писати нема
+ * чого, а згенерований у четвер лист закешувався б із четверговими даними й висів таким до
+ * кінця тижня. Останній завершений тиждень натомість **незмінний**, тож кеш вічний і правдивий.
+ * «Що відбувається зараз» покривають підказки (ai.insights) — вони живі й оновлюються на дію.
+ *
+ * `week`  = минулий Пн–Нд; `month` = 4 завершені тижні, що закінчуються тією ж неділею.
  */
 export function periodBounds(period: AiPeriod, today: string): PeriodBounds {
   const weeks = WEEKS_IN_PERIOD[period];
-  const from = addDaysISO(mondayISO(today), -(weeks - 1) * 7);
+  const lastSunday = addDaysISO(mondayISO(today), -1); // неділя тижня, що завершився
+  const from = addDaysISO(lastSunday, -(weeks * 7 - 1));
   return {
     kind: period,
     from,
-    to: today,
-    key: period === "week" ? isoWeekKey(today) : today.slice(0, 7),
+    to: lastSunday,
+    // Ключ кешу — за САМИМ періодом (не за «сьогодні»), інакше кожен новий день робив би
+    // новий рядок для того самого тижня.
+    key: period === "week" ? isoWeekKey(from) : from.slice(0, 7),
     prevFrom: addDaysISO(from, -weeks * 7),
     prevTo: addDaysISO(from, -1),
   };

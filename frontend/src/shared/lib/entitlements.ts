@@ -16,14 +16,23 @@ export type Entitlement =
   | "unlimited-habits"
   | "advanced-stats"
   | "customization"
-  | "table-layout";
+  | "table-layout"
+  // AI-помічник (ADR 0012). На релізі відкритий усім (MOCK_PLAN='pro'); згодом Pro-перком стане
+  // не сам доступ, а кращий тир моделі + вища денна квота — тобто гейт лишиться тут же.
+  | "ai-assistant";
 
 // Реліз: усі як 'pro' (усі фічі відкриті). Згодом — похідне від UserDto.plan з БД.
 const MOCK_PLAN: Plan = "pro";
 
 const ENTITLEMENTS: Record<Plan, Entitlement[]> = {
   free: [],
-  pro: ["unlimited-habits", "advanced-stats", "customization", "table-layout"],
+  pro: [
+    "unlimited-habits",
+    "advanced-stats",
+    "customization",
+    "table-layout",
+    "ai-assistant",
+  ],
 };
 
 export function useEntitlement(feature: Entitlement): boolean {

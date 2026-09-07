@@ -212,6 +212,10 @@ export interface PreferencesDto {
   statsGoalPct: number | null;
   hiddenStatWidgets: string[] | null; // null = ще не зберігалось (для seed-логіки)
   editorScale: number | null;
+  // AI-помічник (ADR 0012). null = не задано → трактуємо як false.
+  aiEnabled: boolean | null;
+  aiDiaryOptIn: boolean | null;
+  aiConsentAt: string | null; // ISO datetime; ставить СЕРВЕР при першому вмиканні (read-only)
 }
 
 /** PATCH /me/preferences — часткове оновлення (передаємо лише те, що змінилось). */
@@ -223,4 +227,66 @@ export type UpdatePreferencesRequest = Partial<{
   statsGoalPct: number | null;
   hiddenStatWidgets: string[];
   editorScale: number;
+  // AI: пишуться ЯВНО (екран згоди / тумблери в Settings), а не через debounce-синк префів —
+  // інакше локальний `false` до гідрації міг би вимкнути помічника, увімкненого на іншому
+  // пристрої. `aiConsentAt` клієнт не надсилає — це серверне поле.
+  aiEnabled: boolean;
+  aiDiaryOptIn: boolean;
 }>;
+
+// --- AI-помічник (ADR 0012) ---
+
+/**
+ * Підказка-патерн. Генерується БЕЗ LLM: сервер віддає ключ+параметри, текст рендерить клієнт
+ * з i18n-шаблону `ai.insights.<key>.v<variant>` — тож підказка не може «вигадати» число.
+ */
+export interface InsightDto {
+  key: string;
+  variant: number; // індекс формулювання (ротація за днем — проти відчуття шаблонності)
+  severity: "care" | "notice" | "info";
+  params: Record<string, string | number>;
+  seed: string; // машинна зачіпка для засівання чату (фаза B2)
+}
+
+export interface ReflectionItemDto {
+  habitId: string | null; // звірено з контекстом на сервері — id завжди існує або null
+  text: string;
+}
+
+export interface ReflectionContentDto {
+  headline: string;
+  highlights: ReflectionItemDto[];
+  slips: ReflectionItemDto[];
+  pattern: { kind: string; text: string } | null;
+  question: string;
+}
+
+export interface ReflectionDto {
+  period: "week" | "month";
+  periodKey: string; // '2026-W36' | '2026-09'
+  locale: string;
+  content: ReflectionContentDto;
+  createdAt: string;
+  cached: boolean; // true → віддано з кешу (нуль токенів)
+}
+
+/** Елемент історії листів (кеш = архів): без повного вмісту, лише заголовок. */
+export interface ReflectionSummaryDto {
+  periodKey: string;
+  locale: string;
+  headline: string;
+  createdAt: string;
+}
+
+export interface AiQuotaDto {
+  used: number;
+  limit: number;
+  remaining: number;
+  configured: boolean; // false → провайдер не налаштований (ключа немає)
+}
+
+export interface ReflectionRequest {
+  period: "week" | "month";
+  today: string; // локальна дата клієнта — без TZ-дрейфу
+  locale: "en" | "uk";
+}

@@ -40,7 +40,11 @@ const MAX_INSIGHTS = 2; // клієнт показує 1; друга — на в
 const LOOKBACK_DAYS = 28;
 const LOW_MOOD_MAX = 2;
 const LOW_MOOD_MIN_DAYS = 3;
-const STREAK_BROKEN_MIN_LONGEST = 7;
+// Обірвана серія показується лише якщо вона САМА була змістовною: інакше ми драматизували б
+// розрив дводенної серії, посилаючись на давній рекорд («на нулі після 26 днів», хоча щойно
+// обірвались 2). Рекорд тепер лише додатковий контекст, а не підмет речення.
+const STREAK_BROKEN_MIN_RUN = 5;
+const STREAK_BROKEN_MAX_DAYS_AGO = 14; // старіший розрив — уже не новина
 const COMEBACK_MIN_GAP_DAYS = 7;
 const SYNERGY_MIN_DELTA = 0.2;
 const TIMED_AT_RISK_MAX_DAYS_LEFT = 2;
@@ -84,6 +88,12 @@ interface Snapshot {
   moodByDate: Map<string, number>;
   /** Усі дні з ≥1 виконаною навичкою за LOOKBACK_DAYS. */
   activeDates: Set<string>;
+  /**
+   * habitId → дати виконання за LOOKBACK_DAYS. Потрібне для довжини серії, що обірвалась.
+   * Прим.: серія довша за вікно обрізається його межею — для «свіжого розриву» (≤14 днів тому)
+   * цього достатньо, а точний рекорд усе одно приходить із `computeStats.habitStreaks`.
+   */
+  doneByHabit: Map<string, Set<string>>;
   /** Виконання поточного Пн–Нд-тижня по навичці: count і Σ minutes. */
   weekDone: Map<string, { count: number; minutes: number }>;
   stats: Awaited<ReturnType<typeof computeStats>>;
@@ -114,9 +124,13 @@ async function loadSnapshot(userId: string, today: string): Promise<Snapshot> {
   ]);
 
   const activeDates = new Set<string>();
+  const doneByHabit = new Map<string, Set<string>>();
   const weekDone = new Map<string, { count: number; minutes: number }>();
   for (const e of entries) {
     activeDates.add(e.date);
+    let set = doneByHabit.get(e.habitId);
+    if (!set) doneByHabit.set(e.habitId, (set = new Set()));
+    set.add(e.date);
     if (e.date >= monday) {
       const w = weekDone.get(e.habitId) ?? { count: 0, minutes: 0 };
       w.count += 1;
@@ -131,6 +145,7 @@ async function loadSnapshot(userId: string, today: string): Promise<Snapshot> {
     nameOf: new Map(habits.map((h) => [h.id, h.name])),
     moodByDate: new Map(logs.map((l) => [l.date, l.mood])),
     activeDates,
+    doneByHabit,
     weekDone,
     stats,
   };
@@ -173,17 +188,52 @@ const comeback = (s: Snapshot): InsightDto | null => {
   };
 };
 
-/** Довга серія навички (≥7) зараз на нулі — беремо найдовшу. */
+/**
+ * Змістовна серія щойно обірвалась. Рахуємо ДОВЖИНУ ТІЄЇ серії, що впала, і коли це сталося —
+ * а не рекорд за всю історію: `habitStreaks.longest` описує інший факт, і підставляти його в
+ * речення про свіжий розрив означало б брехати числом (єдине, чого детермінована підказка
+ * робити не має права). Рекорд віддаємо окремим параметром — як контекст.
+ */
 const streakBroken = (s: Snapshot): InsightDto | null => {
-  const broken = s.stats.habitStreaks
-    .filter((h) => h.longest >= STREAK_BROKEN_MIN_LONGEST && h.current === 0 && s.nameOf.has(h.habitId))
-    .sort((a, b) => b.longest - a.longest)[0];
+  // ЛИШЕ щоденні звички. У count/часових стрік міряється в ТИЖНЯХ (ADR 0010/0011), тож
+  // `current === 0` там означає «не досягнуто тижневої цілі», а не «обірвалась денна серія» —
+  // денна арифметика на таких навичках дала б безглузде «серія 5 днів» проти рекорду «4 тижні».
+  // Для тижневих потрібен окремий тригер (пропущені тижні поспіль) — свідомо поза цим.
+  const dailyIds = new Set(
+    s.habits.filter((h) => h.weeklyTarget == null && h.weeklyMinutesTarget == null).map((h) => h.id),
+  );
+  const candidates = s.stats.habitStreaks
+    .filter((h) => h.current === 0 && dailyIds.has(h.habitId) && s.nameOf.has(h.habitId))
+    .map((h) => {
+      const done = s.doneByHabit.get(h.habitId);
+      if (!done?.size) return null;
+      // Найновіша відмітка + довжина безперервного відрізка, що на ній закінчується.
+      let last = "";
+      for (const d of done) if (d > last) last = d;
+      let run = 1;
+      while (done.has(addDaysISO(last, -run))) run += 1;
+      return { habitId: h.habitId, run, daysAgo: daysBetween(last, s.today) };
+    })
+    .filter(
+      (c): c is NonNullable<typeof c> =>
+        c !== null && c.run >= STREAK_BROKEN_MIN_RUN && c.daysAgo <= STREAK_BROKEN_MAX_DAYS_AGO,
+    )
+    // Найсвіжіший розрив важливіший; за рівних — довша обірвана серія.
+    .sort((a, b) => a.daysAgo - b.daysAgo || b.run - a.run);
+
+  const broken = candidates[0];
   if (!broken) return null;
   return {
     key: "streakBroken",
     variant: variantFor("streakBroken", s.today),
     severity: "notice",
-    params: { habit: s.nameOf.get(broken.habitId)!, longest: broken.longest },
+    // `longest` свідомо НЕ віддаємо: у різних типів навичок його одиниця різна (дні/тижні),
+    // і в шаблоні поруч із денним `run` він читався б як те саме — знову брехня числом.
+    params: {
+      habit: s.nameOf.get(broken.habitId)!,
+      run: broken.run,
+      daysAgo: broken.daysAgo,
+    },
     seed: `streakBroken:${broken.habitId}`,
   };
 };

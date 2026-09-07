@@ -6,10 +6,18 @@ import { useSyncExternalStore } from "react";
  */
 
 export type ToastVariant = "error" | "success";
+
+/** Опційна дія в тості — для undo-патерну («Приховано · Повернути»). */
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface ToastItem {
   id: number;
   message: string;
   variant: ToastVariant;
+  action?: ToastAction;
 }
 
 let items: ToastItem[] = [];
@@ -18,8 +26,8 @@ let nextId = 1;
 
 const emit = () => listeners.forEach((l) => l());
 
-function push(message: string, variant: ToastVariant) {
-  items = [...items, { id: nextId++, message, variant }];
+function push(message: string, variant: ToastVariant, action?: ToastAction) {
+  items = [...items, { id: nextId++, message, variant, action }];
   emit();
 }
 
@@ -29,8 +37,8 @@ export function dismissToast(id: number) {
 }
 
 export const toast = {
-  error: (message: string) => push(message, "error"),
-  success: (message: string) => push(message, "success"),
+  error: (message: string, action?: ToastAction) => push(message, "error", action),
+  success: (message: string, action?: ToastAction) => push(message, "success", action),
 };
 
 export function useToasts(): ToastItem[] {

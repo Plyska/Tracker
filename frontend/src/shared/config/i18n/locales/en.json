@@ -9,7 +9,85 @@
     "planner": "Planner",
     "diary": "Diary",
     "statistics": "Statistics",
+    "assistant": "Assistant",
     "settings": "Settings"
+  },
+  "ai": {
+    "beta": "Beta",
+    "betaHint": "The assistant is still in testing — it runs on a free provider tier.",
+    "diaryHint": "Diary entries are the most personal thing here. On the free tier they also pass through Google. If you're unsure, leave this off — the assistant works well on habits and mood alone.",
+    "intro": {
+      "title": "Your companion",
+      "body": "It reads your habits, check-ins and mood, and writes you a short letter each week — what went well, what slipped, and one thing it noticed.",
+      "enable": "Turn on the assistant"
+    },
+    "consent": {
+      "title": "The assistant",
+      "sees": "What it sees: habit names, check-ins and mood. Diary entries — only if you allow it.",
+      "testing": "While the assistant is in testing, it runs on Google Gemini's free tier. That means Google may use the requests to improve its models — as in the free versions of other AI services; some may be reviewed by Google staff.",
+      "paidPlan": "When we move to the paid tier this stops — we'll let you know as soon as it does.",
+      "diaryLabel": "Let it read my diary",
+      "control": "You're always in control: turn the assistant off, keep your diary private, or delete all AI data — one tap in Settings.",
+      "accept": "Turn on"
+    },
+    "reflection": {
+      "highlights": "What went well",
+      "slips": "What slipped",
+      "generating": "Writing your letter…",
+      "history": "Earlier letters",
+      "empty": "No letter yet",
+      "emptyHint": "Track a few days and the assistant will have something to write about.",
+      "retry": "Try again"
+    },
+    "quota": {
+      "status": "{{used}} of {{limit}} requests used today",
+      "exhausted": "Daily limit reached",
+      "resets": "The limit resets tomorrow — your letter will be waiting."
+    },
+    "settings": {
+      "title": "AI assistant",
+      "description": "A weekly letter about your habits and mood, plus gentle notices on the dashboard.",
+      "deleteData": "Delete AI data",
+      "deleted": "Deleted {{count}} letters"
+    },
+    "insights": {
+      "discuss": "Talk about it",
+      "dismiss": "Dismiss",
+      "dismissed": "Hidden for a few days",
+      "undo": "Undo",
+      "restoreAll": "Show hidden notices",
+      "restored": "Hidden notices restored",
+      "lowMoodStreak": {
+        "v0": "{{count}} days in a row with a low mood. Want to talk, or just rest?",
+        "v1": "Mood has been low {{count}} days running. No pressure — just noticing.",
+        "v2": "That's {{count}} quiet days in a row. Anything you'd want to put into words?"
+      },
+      "comeback": {
+        "v0": "You're back after {{days}} days away. That's the hard part done.",
+        "v1": "{{days}} days off, and here you are again. Good to see.",
+        "v2": "Back after a {{days}}-day break — starting again counts."
+      },
+      "streakBroken": {
+        "v0": "{{habit}}: a {{run}}-day run ended {{daysAgo}} days ago. Streaks break; the habit doesn't have to.",
+        "v1": "{{habit}} hasn't been checked for {{daysAgo}} days — before that, {{run}} in a row. Start a new one?",
+        "v2": "A {{run}}-day run on {{habit}} stopped {{daysAgo}} days ago. One day is enough to begin again."
+      },
+      "weeklyTargetAtRisk": {
+        "v0": "{{habit}}: {{remaining}} left with {{daysLeft}} days in the week.",
+        "v1": "{{daysLeft}} days left and {{remaining}} to go on {{habit}}.",
+        "v2": "{{habit}} needs {{remaining}} more before Sunday ({{daysLeft}} days)."
+      },
+      "synergyFound": {
+        "v0": "On {{habitA}} days you also do {{habitB}} {{pct}}% of the time — against {{usualPct}}% usually.",
+        "v1": "{{habitA}} pulls {{habitB}} along: {{pct}}% versus your usual {{usualPct}}%.",
+        "v2": "When {{habitA}} happens, {{habitB}} follows {{pct}}% of the time ({{usualPct}}% otherwise)."
+      },
+      "perfectWeek": {
+        "v0": "{{days}} perfect days in a row. Every habit, every day.",
+        "v1": "A full {{days}}-day sweep — nothing missed.",
+        "v2": "{{days}} days, everything done. Worth noticing."
+      }
+    }
   },
   "sidebar": {
     "toggle": "Toggle sidebar",
@@ -485,6 +563,10 @@
     "generic": "Something went wrong. Please try again.",
     "HABIT_NOT_FOUND": "This habit no longer exists.",
     "TASK_NOT_FOUND": "This task no longer exists.",
-    "VALIDATION_ERROR": "Invalid data. Please check and try again."
+    "VALIDATION_ERROR": "Invalid data. Please check and try again.",
+    "AI_DISABLED": "The assistant is turned off. You can enable it in Settings.",
+    "AI_QUOTA_EXCEEDED": "You've used today's assistant requests. The limit resets tomorrow.",
+    "AI_UNAVAILABLE": "The assistant is unavailable right now. Please try again in a moment.",
+    "AI_NOT_ENOUGH_DATA": "Not enough tracked days yet for a letter. Keep going for a bit."
   }
 }

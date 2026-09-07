@@ -9,5 +9,6 @@ export const paths = {
   plannerDay: (date: string) => `/planner/${date}`,
   statistics: "/statistics",
   diary: "/diary",
+  assistant: "/assistant",
   settings: "/settings",
 } as const;

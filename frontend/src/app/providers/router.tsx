@@ -73,6 +73,16 @@ export const router = createBrowserRouter([
             handle: { titleKey: "nav.diary" },
           },
           {
+            path: "assistant",
+            // Ліниво — окремий чанк: помічник потрібен не кожному відкриттю застосунку,
+            // і його код не має важити в основному бандлі (як statistics/diary).
+            lazy: async () => {
+              const { AssistantPage } = await import("@/pages/assistant");
+              return { Component: AssistantPage };
+            },
+            handle: { titleKey: "nav.assistant" },
+          },
+          {
             path: "settings",
             element: <SettingsPage />,
             handle: { titleKey: "nav.settings" },

@@ -23,4 +23,12 @@ export type {
   OAuthProvider,
   PreferencesDto,
   UpdatePreferencesRequest,
+  // AI-помічник (ADR 0012)
+  InsightDto,
+  ReflectionItemDto,
+  ReflectionContentDto,
+  ReflectionDto,
+  ReflectionSummaryDto,
+  AiQuotaDto,
+  ReflectionRequest,
 } from "./types";
