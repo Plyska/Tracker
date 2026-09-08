@@ -287,7 +287,9 @@ const synergyFound = (s: Snapshot): InsightDto | null => {
       habitA: s.nameOf.get(top.habitA)!,
       habitB: s.nameOf.get(top.habitB)!,
       pct: Math.round(top.rate * 100),
-      baselinePct: Math.round(top.baseline * 100),
+      // Назва мусить збігатися з плейсхолдером у `ai.insights.synergyFound.v*` — інакше i18n
+      // мовчки лишає «{{usualPct}}» у тексті. Тут же вона збігається з `ai.context.ts`.
+      usualPct: Math.round(top.baseline * 100),
     },
     seed: `synergyFound:${top.habitA}:${top.habitB}`,
   };

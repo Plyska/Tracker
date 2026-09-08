@@ -14,8 +14,8 @@
   },
   "ai": {
     "beta": "Beta",
-    "betaHint": "The assistant is still in testing — it runs on a free provider tier.",
-    "diaryHint": "Diary entries are the most personal thing here. On the free tier they also pass through Google. If you're unsure, leave this off — the assistant works well on habits and mood alone.",
+    "betaHint": "The assistant is still in testing — answers can be off.",
+    "diaryHint": "Diary entries are the most personal thing here: like everything else, they go to an external processing service. If you're unsure, leave this off — the assistant works well on habits and mood alone.",
     "intro": {
       "title": "Your companion",
       "body": "It reads your habits, check-ins and mood, and writes you a short letter each week — what went well, what slipped, and one thing it noticed.",
@@ -24,8 +24,7 @@
     "consent": {
       "title": "The assistant",
       "sees": "What it sees: habit names, check-ins and mood. Diary entries — only if you allow it.",
-      "testing": "While the assistant is in testing, it runs on Google Gemini's free tier. That means Google may use the requests to improve its models — as in the free versions of other AI services; some may be reviewed by Google staff.",
-      "paidPlan": "When we move to the paid tier this stops — we'll let you know as soon as it does.",
+      "testing": "To answer you, the assistant sends requests to an external processing service. Under our agreement with it, your requests are not used to train models and are not stored: temporary technical logs are possible for up to 30 days, only to investigate a failure or abuse.",
       "diaryLabel": "Let it read my diary",
       "control": "You're always in control: turn the assistant off, keep your diary private, or delete all AI data — one tap in Settings.",
       "accept": "Turn on"
@@ -40,6 +39,8 @@
       "retry": "Try again"
     },
     "quota": {
+      "remaining_one": "{{count}} request left today",
+      "remaining_other": "{{count}} requests left today",
       "status": "{{used}} of {{limit}} requests used today",
       "exhausted": "Daily limit reached",
       "resets": "The limit resets tomorrow — your letter will be waiting."
@@ -51,6 +52,11 @@
       "deleted": "Deleted {{count}} letters"
     },
     "insights": {
+      "unit": {
+        "times_one": "{{count}} time",
+        "times_other": "{{count}} times",
+        "hours": "{{value}}h"
+      },
       "discuss": "Talk about it",
       "dismiss": "Dismiss",
       "dismissed": "Hidden for a few days",
@@ -73,9 +79,9 @@
         "v2": "A {{run}}-day run on {{habit}} stopped {{daysAgo}} days ago. One day is enough to begin again."
       },
       "weeklyTargetAtRisk": {
-        "v0": "{{habit}}: {{remaining}} left with {{daysLeft}} days in the week.",
-        "v1": "{{daysLeft}} days left and {{remaining}} to go on {{habit}}.",
-        "v2": "{{habit}} needs {{remaining}} more before Sunday ({{daysLeft}} days)."
+        "v0": "{{habit}}: {{remaining}} left with {{daysLeft}} in the week.",
+        "v1": "{{daysLeft}} left and {{remaining}} to go on {{habit}}.",
+        "v2": "{{habit}} needs {{remaining}} more before Sunday ({{daysLeft}})."
       },
       "synergyFound": {
         "v0": "On {{habitA}} days you also do {{habitB}} {{pct}}% of the time — against {{usualPct}}% usually.",
@@ -86,6 +92,58 @@
         "v0": "{{days}} perfect days in a row. Every habit, every day.",
         "v1": "A full {{days}}-day sweep — nothing missed.",
         "v2": "{{days}} days, everything done. Worth noticing."
+      }
+    },
+    "checkin": {
+      "inputLabel": "Check-in",
+      "send": "Send",
+      "placeholder": {
+        "log": "What did you get to today?",
+        "plan": "What's the plan for today?"
+      },
+      "confirm_one": "Save {{count}}",
+      "confirm_other": "Save {{count}}",
+      "discard": "Cancel",
+      "saved_one": "Saved {{count}} action",
+      "saved_other": "Saved {{count}} actions",
+      "moodLabel": "Mood: {{value}} of 5",
+      "moodNeeded": "Pick a mood — the diary entry can't be saved without one",
+      "entrySkipped": "{{habit}} — skipped",
+      "unknownHabit": "Unknown habit",
+      "rejected": {
+        "outsideWeek": "{{detail}} is outside this week — only the current week can be edited",
+        "futureDate": "{{detail}} is in the future — it can't be logged ahead",
+        "unknownHabit": "No such habit — you can create it on the Dashboard",
+        "invalidShape": "Couldn't parse: {{detail}}",
+        "duplicate": "{{detail}} — already logged for that day"
+      },
+      "dateToday": "today",
+      "dateTomorrow": "tomorrow",
+      "dateNone": "no date",
+      "plan_one": "Schedule {{count}}",
+      "plan_other": "Schedule {{count}}",
+      "planned_one": "Scheduled {{count}} task",
+      "planned_other": "Scheduled {{count}} tasks"
+    },
+    "chat": {
+      "title": "Conversation",
+      "inputLabel": "Message",
+      "placeholder": "Say what's on your mind…",
+      "send": "Send",
+      "stop": "Stop",
+      "close": "End conversation",
+      "thinking": "thinking…",
+      "tool": {
+        "get_overview": "checking your stats…",
+        "get_diary": "reading your diary…",
+        "propose_actions": "preparing a card…"
+      },
+      "openFromReflection": "Talk about the week",
+      "openFromCheckin": "Say more about it",
+      "opener": {
+        "reflection": "Let's talk about this week.",
+        "insight": "Tell me more about this.",
+        "checkin": "I'd like to say more about my day."
       }
     }
   },
@@ -507,8 +565,12 @@
     "h3": "Heading 3",
     "fontFamily": "Font",
     "fontSize": "Size",
-    "font": { "default": "Default font" },
-    "size": { "default": "Default size" },
+    "font": {
+      "default": "Default font"
+    },
+    "size": {
+      "default": "Default size"
+    },
     "color": "Text color",
     "highlight": "Highlight",
     "bulletList": "Bullet list",

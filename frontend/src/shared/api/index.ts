@@ -31,4 +31,9 @@ export type {
   ReflectionSummaryDto,
   AiQuotaDto,
   ReflectionRequest,
+  CheckinRequest,
+  CheckinActionDto,
+  CheckinClarificationDto,
+  CheckinRejectedDto,
+  CheckinResponseDto,
 } from "./types";

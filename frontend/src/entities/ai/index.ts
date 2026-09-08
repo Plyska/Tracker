@@ -1,6 +1,7 @@
 export {
   aiApi,
   useGetInsightsQuery,
+  useCheckinMutation,
   useGetReflectionMutation,
   useGetReflectionsQuery,
   useGetAiQuotaQuery,

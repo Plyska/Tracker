@@ -100,7 +100,6 @@ export function AiConsentDialog({
                   <p className="rounded-lg border border-border bg-background p-3 leading-relaxed text-muted-foreground">
                     {t("ai.consent.testing")}
                   </p>
-                  <p className="text-muted-foreground">{t("ai.consent.paidPlan")}</p>
 
                   <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-accent/50">
                     <input

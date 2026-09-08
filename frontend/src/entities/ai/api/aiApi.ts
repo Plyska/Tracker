@@ -1,6 +1,8 @@
 import { baseApi } from "@/shared/api";
 import type {
   AiQuotaDto,
+  CheckinRequest,
+  CheckinResponseDto,
   InsightDto,
   ReflectionDto,
   ReflectionRequest,
@@ -32,6 +34,16 @@ export const aiApi = baseApi.injectEndpoints({
       ],
     }),
 
+    /**
+     * Чек-ін: розбір тексту на дії. Мутація, бо витрачає квоту (сам виклик нічого не пише —
+     * запис іде далі через toggleEntry / upsertDailyLog / addTask після підтвердження).
+     * Кеш звичок і відміток НЕ інвалідуємо: тут ще нічого не змінилось.
+     */
+    checkin: build.mutation<CheckinResponseDto, CheckinRequest>({
+      query: (body) => ({ url: "/ai/checkin", method: "POST", body }),
+      invalidatesTags: [{ type: "Ai", id: "QUOTA" }],
+    }),
+
     getReflections: build.query<ReflectionSummaryDto[], { period: "week" | "month" }>({
       query: ({ period }) => ({ url: "/ai/reflections", params: { period } }),
       providesTags: [{ type: "Ai", id: "HISTORY" }],
@@ -42,10 +54,8 @@ export const aiApi = baseApi.injectEndpoints({
       providesTags: [{ type: "Ai", id: "QUOTA" }],
     }),
 
-    deleteAiData: build.mutation<
-      { deletedReflections: number; deletedUsageDays: number },
-      void
-    >({
+    // Лічильники квот сервер не видаляє (це метрика, а не вміст) — тож і поля про них тут немає.
+    deleteAiData: build.mutation<{ deletedReflections: number }, void>({
       query: () => ({ url: "/ai/data", method: "DELETE" }),
       invalidatesTags: [
         { type: "Ai", id: "HISTORY" },
@@ -57,6 +67,7 @@ export const aiApi = baseApi.injectEndpoints({
 
 export const {
   useGetInsightsQuery,
+  useCheckinMutation,
   useGetReflectionMutation,
   useGetReflectionsQuery,
   useGetAiQuotaQuery,

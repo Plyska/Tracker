@@ -16,9 +16,15 @@ function DashboardPage() {
 
   return (
     <section className="space-y-8">
-      {/* Підказка-патерн: «двері» до помічника. Без LLM, тож показуємо навіть до згоди —
-          дані нікуди не йдуть, а CTA «обговорити» веде на /assistant (там і буде згода). */}
-      <InsightCard onDiscuss={() => void navigate(paths.assistant)} />
+      {/* Підказка-патерн: «двері» до помічника. Без LLM, тож показуємо навіть до згоди — дані
+          нікуди не йдуть. «Обговорити» веде одразу в розмову з зачіпкою цієї підказки: без неї
+          людина приходила б у порожній чат і мусила переказувати щойно прочитане. Якщо згоди ще
+          немає, сторінка розмови сама поверне на /assistant, де стоїть інтро й вмикач. */}
+      <InsightCard
+        onDiscuss={(seed) =>
+          void navigate(paths.assistantChat, { state: { seed: { type: "insight", key: seed } } })
+        }
+      />
       {showToolbar && <DashboardToolbar />}
       <HabitTable />
     </section>

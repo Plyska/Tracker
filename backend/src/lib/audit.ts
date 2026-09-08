@@ -40,6 +40,8 @@ interface AuditFields {
   outputTokens?: number;
   period?: string;
   cached?: boolean;
+  /** Причина зупинки генерації: `MAX_TOKENS` в аудиті — сигнал, що стеля бюджету затісна. */
+  finishReason?: string;
 }
 
 export const audit = (event: AuditEvent, fields: AuditFields = {}): void => {

@@ -11,7 +11,7 @@ import {
   unhideInsight,
 } from "@/entities/ai";
 import { Card, IconButton, toast } from "@/shared/ui";
-import { cn, todayISODate } from "@/shared/lib";
+import { cn, minutesToHoursLabel, todayISODate } from "@/shared/lib";
 
 const MotionCard = motion.create(Card);
 
@@ -67,11 +67,30 @@ export function InsightCard({ onDiscuss }: { onDiscuss?: (seed: string) => void 
   // Варіант із сервера може вийти за межі набору, якщо i18n і бекенд розійшлися — беремо по модулю,
   // а якщо конкретного варіанта в перекладі нема, відкочуємось на v0 (замість показу сирого ключа).
   const variant = insight.variant % INSIGHT_VARIANTS;
+
+  // Числа з одиницями складаємо ДО підстановки в шаблон. Сервер шле `remaining` разом з `unit`, і
+  // без одиниці «лишилось 120» для часової звички читалось би як 120 разів, а не дві години.
+  // `daysLeft` теж проганяємо через плюралізацію: «до кінця тижня 1 дні» українською неграмотно,
+  // а готові відмінки вже є в `statistics.unit.days` — другий набір тримати немає сенсу.
+  const params =
+    insight.key === "weeklyTargetAtRisk"
+      ? {
+          ...insight.params,
+          remaining:
+            insight.params.unit === "minutes"
+              ? t("ai.insights.unit.hours", {
+                  value: minutesToHoursLabel(Number(insight.params.remaining)),
+                })
+              : t("ai.insights.unit.times", { count: Number(insight.params.remaining) }),
+          daysLeft: t("statistics.unit.days", { count: Number(insight.params.daysLeft) }),
+        }
+      : insight.params;
+
   const text =
     (t(`ai.insights.${insight.key}.v${variant}`, {
-      ...insight.params,
+      ...params,
       defaultValue: "",
-    }) as string) || (t(`ai.insights.${insight.key}.v0`, insight.params) as string);
+    }) as string) || (t(`ai.insights.${insight.key}.v0`, params) as string);
 
   return (
     <MotionCard

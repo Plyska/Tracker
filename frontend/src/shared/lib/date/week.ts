@@ -109,3 +109,22 @@ export function shiftAnchor(
   const next = scale === "week" ? addWeeks(date, dir) : addMonths(date, dir);
   return toISODate(next);
 }
+
+/**
+ * Людський підпис періоду: «1–7 вересня», «29 вересня – 5 жовтня», «29 грудня 2025 – 4 січня 2026».
+ *
+ * Через `Intl.formatRange`, а не склеюванням рядків: порядок дня й місяця залежить від мови
+ * («1–7 вересня», але «September 1–7»), і вручну це виходить правильно лише для однієї локалі.
+ * Рік показуємо тільки коли період не з поточного — інакше підпис шумить.
+ */
+export function formatDateRange(from: string, to: string, locale: string): string {
+  const a = fromISODate(from);
+  const b = fromISODate(to);
+  const thisYear = new Date().getFullYear();
+  const showYear = a.getFullYear() !== thisYear || b.getFullYear() !== thisYear;
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    ...(showYear ? { year: "numeric" as const } : {}),
+  }).formatRange(a, b);
+}

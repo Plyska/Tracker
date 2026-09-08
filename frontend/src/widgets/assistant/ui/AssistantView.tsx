@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { RefreshCw, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -9,9 +10,12 @@ import {
   useAiPrefs,
 } from "@/entities/ai";
 import { AiConsentDialog, BetaBadge } from "@/features/ai-consent";
+import { CheckinComposer } from "@/features/ai-checkin";
+import { type ChatSeed } from "@/features/ai-chat";
 import type { ReflectionDto } from "@/shared/api";
 import { Button, Card, Skeleton } from "@/shared/ui";
-import { todayISODate } from "@/shared/lib";
+import { paths } from "@/shared/config/paths";
+import { formatDateRange, todayISODate } from "@/shared/lib";
 import type { Locale } from "@/shared/config/i18n";
 import { ReflectionCard } from "./ReflectionCard";
 import { InsightCard } from "./InsightCard";
@@ -32,6 +36,12 @@ export function AssistantView() {
   const { enabled, isLoading: prefsLoading } = useAiPrefs();
   const [consentOpen, setConsentOpen] = useState(false);
   const [reflection, setReflection] = useState<ReflectionDto | null>(null);
+
+  // Розмова живе на власному роуті (`/assistant/chat`), тож «обговорити» — це навігація із
+  // зачіпкою, а не перемикання стану сторінки. Плюс до повноекранного layout це дає безкоштовно
+  // правильне «назад» і посилання, яке можна відкрити напряму.
+  const navigate = useNavigate();
+  const openChat = (seed: ChatSeed) => void navigate(paths.assistantChat, { state: { seed } });
 
   const [generate, { isLoading: generating, error }] = useGetReflectionMutation();
   const { data: quota } = useGetAiQuotaQuery({ today }, { skip: !enabled });
@@ -83,7 +93,9 @@ export function AssistantView() {
 
   return (
     <div className="space-y-6">
-      <InsightCard />
+      {/* Композер зверху: чек-ін — це дія, а лист і підказки — те, що читають. */}
+      <CheckinComposer onDiscuss={() => openChat({ type: "checkin", key: today })} />
+      <InsightCard onDiscuss={(seed) => openChat({ type: "insight", key: seed })} />
 
       {generating && !reflection ? (
         <div className="space-y-3">
@@ -99,7 +111,13 @@ export function AssistantView() {
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <ReflectionCard content={reflection.content} createdAt={reflection.createdAt} />
+          <ReflectionCard
+            content={reflection.content}
+            periodStart={reflection.periodStart}
+            periodEnd={reflection.periodEnd}
+            createdAt={reflection.createdAt}
+            onDiscuss={() => openChat({ type: "reflection", key: reflection.periodKey })}
+          />
         </motion.div>
       ) : (
         <Card className="flex flex-col items-center gap-2 px-6 py-10 text-center">
@@ -140,7 +158,10 @@ export function AssistantView() {
               .map((h) => (
                 <li key={h.periodKey}>
                   <Card className="p-3">
-                    <p className="text-xs text-muted-foreground">{h.periodKey}</p>
+                    {/* Дні, а не «2026-W36»: номер ISO-тижня людині ні про що не каже. */}
+                    <p className="text-xs text-muted-foreground">
+                      {formatDateRange(h.periodStart, h.periodEnd, i18n.language)}
+                    </p>
                     <p className="mt-1 text-sm leading-relaxed">{h.headline}</p>
                   </Card>
                 </li>

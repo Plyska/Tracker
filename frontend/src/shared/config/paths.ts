@@ -10,5 +10,8 @@ export const paths = {
   statistics: "/statistics",
   diary: "/diary",
   assistant: "/assistant",
+  /** Розмова з помічником. Окремий роут, бо в чата власний повноекранний layout: список
+   *  скролиться, поле вводу закріплене внизу — під стосом карток це не живе. */
+  assistantChat: "/assistant/chat",
   settings: "/settings",
 } as const;

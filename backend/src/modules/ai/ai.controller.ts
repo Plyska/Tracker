@@ -1,12 +1,26 @@
 import type { Request, Response } from "express";
 import { prisma } from "../../prisma.js";
 import { audit } from "../../lib/audit.js";
-import { Errors } from "../../lib/errors.js";
+import { AppError, Errors } from "../../lib/errors.js";
 import { computeInsights } from "./ai.insights.js";
 import { getOrCreateReflection, listReflections } from "./ai.reflection.js";
-import { assertQuota, getQuota } from "./ai.quota.js";
-import { isAiConfigured } from "./ai.client.js";
+import { buildCheckinContext, parseCheckin, validateProposal } from "./ai.checkin.js";
+import {
+  CHAT_MAX_OUTPUT_TOKENS,
+  CHAT_OVERVIEW_DAYS,
+  CHAT_TOOLS,
+  buildChatInstruction,
+  overviewFor,
+  runChatTool,
+  type ChatToolContext,
+} from "./ai.chat.js";
+import { buildSystemPrompt, USER_DATA_TAG } from "./ai.prompts.js";
+import { assertQuota, consumeQuota, getQuota } from "./ai.quota.js";
+import { getAiProvider, isAiConfigured } from "./ai.client.js";
+import { addDaysISO } from "./ai.dates.js";
 import type {
+  ChatBody,
+  CheckinBody,
   InsightsQuery,
   QuotaQuery,
   ReflectionBody,
@@ -59,6 +73,165 @@ export const postReflection = async (req: Request, res: Response): Promise<void>
   res.json(result);
 };
 
+/**
+ * POST /ai/checkin — розбір тексту на дії (фаза B1).
+ *
+ * Нічого не пише: повертає ПРОПОЗИЦІЮ, яку клієнт застосовує через уже наявні
+ * `PUT /entries`, `PUT /daily-logs`, `POST /tasks` після підтвердження картки. Тож і `aiDiaryOptIn`
+ * тут не потрібен — щоденник людина сама щойно надиктувала, ми не читаємо старих записів.
+ */
+export const postCheckin = async (req: Request, res: Response): Promise<void> => {
+  const userId = req.userId!;
+  const { text, today, locale, intent } = req.body as CheckinBody;
+  await requireAiEnabled(userId);
+
+  await assertQuota(userId, today);
+  res.json(await parseCheckin(userId, text, today, locale, intent));
+};
+
+/**
+ * POST /ai/chat — розмова потоком (SSE, фаза B2).
+ *
+ * Чому не RTK Query: `httpBaseQuery` не стрімить. Клієнт читає це через `fetch` +
+ * `ReadableStream` (план §5.2), тому формат подій тут — контракт, а не деталь.
+ *
+ * Порядок навмисний: усі перевірки (згода, квота, наявність провайдера, збір контексту) — ДО
+ * `writeHead`. Після відкриття потоку код 200 уже відправлено, і повернути 429 чи 503 неможливо:
+ * лишається подія `error`, яку клієнт мусить показати сам.
+ */
+export const postChat = async (req: Request, res: Response): Promise<void> => {
+  const userId = req.userId!;
+  const { messages, today, locale, seed } = req.body as ChatBody;
+  const prefs = await requireAiEnabled(userId);
+  await assertQuota(userId, today);
+
+  const provider = getAiProvider();
+  const [checkinCtx, overview] = await Promise.all([
+    buildCheckinContext(userId, today),
+    overviewFor(userId, addDaysISO(today, -(CHAT_OVERVIEW_DAYS - 1)), today),
+  ]);
+
+  const toolCtx: ChatToolContext = {
+    userId,
+    today,
+    diaryOptIn: prefs.aiDiaryOptIn === true,
+    proposal: null,
+  };
+
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    // Вимикає буферизацію на проксі (nginx та подібні) — інакше потік доїде «одним шматком»
+    // наприкінці, і весь сенс стрімінгу зникне.
+    "X-Accel-Buffering": "no",
+  });
+  const send = (event: string, data: unknown): void => {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  // Людина закрила вкладку чи натиснула «стоп» — обриваємо виклик до провайдера, а не
+  // догенеровуємо у порожнечу за її ж квоту.
+  const abort = new AbortController();
+  res.on("close", () => abort.abort());
+
+  // Контекст чіпляємо до ОСТАННЬОГО повідомлення, а не до першого: у довгій розмові дані з
+  // першого ходу вже застарілі (людина щойно щось відмітила), а тут вони завжди свіжі.
+  const turns = messages.map((m, i) =>
+    i < messages.length - 1
+      ? m
+      : {
+          role: m.role,
+          text: [
+            buildChatInstruction(locale, today),
+            `<${USER_DATA_TAG}>`,
+            `<overview>\n${JSON.stringify(overview)}\n</overview>`,
+            `<habits_and_week>\n${JSON.stringify(checkinCtx)}\n</habits_and_week>`,
+            seed ? `<opened_from>${seed.type}:${seed.key}</opened_from>` : "",
+            `<user_message>\n${m.text}\n</user_message>`,
+            `</${USER_DATA_TAG}>`,
+          ]
+            .filter(Boolean)
+            .join("\n\n"),
+        },
+  );
+
+  let usage: {
+    model: string;
+    inputTokens: number;
+    outputTokens: number;
+    finishReason?: string;
+  } = { model: provider.model, inputTokens: 0, outputTokens: 0 };
+  // Чи сказала модель хоч слово. Порожній хід — не теоретичний випадок: «мислення» ділить бюджет
+  // із відповіддю й може з'їсти його весь (див. CHAT_MAX_OUTPUT_TOKENS).
+  let sawText = false;
+  try {
+    for await (const chunk of provider.streamChat({
+      system: buildSystemPrompt(locale),
+      turns,
+      tools: CHAT_TOOLS,
+      maxOutputTokens: CHAT_MAX_OUTPUT_TOKENS,
+      // План передбачав "medium", але замір це не підтвердив: MEDIUM удвічі повільніший (86 с
+      // проти 42) і втричі дорожчий за токенами, а відповідь та сама — і навіть багатоходовий
+      // випадок із `get_overview` за минулий місяць LOW відпрацьовує правильно. У розмові
+      // зайві 40 секунд тиші коштують дорожче за будь-яку теоретичну глибину.
+      effort: "low",
+      signal: abort.signal,
+      runTool: (call) => runChatTool(call, toolCtx),
+    })) {
+      if (chunk.kind === "text") {
+        sawText = true;
+        send("text", { delta: chunk.delta });
+      }
+      // Назву інструмента показуємо («дивлюсь щоденник…»), аргументи — ні: вони нецікаві
+      // і можуть містити дати, які людина не питала.
+      else if (chunk.kind === "tool") send("tool", { name: chunk.call.name });
+      else usage = chunk;
+    }
+
+    // Пропозиція проходить ТУ САМУ валідацію, що чек-ін (спільний `validateProposal`), тож чат
+    // не може обійти правила, які чек-ін дотримує: вікно тижня, чужі id, дублі.
+    if (toolCtx.proposal) {
+      const { actions, rejected } = validateProposal(toolCtx.proposal.actions, checkinCtx);
+      send("proposal", {
+        actions,
+        rejected,
+        context: {
+          today: checkinCtx.today,
+          weekStart: checkinCtx.weekStart,
+          weekEnd: checkinCtx.weekEnd,
+        },
+      });
+    }
+
+    await consumeQuota(userId, today, usage.inputTokens, usage.outputTokens);
+    audit("ai.chat", {
+      userId,
+      model: usage.model,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+      finishReason: usage.finishReason,
+    });
+
+    // Хід без жодного слова (і без картки) — для людини це «чат мовчить», найгірший з можливих
+    // станів: незрозуміло, чи зламалось, чи ще думає. Кажемо прямо, що відповіді не буде.
+    // Квоту при цьому вже списано свідомо: провайдер відпрацював і токени витрачені.
+    if (!sawText && !toolCtx.proposal) {
+      console.error(`[ai] chat produced no text (finishReason: ${usage.finishReason ?? "none"})`);
+      send("error", { code: "AI_UNAVAILABLE" });
+    }
+
+    send("done", { usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens } });
+  } catch (e) {
+    // Потік уже відкрито (200), тож звичайний errorHandler недосяжний — код помилки їде подією.
+    console.error("[ai] chat stream failed:", e);
+    const code = e instanceof AppError ? e.code : "AI_UNAVAILABLE";
+    if (!res.writableEnded) send("error", { code });
+  } finally {
+    if (!res.writableEnded) res.end();
+  }
+};
+
 /** GET /ai/reflections?period= — історія (заголовки минулих листів). */
 export const getReflections = async (req: Request, res: Response): Promise<void> => {
   const userId = req.userId!;
@@ -100,13 +273,21 @@ export const exportAiData = async (req: Request, res: Response): Promise<void> =
   res.json({ reflections, usage });
 };
 
-/** DELETE /ai/data — видалити всі AI-дані користувача (листи + лічильники квот). */
+/**
+ * DELETE /ai/data — видалити AI-**вміст** користувача (згенеровані листи).
+ *
+ * `AiUsage` свідомо НЕ чіпаємо, хоч раніше чіпали: це лічильник денної квоти, і його видалення
+ * було прямим її обходом — «видалити дані» повертало повний ліміт, скільки завгодно разів на день.
+ * На безкоштовному тирі це ще й спалювало б спільну квоту всього проєкту.
+ *
+ * Компроміс «лишати тільки сьогоднішній рядок» не працює: день у `AiUsage` — ЛОКАЛЬНА дата
+ * клієнта, тобто клієнт сам казав би нам, який рядок пощадити, і збрехав би. Тому лічильники
+ * лишаються цілком — це метрика тарифікації, а не вміст: листів, тексту чи щоденника в ній немає,
+ * лише кількість запитів і токенів за день.
+ */
 export const deleteAiData = async (req: Request, res: Response): Promise<void> => {
   const userId = req.userId!;
-  const [reflections, usage] = await prisma.$transaction([
-    prisma.aiReflection.deleteMany({ where: { userId } }),
-    prisma.aiUsage.deleteMany({ where: { userId } }),
-  ]);
+  const reflections = await prisma.aiReflection.deleteMany({ where: { userId } });
   audit("ai.data.delete", { userId });
-  res.json({ deletedReflections: reflections.count, deletedUsageDays: usage.count });
+  res.json({ deletedReflections: reflections.count });
 };

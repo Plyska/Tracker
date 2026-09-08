@@ -5,6 +5,8 @@ import { requireCsrf } from "../../lib/csrf.js";
 import { validate } from "../../middleware/validate.js";
 import { aiLimiter } from "../../middleware/rateLimit.js";
 import {
+  chatBodySchema,
+  checkinBodySchema,
   insightsQuerySchema,
   quotaQuerySchema,
   reflectionBodySchema,
@@ -37,6 +39,13 @@ aiRouter.get(
   validate(reflectionsQuerySchema, "query"),
   asyncHandler(ctrl.getReflections),
 );
+
+// Чек-ін: розбір тексту на дії. Нічого не записує — запис іде через /entries, /daily-logs,
+// /tasks після підтвердження на клієнті (модель не пише в БД, ADR 0012).
+aiRouter.post("/checkin", validate(checkinBodySchema), asyncHandler(ctrl.postCheckin));
+
+// Чат потоком (SSE). Історія не зберігається — приходить у тілі щоразу.
+aiRouter.post("/chat", validate(chatBodySchema), asyncHandler(ctrl.postChat));
 
 aiRouter.get("/quota", validate(quotaQuerySchema, "query"), asyncHandler(ctrl.getAiQuota));
 

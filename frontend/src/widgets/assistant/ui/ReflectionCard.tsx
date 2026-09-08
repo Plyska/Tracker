@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import { HabitGlyph, useGetHabitsQuery } from "@/entities/habit";
 import type { ReflectionContentDto, ReflectionItemDto } from "@/shared/api";
 import { BetaBadge } from "@/features/ai-consent";
-import { Card } from "@/shared/ui";
+import { Button, Card } from "@/shared/ui";
+import { formatDateRange } from "@/shared/lib";
 
 const MotionCard = motion.create(Card);
 
@@ -16,10 +17,18 @@ const MotionCard = motion.create(Card);
  */
 export function ReflectionCard({
   content,
+  periodStart,
+  periodEnd,
   createdAt,
+  onDiscuss,
 }: {
   content: ReflectionContentDto;
+  /** Межі періоду (ISO) — лист завжди про ЗАВЕРШЕНИЙ тиждень, і це має бути видно. */
+  periodStart: string;
+  periodEnd: string;
   createdAt?: string;
+  /** Відкрити розмову про цей лист (фаза B2); без нього кнопка не показується. */
+  onDiscuss?: () => void;
 }) {
   const { t, i18n } = useTranslation();
   const reduce = useReducedMotion();
@@ -54,10 +63,17 @@ export function ReflectionCard({
       transition={{ duration: 0.3, ease: "easeOut" }}
       className="space-y-5 p-5 sm:p-6"
     >
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-base font-medium leading-relaxed sm:text-lg">
-          {content.headline}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          {/* Період — над заголовком: лист про ЗАВЕРШЕНИЙ тиждень, і без цього підпису числа в
+              ньому легко прочитати як «за сьогодні». */}
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {formatDateRange(periodStart, periodEnd, i18n.language)}
+          </p>
+          <p className="text-base font-medium leading-relaxed sm:text-lg">
+            {content.headline}
+          </p>
+        </div>
         <BetaBadge />
       </div>
 
@@ -88,9 +104,18 @@ export function ReflectionCard({
         </section>
       )}
 
-      <section className="flex items-center gap-2.5 border-t border-border pt-4">
-        <MessageCircleQuestion className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-        <p className="text-sm font-medium leading-relaxed">{content.question}</p>
+      {/* Питання листа — природна точка входу в розмову: відповідати на нього хочеться, і
+          саме тому кнопка стоїть тут, а не окремо внизу картки. */}
+      <section className="space-y-3 border-t border-border pt-4">
+        <div className="flex items-center gap-2.5">
+          <MessageCircleQuestion className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+          <p className="text-sm font-medium leading-relaxed">{content.question}</p>
+        </div>
+        {onDiscuss && (
+          <Button variant="outline" size="sm" onClick={onDiscuss}>
+            {t("ai.chat.openFromReflection")}
+          </Button>
+        )}
       </section>
 
       {createdAt && (

@@ -264,6 +264,9 @@ export interface ReflectionContentDto {
 export interface ReflectionDto {
   period: "week" | "month";
   periodKey: string; // '2026-W36' | '2026-09'
+  // Межі періоду (ISO). Рахує СЕРВЕР — клієнт не відтворює правил ISO-тижня.
+  periodStart: string;
+  periodEnd: string;
   locale: string;
   content: ReflectionContentDto;
   createdAt: string;
@@ -273,6 +276,8 @@ export interface ReflectionDto {
 /** Елемент історії листів (кеш = архів): без повного вмісту, лише заголовок. */
 export interface ReflectionSummaryDto {
   periodKey: string;
+  periodStart: string;
+  periodEnd: string;
   locale: string;
   headline: string;
   createdAt: string;
@@ -289,4 +294,56 @@ export interface ReflectionRequest {
   period: "week" | "month";
   today: string; // локальна дата клієнта — без TZ-дрейфу
   locale: "en" | "uk";
+}
+
+/**
+ * Чек-ін (фаза B1): текст → дії. Сервер лише **пропонує** — записує клієнт після підтвердження,
+ * через ті самі мутації, що й ручні дії (ADR 0012: модель не пише в БД).
+ */
+export interface CheckinRequest {
+  text: string;
+  today: string;
+  locale: "en" | "uk";
+  intent: "auto" | "log" | "plan"; // підказка за часом доби; розпізнає все одно модель
+}
+
+export type CheckinActionDto =
+  | {
+      type: "entry";
+      habitId: string;
+      date: string;
+      done: boolean;
+      minutes: number | null;
+      /** Скільки хвилин уже записано за цей день (часові звички) — щоб показати «30 → 70». */
+      prevMinutes?: number | null;
+    }
+  | { type: "mood"; date: string; value: number }
+  | { type: "diary"; date: string; text: string }
+  | {
+      type: "task";
+      date: string | null;
+      title: string;
+      startTime: string | null;
+      endTime: string | null;
+      habitId: string | null;
+    };
+
+export interface CheckinClarificationDto {
+  field: string;
+  question: string;
+  options: string[];
+}
+
+/** Відкинуте сервером — показуємо з поясненням, а не ковтаємо мовчки. */
+export interface CheckinRejectedDto {
+  reason: "outsideWeek" | "unknownHabit" | "futureDate" | "invalidShape" | "duplicate";
+  detail: string;
+}
+
+export interface CheckinResponseDto {
+  actions: CheckinActionDto[];
+  clarifications: CheckinClarificationDto[];
+  reply: string;
+  rejected: CheckinRejectedDto[];
+  context: { today: string; weekStart: string; weekEnd: string };
 }

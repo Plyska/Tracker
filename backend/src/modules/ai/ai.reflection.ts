@@ -6,6 +6,7 @@ import { getAiProvider } from "./ai.client.js";
 import { buildContextPack, type AiPeriod, type ContextPack } from "./ai.context.js";
 import { buildReflectionInstruction, buildSystemPrompt, type AiLocale } from "./ai.prompts.js";
 import { consumeQuota } from "./ai.quota.js";
+import { periodKeyBounds } from "./ai.dates.js";
 
 /**
  * Тижневий/місячний лист-підсумок (ADR 0012, план §3.1).
@@ -112,6 +113,9 @@ function sanitizeReferences(content: ReflectionContent, pack: ContextPack): Refl
 export interface ReflectionResult {
   period: AiPeriod;
   periodKey: string;
+  /** Межі періоду (ISO). Віддає СЕРВЕР: клієнт не має відтворювати правила ISO-тижня. */
+  periodStart: string;
+  periodEnd: string;
   locale: string;
   content: ReflectionContent;
   createdAt: string;
@@ -143,6 +147,8 @@ export async function getOrCreateReflection(
     return {
       period,
       periodKey: cachedRow.periodKey,
+      periodStart: bounds.from,
+      periodEnd: bounds.to,
       locale: cachedRow.locale,
       content: cachedRow.content as ReflectionContent,
       createdAt: cachedRow.createdAt.toISOString(),
@@ -198,6 +204,8 @@ export async function getOrCreateReflection(
   return {
     period,
     periodKey: row.periodKey,
+    periodStart: bounds.from,
+    periodEnd: bounds.to,
     locale,
     content: parsed,
     createdAt: row.createdAt.toISOString(),
@@ -213,10 +221,16 @@ export async function listReflections(userId: string, period: AiPeriod, limit = 
     take: limit,
     select: { periodKey: true, locale: true, content: true, createdAt: true },
   });
-  return rows.map((r) => ({
-    periodKey: r.periodKey,
-    locale: r.locale,
-    headline: (r.content as ReflectionContent).headline,
-    createdAt: r.createdAt.toISOString(),
-  }));
+  return rows.map((r) => {
+    // Межі рахуємо з ключа: у рядку архіву дат немає, а клієнту потрібні саме дні.
+    const bounds = periodKeyBounds(r.periodKey);
+    return {
+      periodKey: r.periodKey,
+      periodStart: bounds.from,
+      periodEnd: bounds.to,
+      locale: r.locale,
+      headline: (r.content as ReflectionContent).headline,
+      createdAt: r.createdAt.toISOString(),
+    };
+  });
 }

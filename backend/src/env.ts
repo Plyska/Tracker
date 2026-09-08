@@ -26,11 +26,15 @@ const schema = z.object({
 
   // ── AI-компаньйон (ADR 0012) ─────────────────────────────────────────────────────────────
   // Провайдер — за швом `AiProvider` (modules/ai/ai.client.ts); зміна = env, не код.
-  AI_PROVIDER: z.enum(["gemini", "anthropic"]).default("gemini"),
+  AI_PROVIDER: z.enum(["groq", "gemini", "anthropic"]).default("groq"),
   // Ключ ОПЦІЙНИЙ локально (без нього /ai/* віддає 503 AI_UNAVAILABLE), у проді — обов'язковий
   // (guard нижче, фейл-фаст як для JWT-секретів).
+  GROQ_API_KEY: z.string().min(1).optional(),
   GEMINI_API_KEY: z.string().min(1).optional(),
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  // Базовий URL для OpenAI-сумісних провайдерів. Без значення — дефолт провайдера; задається
+  // руками лише щоб націлити ту саму реалізацію на іншого сумісного (Cerebras, OpenRouter…).
+  AI_BASE_URL: z.string().url().optional(),
   // Модель провайдера; без значення — дефолт за провайдером (див. export `aiModel`).
   AI_MODEL: z.string().min(1).optional(),
   // Денна квота запитів до LLM на користувача (лист/чек-ін/чат) → 429 AI_QUOTA_EXCEEDED.
@@ -67,22 +71,46 @@ if (
 
 // AI: ключ активного провайдера. Локально може бути відсутній (фіча деградує до 503),
 // у проді — фейл-фаст: тихий деплой без AI гірший за помітну помилку старту.
-const aiApiKey =
-  raw.AI_PROVIDER === "gemini" ? raw.GEMINI_API_KEY : raw.ANTHROPIC_API_KEY;
+const AI_KEY_VAR = {
+  groq: "GROQ_API_KEY",
+  gemini: "GEMINI_API_KEY",
+  anthropic: "ANTHROPIC_API_KEY",
+} as const;
+
+const aiApiKey = {
+  groq: raw.GROQ_API_KEY,
+  gemini: raw.GEMINI_API_KEY,
+  anthropic: raw.ANTHROPIC_API_KEY,
+}[raw.AI_PROVIDER];
+
 if (raw.NODE_ENV === "production" && !aiApiKey) {
   // eslint-disable-next-line no-console
   console.error(
     `Refusing to start: AI_PROVIDER=${raw.AI_PROVIDER} but its API key is not set ` +
-      `(${raw.AI_PROVIDER === "gemini" ? "GEMINI_API_KEY" : "ANTHROPIC_API_KEY"}).`,
+      `(${AI_KEY_VAR[raw.AI_PROVIDER]}).`,
   );
   process.exit(1);
 }
 
 // Дефолтна модель за провайдером. Gemini — Flash на free tier (ADR 0012 / план §3.5);
 // Anthropic — Opus 5 (поточна рекомендація). Перекривається AI_MODEL.
+//
+// Свідомо НЕ найновіший Flash: на безкоштовному тирі `gemini-3.8-flash` стабільно віддавав 503
+// «high demand» (найсвіжіша модель — найзавантаженіша), і чек-ін не проходив узагалі. 3.7 при
+// тій самій якості розбору відповідає. Це вибір на час розробки; при переході на платний тир
+// (план §3.6) модель усе одно перезатверджується.
 const AI_DEFAULT_MODEL: Record<typeof raw.AI_PROVIDER, string> = {
-  gemini: "gemini-3.8-flash",
+  groq: "openai/gpt-oss-120b",
+  gemini: "gemini-3.7-flash",
   anthropic: "claude-opus-5",
+};
+
+/**
+ * Базовий URL OpenAI-сумісних провайдерів. Одна реалізація обслуговує всіх — щоб націлити її на
+ * Cerebras чи OpenRouter, достатньо `AI_BASE_URL`, без рядка коду.
+ */
+const AI_DEFAULT_BASE_URL: Partial<Record<typeof raw.AI_PROVIDER, string>> = {
+  groq: "https://api.groq.com/openai/v1",
 };
 
 export const env = {
@@ -94,6 +122,7 @@ export const env = {
   aiProvider: raw.AI_PROVIDER,
   aiApiKey, // undefined → AI недоступний (503), сервер працює
   aiModel: raw.AI_MODEL ?? AI_DEFAULT_MODEL[raw.AI_PROVIDER],
+  aiBaseUrl: raw.AI_BASE_URL ?? AI_DEFAULT_BASE_URL[raw.AI_PROVIDER],
   aiDailyMessageLimit: raw.AI_DAILY_MESSAGE_LIMIT,
   aiContextMaxTokens: raw.AI_CONTEXT_MAX_TOKENS,
 };
