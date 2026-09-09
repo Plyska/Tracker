@@ -24,6 +24,12 @@ export type AiPeriod = "week" | "month";
 const WEEKS_IN_PERIOD: Record<AiPeriod, number> = { week: 1, month: 4 };
 const DIARY_MAX_ENTRIES = 7;
 const DIARY_MAX_CHARS = 500;
+
+/**
+ * Скільки днів із даними потрібно, щоб лист мав сенс. Менше — і виходить вода: модель починає
+ * будувати висновки на двох відмітках і сама собі суперечить у числах.
+ */
+const MIN_DAYS_FOR_LETTER = 3;
 /** Грубий орієнтир: ~4 символи JSON на токен. Точність тут не потрібна — це лише стеля. */
 const CHARS_PER_TOKEN = 4;
 
@@ -171,6 +177,28 @@ export async function buildContextPack(
       : Promise.resolve([]),
   ]);
 
+  /**
+   * Скільки днів періоду взагалі мають дані — окремим запитом, і це не педантизм.
+   *
+   * Раніше «мало даних» рахувалося як `daily[].total > 0`, але `daily[]` у `computeStats`
+   * враховує **лише щоденні** звички: у count і timed денного очікування немає за побудовою
+   * (ADR 0010/0011). Наслідки були в обидва боки: хто веде лише «зал 3×/тиждень» або лише
+   * «гітара 5 год/тиждень», отримував 422 **назавжди**, а тиждень із двома відмітками щоденної
+   * звички проходив як повноцінний і давав лист із суперечливими числами.
+   *
+   * Тут рахуємо чесно: доба має дані, якщо в неї є хоч одна виконана відмітка БУДЬ-ЯКОГО типу
+   * або запис настрою.
+   */
+  const entryDates = await prisma.habitEntry.findMany({
+    where: {
+      habitId: { in: habits.map((h) => h.id) },
+      done: true,
+      date: { gte: bounds.from, lte: bounds.to },
+    },
+    select: { date: true },
+    distinct: ["date"],
+  });
+
   const nameOf = new Map(habits.map((h) => [h.id, h.name]));
   const breakdown = new Map(stats.habitBreakdown.map((b) => [b.habitId, b]));
   const prevBreakdown = new Map(prevStats.habitBreakdown.map((b) => [b.habitId, b]));
@@ -212,6 +240,12 @@ export async function buildContextPack(
     mood: d.mood,
     minutes: d.minutes,
   }));
+
+  // Об'єднання днів із відмітками й днів із настроєм — саме «є про що писати».
+  const daysWithData = new Set([
+    ...entryDates.map((e) => e.date),
+    ...days.filter((d) => d.mood != null).map((d) => d.date),
+  ]).size;
 
   const patterns: ContextPack["patterns"] = {
     synergies: stats.habitSynergies
@@ -262,8 +296,9 @@ export async function buildContextPack(
     notes: {
       diaryIncluded: diaryOptIn && diary.length > 0,
       hasComparison,
-      // «Мало даних» — щоб інструкція веліла сказати це прямо, а не доповнювати лист водою.
-      sparse: packHabits.length === 0 || days.filter((d) => d.total > 0).length < 3,
+      // «Мало даних» — щоб не писати лист-воду. Рахуємо ДНІ З ДАНИМИ (відмітка будь-якого типу
+      // або настрій), а не денні очікування щоденних звичок — див. коментар біля `entryDates`.
+      sparse: packHabits.length === 0 || daysWithData < MIN_DAYS_FOR_LETTER,
     },
   };
 

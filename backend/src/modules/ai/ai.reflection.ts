@@ -4,7 +4,16 @@ import { audit } from "../../lib/audit.js";
 import { Errors } from "../../lib/errors.js";
 import { getAiProvider } from "./ai.client.js";
 import { buildContextPack, type AiPeriod, type ContextPack } from "./ai.context.js";
-import { buildReflectionInstruction, buildSystemPrompt, type AiLocale } from "./ai.prompts.js";
+import {
+  buildReflectionInstruction,
+  buildSystemPrompt,
+  crisisReply,
+  toAddressForm,
+  weekdayCalendar,
+  type AddressForm,
+  type AiLocale,
+} from "./ai.prompts.js";
+import { screenForCrisis } from "./ai.crisis.js";
 import { consumeQuota } from "./ai.quota.js";
 import { periodKeyBounds } from "./ai.dates.js";
 
@@ -41,6 +50,12 @@ export const reflectionContentSchema = z.object({
     })
     .nullable(),
   question: z.string().min(1).max(300),
+  /**
+   * Тепла нотатка про підтримку, коли сигнали стійкі (довго низький настрій) — і `null`, коли їх
+   * немає. Окреме поле, бо в прогоні лист на семи днях настрою 2 фахівця не згадав узагалі:
+   * решта полів habit-подібні, і турботі просто не було куди подітися.
+   */
+  care: z.string().max(400).nullable(),
 });
 
 export type ReflectionContent = z.infer<typeof reflectionContentSchema>;
@@ -93,8 +108,15 @@ const REFLECTION_JSON_SCHEMA = {
       required: ["kind", "text"],
     },
     question: { type: "string", description: "ONE open question the user can reply to." },
+    care: {
+      type: ["string", "null"],
+      description:
+        "When signals are persistent (mood low for many days in a row), one warm sentence " +
+        "suggesting they talk to someone they trust or a professional. No diagnosis, no advice. " +
+        "null when there is no such signal. This is NOT about habits.",
+    },
   },
-  required: ["headline", "highlights", "slips", "pattern", "question"],
+  required: ["headline", "highlights", "slips", "pattern", "question", "care"],
 } as const;
 
 /** Прибрати посилання на неіснуючі навички — модель не може вигадати id. */
@@ -110,6 +132,7 @@ function sanitizeReferences(content: ReflectionContent, pack: ContextPack): Refl
   };
 }
 
+
 export interface ReflectionResult {
   period: AiPeriod;
   periodKey: string;
@@ -117,7 +140,10 @@ export interface ReflectionResult {
   periodStart: string;
   periodEnd: string;
   locale: string;
-  content: ReflectionContent;
+  /** `null` рівно тоді, коли `crisis` не `null`: у кризі листа немає, є відповідь. */
+  content: ReflectionContent | null;
+  /** Кризова відповідь НАШИМ текстом. Клієнт бачить її замість листа. */
+  crisis: string | null;
   createdAt: string;
   /** true → віддано з кешу (нуль токенів). Корисно для UI («оновлено щойно») і для аудиту. */
   cached: boolean;
@@ -136,13 +162,23 @@ export async function getOrCreateReflection(
   today: string,
   locale: AiLocale,
   diaryOptIn: boolean,
+  address: AddressForm,
 ): Promise<ReflectionResult> {
   const { pack, bounds } = await buildContextPack(userId, period, today, locale, diaryOptIn);
 
   const cachedRow = await prisma.aiReflection.findUnique({
     where: { userId_period_periodKey: { userId, period, periodKey: bounds.key } },
   });
-  if (cachedRow) {
+  // Кеш валідний лише для ТІЄЇ САМОЇ мови й форми звертання. Ключ `(userId, period, periodKey)`
+  // не містить ні того, ні того, тож без цієї перевірки людина, що перемкнула мову, діставала
+  // старий лист чужою мовою з `cached: true` — і не могла отримати новий НІКОЛИ. З родом м'якше
+  // (само вилікувалось би наступного тижня), але симптом гірший: перемикач у Налаштуваннях не
+  // давав би жодного видимого ефекту саме там, де його вмикають.
+  // Рід звіряємо лише для української — в англійському листі він не має роботи, і регенерація
+  // через нього була б витраченим викликом. `null` у старих рядках = `neutral`.
+  const sameLocale = cachedRow?.locale === locale;
+  const sameAddress = locale !== "uk" || toAddressForm(cachedRow?.addressForm) === address;
+  if (cachedRow && sameLocale && sameAddress) {
     audit("ai.reflection", { userId, period, cached: true });
     return {
       period,
@@ -151,6 +187,7 @@ export async function getOrCreateReflection(
       periodEnd: bounds.to,
       locale: cachedRow.locale,
       content: cachedRow.content as ReflectionContent,
+      crisis: null,
       createdAt: cachedRow.createdAt.toISOString(),
       cached: true,
     };
@@ -160,11 +197,46 @@ export async function getOrCreateReflection(
   if (pack.notes.sparse) throw Errors.aiNotEnoughData();
 
   const provider = getAiProvider();
+
+  /**
+   * Кризовий скрин ПЕРЕД генерацією листа — і не покладаючись на те, що лист сам помітить.
+   *
+   * У прогоні тон-тестів щоденник із явними думками про смерть дав лист про звички: схема
+   * habit-подібна, і кризі нікуди подітися. Тут же питання одне й перевірне, а модель у таких
+   * сильна (100% точності на 16 пастках). Спрацював — лист НЕ генеруємо взагалі: людині потрібна
+   * відповідь, а не підсумок тижня. Заразом економимо дорогий виклик.
+   *
+   * Збій класифікатора не блокує лист: далі спрацює `care` у самій схемі — вужча мережа, але
+   * краще за мовчання. Кризову відповідь не кешуємо: вона про «зараз», не про період.
+   */
+  if (pack.diary?.length) {
+    const flagged = await screenForCrisis(provider, pack.diary, userId, today);
+    if (flagged) {
+      audit("ai.reflection", { userId, period, cached: false });
+      return {
+        period,
+        periodKey: bounds.key,
+        periodStart: bounds.from,
+        periodEnd: bounds.to,
+        locale,
+        content: null,
+        crisis: crisisReply(locale),
+        createdAt: new Date().toISOString(),
+        cached: false,
+      };
+    }
+  }
   const result = await provider.generateJson({
-    system: buildSystemPrompt(locale),
+    system: buildSystemPrompt(locale, "letter", address),
     // Контекст іде ВІДМЕЖОВАНИМ блоком як дані (анти-injection зі щоденника) — межу описує
     // системний промпт, а тут ми лише дотримуємось тієї ж форми.
-    user: `${buildReflectionInstruction(locale, period)}\n\n<user_data>\n${JSON.stringify(pack)}\n</user_data>`,
+    // Календар періоду — окремим рядком перед даними. Без нього модель називала дні навмання
+    // («пропуски починаючи з понеділка», коли вони з четверга) — див. S6 у тон-тестах.
+    user: [
+      buildReflectionInstruction(locale, period),
+      weekdayCalendar(locale, bounds.from, bounds.to),
+      `<user_data>\n${JSON.stringify(pack)}\n</user_data>`,
+    ].join("\n\n"),
     schema: REFLECTION_JSON_SCHEMA,
     maxOutputTokens: MAX_OUTPUT_TOKENS,
     effort: "low",
@@ -178,12 +250,24 @@ export async function getOrCreateReflection(
     throw Errors.aiUnavailable("AI returned malformed reflection");
   }
 
-  const row = await prisma.aiReflection.create({
-    data: {
+  // Upsert, а не create: якщо лист за цей період уже є іншою мовою — перезаписуємо його, інакше
+  // унікальний ключ `(userId, period, periodKey)` дав би конфлікт при зміні мови.
+  const row = await prisma.aiReflection.upsert({
+    where: { userId_period_periodKey: { userId, period, periodKey: bounds.key } },
+    create: {
       userId,
       period,
       periodKey: bounds.key,
       locale,
+      addressForm: address,
+      content: parsed,
+      model: result.model,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+    },
+    update: {
+      locale,
+      addressForm: address,
       content: parsed,
       model: result.model,
       inputTokens: result.inputTokens,
@@ -208,6 +292,7 @@ export async function getOrCreateReflection(
     periodEnd: bounds.to,
     locale,
     content: parsed,
+    crisis: null,
     createdAt: row.createdAt.toISOString(),
     cached: false,
   };

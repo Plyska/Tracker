@@ -14,7 +14,7 @@ import {
   runChatTool,
   type ChatToolContext,
 } from "./ai.chat.js";
-import { buildSystemPrompt, USER_DATA_TAG } from "./ai.prompts.js";
+import { buildSystemPrompt, toAddressForm, USER_DATA_TAG } from "./ai.prompts.js";
 import { assertQuota, consumeQuota, getQuota } from "./ai.quota.js";
 import { getAiProvider, isAiConfigured } from "./ai.client.js";
 import { addDaysISO } from "./ai.dates.js";
@@ -29,12 +29,13 @@ import type {
 
 /**
  * Гейт AI: фіча вимкнена, поки користувач не пройшов екран згоди (ADR 0012).
- * Повертає налаштування, бо `aiDiaryOptIn` потрібен далі для контексту.
+ * Повертає налаштування, бо далі потрібні `aiDiaryOptIn` (контекст) і `aiAddressForm` (рід у
+ * звертанні — його читають УСІ три поверхні, тож дістаємо тут, а не в кожній окремо).
  */
 async function requireAiEnabled(userId: string) {
   const prefs = await prisma.userPreferences.findUnique({
     where: { userId },
-    select: { aiEnabled: true, aiDiaryOptIn: true, locale: true },
+    select: { aiEnabled: true, aiDiaryOptIn: true, locale: true, aiAddressForm: true },
   });
   if (!prefs?.aiEnabled) throw Errors.aiDisabled();
   return prefs;
@@ -69,6 +70,7 @@ export const postReflection = async (req: Request, res: Response): Promise<void>
     today,
     locale,
     prefs.aiDiaryOptIn === true,
+    toAddressForm(prefs.aiAddressForm),
   );
   res.json(result);
 };
@@ -83,10 +85,12 @@ export const postReflection = async (req: Request, res: Response): Promise<void>
 export const postCheckin = async (req: Request, res: Response): Promise<void> => {
   const userId = req.userId!;
   const { text, today, locale, intent } = req.body as CheckinBody;
-  await requireAiEnabled(userId);
+  const prefs = await requireAiEnabled(userId);
 
   await assertQuota(userId, today);
-  res.json(await parseCheckin(userId, text, today, locale, intent));
+  res.json(
+    await parseCheckin(userId, text, today, locale, intent, toAddressForm(prefs.aiAddressForm)),
+  );
 };
 
 /**
@@ -167,7 +171,7 @@ export const postChat = async (req: Request, res: Response): Promise<void> => {
   let sawText = false;
   try {
     for await (const chunk of provider.streamChat({
-      system: buildSystemPrompt(locale),
+      system: buildSystemPrompt(locale, "chat", toAddressForm(prefs.aiAddressForm)),
       turns,
       tools: CHAT_TOOLS,
       maxOutputTokens: CHAT_MAX_OUTPUT_TOKENS,

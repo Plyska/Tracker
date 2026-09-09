@@ -216,6 +216,11 @@ export interface PreferencesDto {
   aiEnabled: boolean | null;
   aiDiaryOptIn: boolean | null;
   aiConsentAt: string | null; // ISO datetime; ставить СЕРВЕР при першому вмиканні (read-only)
+  /**
+   * Граматичний рід звертання: 'neutral' | 'masculine' | 'feminine'; null = не питали.
+   * Це форма слів, а не стать: українською «ти зробив» і «ти зробила» — різні речення.
+   */
+  aiAddressForm: string | null;
 }
 
 /** PATCH /me/preferences — часткове оновлення (передаємо лише те, що змінилось). */
@@ -232,6 +237,7 @@ export type UpdatePreferencesRequest = Partial<{
   // пристрої. `aiConsentAt` клієнт не надсилає — це серверне поле.
   aiEnabled: boolean;
   aiDiaryOptIn: boolean;
+  aiAddressForm: "neutral" | "masculine" | "feminine";
 }>;
 
 // --- AI-помічник (ADR 0012) ---
@@ -259,6 +265,8 @@ export interface ReflectionContentDto {
   slips: ReflectionItemDto[];
   pattern: { kind: string; text: string } | null;
   question: string;
+  /** Тепла нотатка про підтримку при стійко низькому настрої; null — сигналів немає. */
+  care: string | null;
 }
 
 export interface ReflectionDto {
@@ -268,7 +276,10 @@ export interface ReflectionDto {
   periodStart: string;
   periodEnd: string;
   locale: string;
-  content: ReflectionContentDto;
+  /** `null` рівно тоді, коли `crisis` не null: у кризі листа немає — є відповідь. */
+  content: ReflectionContentDto | null;
+  /** Кризова відповідь текстом сервера. Клієнт показує її ЗАМІСТЬ листа. */
+  crisis: string | null;
   createdAt: string;
   cached: boolean; // true → віддано з кешу (нуль токенів)
 }
@@ -343,7 +354,13 @@ export interface CheckinRejectedDto {
 export interface CheckinResponseDto {
   actions: CheckinActionDto[];
   clarifications: CheckinClarificationDto[];
+  /** Порожній рівно тоді, коли `crisis` не `null`: у кризі картки немає, є відповідь. */
   reply: string;
   rejected: CheckinRejectedDto[];
+  /**
+   * Кризова відповідь готовим текстом від сервера — показується ЗАМІСТЬ картки підтвердження.
+   * Текст серверний, бо контакти мають бути дослівні, а формулювання — без роду.
+   */
+  crisis: string | null;
   context: { today: string; weekStart: string; weekEnd: string };
 }

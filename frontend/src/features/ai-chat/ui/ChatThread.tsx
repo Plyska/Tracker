@@ -128,10 +128,22 @@ export function ChatThread({ onClose }: { onClose?: () => void }) {
    */
   useEffect(() => {
     if (!seed || messages.length > 0 || sentSeed.current) return;
+    // Чекаємо на квоту, перш ніж почати. Без цього вичерпаний ліміт давав НАЙГІРШИЙ із можливих
+    // станів: репліка людини вже в треді, відповіді не буде ніколи (сітка `messages.length > 0`
+    // більше не пустить засів), і розмова лишається мертвою — з тостом, який давно зник.
+    if (!quota) return;
     sentSeed.current = true;
+    if (quota.remaining <= 0) {
+      showError("AI_QUOTA_EXCEEDED");
+      return;
+    }
+    // Правило б'є по `setStreaming` усередині `send`, але це якраз той випадок, який його ж
+    // документація дозволяє: ефект стартує зовнішню дію (мережевий запит), а стан — її побічний
+    // ефект. Перенести це в обробник події ніде: перший хід робить не людина, а прихід сторінки.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void send(t(`ai.chat.opener.${seed.type}`));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- намір: лише на монтування із seed
-  }, [seed]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- намір: один засів, коли квота відома
+  }, [seed, quota]);
 
   // Тримаємо стрічку внизу. Скролимо САМ контейнер, а не `scrollIntoView` по якорю: той тягне за
   // собою й предків, тобто смикав би всю сторінку разом із закріпленим полем вводу.

@@ -6,9 +6,12 @@ import { getAiProvider } from "./ai.client.js";
 import {
   buildCheckinInstruction,
   buildSystemPrompt,
+  crisisReply,
   USER_DATA_TAG,
+  type AddressForm,
   type AiLocale,
 } from "./ai.prompts.js";
+import { screenForCrisis } from "./ai.crisis.js";
 import { consumeQuota } from "./ai.quota.js";
 import { addDaysISO, dowMon0, isISODate } from "./ai.dates.js";
 
@@ -71,6 +74,8 @@ export const checkinResultSchema = z.object({
     )
     .max(3),
   reply: z.string().min(1).max(600),
+  /** Широка сітка: модель лише помічає тривожний сигнал, вердикт виносить класифікатор. */
+  concern: z.boolean(),
 });
 
 export type CheckinAction = z.infer<typeof checkinResultSchema>["actions"][number];
@@ -133,8 +138,14 @@ const CHECKIN_JSON_SCHEMA = {
       type: "string",
       description: "One or two warm sentences reacting to what the user said.",
     },
+    concern: {
+      type: "boolean",
+      description:
+        "true only if the text carries signals of self-harm, thoughts of death or acute crisis " +
+        "aimed at themselves. Tiredness or low mood is not that.",
+    },
   },
-  required: ["actions", "clarifications", "reply"],
+  required: ["actions", "clarifications", "reply", "concern"],
 } as const;
 
 export interface CheckinContext {
@@ -167,9 +178,14 @@ export interface RejectedAction {
  */
 export type ProposedAction = CheckinAction & { prevMinutes?: number | null };
 
-export interface CheckinResponse extends Omit<CheckinResult, "actions"> {
+export interface CheckinResponse extends Omit<CheckinResult, "actions" | "concern"> {
   actions: ProposedAction[];
   rejected: RejectedAction[];
+  /**
+   * Кризова відповідь НАШИМ текстом — і тоді `reply` порожній, а `actions` немає: та сама
+   * форма, що в листі (`content: null` ⟺ `crisis` не `null`). Клієнт показує її замість картки.
+   */
+  crisis: string | null;
   context: { today: string; weekStart: string; weekEnd: string };
 }
 
@@ -373,13 +389,14 @@ export async function parseCheckin(
   today: string,
   locale: AiLocale,
   intent: "auto" | "log" | "plan",
+  address: AddressForm,
 ): Promise<CheckinResponse> {
   const ctx = await buildCheckinContext(userId, today);
   if (ctx.habits.length === 0) throw Errors.aiNotEnoughData("No habits to check in against");
 
   const provider = getAiProvider();
   const result = await provider.generateJson({
-    system: buildSystemPrompt(locale),
+    system: buildSystemPrompt(locale, "checkin", address),
     // Контекст І текст людини — в одному блоці <user_data>, саме тому тегу, який system-промпт
     // називає «дані, а не інструкції». Якби текст лежав поза ним, анти-injection-правило
     // вказувало б не на нього — «ігноруй інструкції» всередині могло б стати командою.
@@ -397,11 +414,19 @@ export async function parseCheckin(
 
   let parsed: CheckinResult;
   try {
-    const raw = JSON.parse(result.text) as { actions?: unknown[]; clarifications?: unknown[]; reply?: string };
+    const raw = JSON.parse(result.text) as {
+      actions?: unknown[];
+      clarifications?: unknown[];
+      reply?: string;
+      concern?: boolean;
+    };
     parsed = checkinResultSchema.parse({
       ...raw,
       actions: normalizeActions(raw.actions, ctx.today),
       clarifications: raw.clarifications ?? [],
+      // Провайдери часто просто не віддають булеве поле замість `false` — і «не сказав» тут
+      // означає саме «не помітив», а не «не знаю».
+      concern: raw.concern ?? false,
     });
   } catch {
     throw Errors.aiUnavailable("AI returned malformed check-in");
@@ -417,11 +442,36 @@ export async function parseCheckin(
     outputTokens: result.outputTokens,
   });
 
+  const base = { context: { today: ctx.today, weekStart: ctx.weekStart, weekEnd: ctx.weekEnd } };
+
+  /**
+   * Два кроки замість одного, і саме в такому порядку — це і є виправлення B2.
+   *
+   * Раніше «криза чи ні» вирішував головний промпт, і на «хочеться зникнути на тиждень» людина
+   * отримувала гарячі лінії. Сітку робити вужчою не можна: ціна пропуску незрівнянна з ціною
+   * зайвого спрацювання. Тож сітка лишається широкою, а точність дає другий крок —
+   * класифікатор із перевірною відповіддю (100% точності на 16 пастках).
+   *
+   * Другий виклик коштує запиту, але лише коли прапорець піднято, тобто в одиницях відсотків
+   * чек-інів. Постійного податку на кожен чек-ін тут немає.
+   */
+  if (parsed.concern) {
+    const flagged = await screenForCrisis(provider, [{ date: ctx.today, text }], userId, today);
+    if (flagged) {
+      // Свідомо БЕЗ окремої події аудиту: «у користувача X криза» — найчутливіший сигнал, який
+      // тільки може потрапити в логи, а факт виклику вже зафіксовано вище як `ai.checkin`.
+      // Дії відкидаємо свідомо: картка «зберегти пробіжку?» поруч із такою розмовою — саме та
+      // помилка тону, заради якої криза взагалі отримала окрему поверхню.
+      return { ...base, actions: [], clarifications: [], reply: "", rejected: [], crisis: crisisReply(locale) };
+    }
+  }
+
   return {
+    ...base,
     actions,
     clarifications: parsed.clarifications,
     reply: parsed.reply,
     rejected,
-    context: { today: ctx.today, weekStart: ctx.weekStart, weekEnd: ctx.weekEnd },
+    crisis: null,
   };
 }

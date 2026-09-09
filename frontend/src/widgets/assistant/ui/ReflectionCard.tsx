@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { CircleCheck, CircleMinus, Lightbulb, MessageCircleQuestion } from "lucide-react";
+import { CircleCheck, CircleMinus, HeartHandshake, Lightbulb, MessageCircleQuestion } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { HabitGlyph, useGetHabitsQuery } from "@/entities/habit";
 import type { ReflectionContentDto, ReflectionItemDto } from "@/shared/api";
@@ -94,6 +94,16 @@ export function ReflectionCard({
             {t("ai.reflection.slips")}
           </h3>
           <ul className="space-y-2">{content.slips.map(renderItem)}</ul>
+        </section>
+      )}
+
+      {/* Турбота — окремо від рубрик про звички й ПЕРЕД питанням. У прогоні лист на семи днях
+          настрою 2 фахівця не згадав узагалі: усі інші поля habit-подібні, і сказати про людину
+          не було де. Тепер є. */}
+      {content.care && (
+        <section className="flex items-center gap-2.5 rounded-lg border border-primary/40 bg-primary/5 p-3">
+          <HeartHandshake className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+          <p className="text-sm leading-relaxed">{content.care}</p>
         </section>
       )}
 

@@ -3,9 +3,10 @@ import { Dialog } from "radix-ui";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Sparkles, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useSetAiPrefs } from "@/entities/ai";
+import { useSetAiPrefs, type AddressForm } from "@/entities/ai";
 import { Button, IconButton } from "@/shared/ui";
 import { cn } from "@/shared/lib";
+import { AddressFormPicker } from "./AddressFormPicker";
 import { BetaBadge } from "./BetaBadge";
 
 interface AiConsentDialogProps {
@@ -33,10 +34,13 @@ export function AiConsentDialog({
   const { t } = useTranslation();
   const reduce = useReducedMotion();
   const [diaryOptIn, setDiaryOptIn] = useState(false);
+  // Дефолт `neutral` — не здогадка, а чесне «не питали»: хто пропустив, лишається на
+  // безродових формулюваннях, тобто на поточній поведінці.
+  const [addressForm, setAddressForm] = useState<AddressForm>("neutral");
   const [setAiPrefs, { isLoading }] = useSetAiPrefs();
 
   const onAccept = async () => {
-    await setAiPrefs({ aiEnabled: true, aiDiaryOptIn: diaryOptIn });
+    await setAiPrefs({ aiEnabled: true, aiDiaryOptIn: diaryOptIn, aiAddressForm: addressForm });
     onOpenChange(false);
     onEnabled?.();
   };
@@ -100,6 +104,8 @@ export function AiConsentDialog({
                   <p className="rounded-lg border border-border bg-background p-3 leading-relaxed text-muted-foreground">
                     {t("ai.consent.testing")}
                   </p>
+
+                  <AddressFormPicker value={addressForm} onChange={setAddressForm} />
 
                   <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-accent/50">
                     <input

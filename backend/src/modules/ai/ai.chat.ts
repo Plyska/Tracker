@@ -1,9 +1,9 @@
 import { prisma } from "../../prisma.js";
 import { htmlToPlainText, truncateText } from "../../lib/html.js";
 import { computeStats } from "../stats/stats.service.js";
-import { addDaysISO, dowMon0, mondayISO } from "./ai.dates.js";
+import { addDaysISO, mondayISO } from "./ai.dates.js";
 import type { ToolCall, ToolSpec } from "./ai.client.js";
-import type { AiLocale } from "./ai.prompts.js";
+import { weekdayCalendar, weekdayName, type AiLocale } from "./ai.prompts.js";
 
 /**
  * Інструменти чату (фаза B2, ADR 0012) — **лише читання**.
@@ -237,32 +237,11 @@ export async function runChatTool(
 
 // ── Інструкція чату ───────────────────────────────────────────────────────────────────────
 
-const DOW = {
-  uk: ["понеділок", "вівторок", "середа", "четвер", "п'ятниця", "субота", "неділя"],
-  en: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-} as const;
 
-/**
- * Календар поточного тижня — готовим рядком, а не «порахуй сам».
- *
- * Заміряно: модель упевнено пише «поставимо в суботу», а в задачу кладе четвер. Назви днів вона
- * виводить з дати ненадійно, і помиляється МОВЧКИ — картка показує правильну дату, а речення
- * поруч бреше. Це той самий принцип, що з підказками (§3.4 плану): дані має давати сервер, а не
- * вгадувати модель. Коштує ~40 токенів і закриває цілий клас помилок.
- */
-const weekCalendar = (locale: AiLocale, today: string): string => {
-  const monday = mondayISO(today);
-  const days = DOW[locale];
-  const line = days
-    .map((name, i) => `${name} ${addDaysISO(monday, i)}`)
-    .join(", ");
-  const label = locale === "uk" ? "Цей тиждень" : "This week";
-  return `${label}: ${line}.`;
-};
 
 const chatUk = (today: string): string =>
-  `Ти в розмові з людиною в її трекері. Сьогодні ${today}, ${DOW.uk[dowMon0(today)]}.
-${weekCalendar("uk", today)} Називаючи день словом, звіряйся з цим рядком, а не рахуй у голові.
+  `Ти в розмові з людиною в її трекері. Сьогодні ${today}, ${weekdayName("uk", today)}.
+${weekdayCalendar("uk", mondayISO(today), addDaysISO(mondayISO(today), 6))} Називаючи день словом, звіряйся з цим рядком, а не рахуй у голові.
 
 Оглядовий зріз за останні тижні вже є нижче в повідомленні — здебільшого його досить, і жодних інструментів кликати не треба. Інструменти лише коли справді бракує даних:
 - get_overview(from, to) — про період поза цим зрізом («а як було в червні?»);
@@ -303,8 +282,8 @@ ${weekCalendar("uk", today)} Називаючи день словом, звір�
 Чого немає в даних — того ти не знаєш; так і кажи, без здогадок.`;
 
 const chatEn = (today: string): string =>
-  `You're in a conversation with someone inside their tracker. Today is ${today}, ${DOW.en[dowMon0(today)]}.
-${weekCalendar("en", today)} When you name a day in words, check it against that line instead of working it out.
+  `You're in a conversation with someone inside their tracker. Today is ${today}, ${weekdayName("en", today)}.
+${weekdayCalendar("en", mondayISO(today), addDaysISO(mondayISO(today), 6))} When you name a day in words, check it against that line instead of working it out.
 
 An overview of the recent weeks is already in the message below — usually that's enough and you need no tools at all. Reach for one only when data is genuinely missing:
 - get_overview(from, to) — for a period outside that overview ("how was June?");

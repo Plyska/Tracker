@@ -77,6 +77,8 @@ export interface PreferencesDto {
   aiEnabled: boolean | null;
   aiDiaryOptIn: boolean | null;
   aiConsentAt: string | null;
+  /** Граматичний рід звертання: 'neutral' | 'masculine' | 'feminine'; null = не задано. */
+  aiAddressForm: string | null;
 }
 
 const toISODate = (d: Date): string => d.toISOString().slice(0, 10);
@@ -93,6 +95,7 @@ export const toPreferencesDto = (p: UserPreferences | null): PreferencesDto => (
   aiEnabled: p?.aiEnabled ?? null,
   aiDiaryOptIn: p?.aiDiaryOptIn ?? null,
   aiConsentAt: p?.aiConsentAt?.toISOString() ?? null,
+  aiAddressForm: p?.aiAddressForm ?? null,
 });
 
 export const toUserDto = (u: User): UserDto => ({

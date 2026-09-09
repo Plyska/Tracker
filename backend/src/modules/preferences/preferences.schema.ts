@@ -17,6 +17,8 @@ export const updatePreferencesSchema = z
     // AI-компаньйон (ADR 0012). aiConsentAt клієнт НЕ передає — ставить сервер при першому enable.
     aiEnabled: z.boolean(),
     aiDiaryOptIn: z.boolean(),
+    // Форма звертання (граматичний рід) — не стать: нам потрібен рід дієслова, не ідентичність.
+    aiAddressForm: z.enum(["neutral", "masculine", "feminine"]),
   })
   .partial();
 

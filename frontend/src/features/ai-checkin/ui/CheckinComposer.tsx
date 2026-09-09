@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Loader2, SendHorizonal } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useCheckinMutation, useAiPrefs } from "@/entities/ai";
+import { CrisisCard, useCheckinMutation, useAiPrefs } from "@/entities/ai";
 import type { CheckinResponseDto } from "@/shared/api";
 import { Button, Card } from "@/shared/ui";
 import { todayISODate } from "@/shared/lib";
@@ -109,17 +109,25 @@ export function CheckinComposer({ onDiscuss }: { onDiscuss?: () => void }) {
             animate={{ opacity: 1, y: 0 }}
             exit={reduce ? undefined : { opacity: 0 }}
           >
-            <CheckinReview
-              result={result}
-              onDone={() => setResult(null)}
-              onAnswer={answerClarification}
-            />
-            {onDiscuss && (
-              <div className="mt-2 text-center">
-                <Button variant="ghost" size="sm" onClick={onDiscuss}>
-                  {t("ai.chat.openFromCheckin")}
-                </Button>
-              </div>
+            {/* Криза заміщує картку повністю — не доповнює її. Пропозиція «зберегти пробіжку?»
+                поруч із такою відповіддю знецінює саму відповідь, тож сервер і дій не віддає. */}
+            {result.crisis ? (
+              <CrisisCard text={result.crisis} />
+            ) : (
+              <>
+                <CheckinReview
+                  result={result}
+                  onDone={() => setResult(null)}
+                  onAnswer={answerClarification}
+                />
+                {onDiscuss && (
+                  <div className="mt-2 text-center">
+                    <Button variant="ghost" size="sm" onClick={onDiscuss}>
+                      {t("ai.chat.openFromCheckin")}
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </motion.div>
         )}

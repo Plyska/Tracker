@@ -18,9 +18,14 @@ import {
 /** Кількість варіантів формулювання підказки — має збігатися з VARIANTS в ai.insights.ts. */
 export const INSIGHT_VARIANTS = 3;
 
+/** Форма звертання = граматичний рід дієслова, не ідентичність (див. ai.prompts.ts). */
+export type AddressForm = "neutral" | "masculine" | "feminine";
+
 export interface AiPrefs {
   enabled: boolean;
   diaryOptIn: boolean;
+  /** `neutral` — і дефолт, і «не питали»: поведінка та сама, тож розрізняти їх не потрібно. */
+  addressForm: AddressForm;
   /** null → згоди ще не було: показуємо екран згоди, а не тумблер. */
   consentAt: string | null;
   isLoading: boolean;
@@ -34,6 +39,7 @@ export function useAiPrefs(): AiPrefs {
   return {
     enabled: data?.aiEnabled === true,
     diaryOptIn: data?.aiDiaryOptIn === true,
+    addressForm: (data?.aiAddressForm as AddressForm | null) ?? "neutral",
     consentAt: data?.aiConsentAt ?? null,
     isLoading: isAuthenticated && isLoading,
   };
@@ -43,7 +49,7 @@ export function useAiPrefs(): AiPrefs {
 export function useSetAiPrefs() {
   const [updatePreferences, state] = useUpdatePreferencesMutation();
   const setAiPrefs = useCallback(
-    (patch: { aiEnabled?: boolean; aiDiaryOptIn?: boolean }) =>
+    (patch: { aiEnabled?: boolean; aiDiaryOptIn?: boolean; aiAddressForm?: AddressForm }) =>
       updatePreferences(patch).unwrap(),
     [updatePreferences],
   );

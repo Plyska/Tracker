@@ -145,6 +145,16 @@
         "insight": "Tell me more about this.",
         "checkin": "I'd like to say more about my day."
       }
+    },
+    "crisis": {
+      "title": "Support"
+    },
+    "address": {
+      "label": "How should we address you?",
+      "hint": "Ukrainian verbs carry grammatical gender when addressing someone. This is only about word forms.",
+      "neutral": "No gender",
+      "masculine": "Masculine",
+      "feminine": "Feminine"
     }
   },
   "sidebar": {

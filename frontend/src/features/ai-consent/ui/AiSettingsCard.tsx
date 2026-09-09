@@ -11,6 +11,7 @@ import {
 } from "@/entities/ai";
 import { AnimatedText, Button, toast } from "@/shared/ui";
 import { cn, todayISODate } from "@/shared/lib";
+import { AddressFormPicker } from "./AddressFormPicker";
 import { AiConsentDialog } from "./AiConsentDialog";
 import { BetaBadge } from "./BetaBadge";
 
@@ -59,7 +60,7 @@ function Toggle({
  */
 export function AiSettingsCard() {
   const { t } = useTranslation();
-  const { enabled, diaryOptIn, consentAt } = useAiPrefs();
+  const { enabled, diaryOptIn, addressForm, consentAt } = useAiPrefs();
   const [setAiPrefs] = useSetAiPrefs();
   const [deleteAiData, { isLoading: deleting }] = useDeleteAiDataMutation();
   const today = todayISODate();
@@ -76,7 +77,7 @@ export function AiSettingsCard() {
       setConsentOpen(true);
       return;
     }
-    void setAiPrefs({ aiEnabled: next });
+    void setAiPrefs({ aiEnabled: next }).catch(() => {});
   };
 
   const onDelete = async () => {
@@ -116,11 +117,17 @@ export function AiSettingsCard() {
           </div>
           <Toggle
             checked={diaryOptIn}
-            onCheckedChange={(v) => void setAiPrefs({ aiDiaryOptIn: v })}
+            onCheckedChange={(v) => void setAiPrefs({ aiDiaryOptIn: v }).catch(() => {})}
             disabled={!enabled}
             label={t("ai.consent.diaryLabel")}
           />
         </div>
+
+        <AddressFormPicker
+          value={addressForm}
+          onChange={(v) => void setAiPrefs({ aiAddressForm: v }).catch(() => {})}
+          disabled={!enabled}
+        />
 
         {enabled && quota && (
           <p className="text-xs text-muted-foreground">

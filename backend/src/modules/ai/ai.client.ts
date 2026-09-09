@@ -23,6 +23,17 @@ export interface GenerateJsonParams {
   maxOutputTokens: number;
   /** Нижче = дешевше й стисліше. Для листа достатньо мінімального. */
   effort?: "low" | "medium";
+  /**
+   * Температура семплінгу. Не задавати = дефолт провайдера (~1.0), і для листа це правильно:
+   * він має звучати живо, а не однаково щотижня.
+   *
+   * А от там, де відповідь **перевірна** — класифікація, витяг фактів — випадковість не дає
+   * нічого, крім розкиду. Заміряно на кризовому класифікаторі: та сама фраза («хочеться зникнути
+   * на тиждень») на дефолтній температурі давала 2 хибних спрацювання з 8 прогонів, хоча
+   * одиничний замір показував бездоганні 14/14. Один прогін на кейс просто не здатен побачити
+   * такий розкид — саме тому запобіжник тепер іде з `temperature: 0`.
+   */
+  temperature?: number;
   signal?: AbortSignal;
 }
 
@@ -215,6 +226,7 @@ class GeminiProvider implements AiProvider {
           thinkingConfig: {
             thinkingLevel: p.effort === "medium" ? ThinkingLevel.MEDIUM : ThinkingLevel.LOW,
           },
+          ...(p.temperature !== undefined && { temperature: p.temperature }),
           abortSignal: p.signal,
         },
       }),
@@ -480,6 +492,7 @@ class OpenAiCompatibleProvider implements AiProvider {
           model: this.model,
           max_completion_tokens: p.maxOutputTokens,
           reasoning_effort: this.reasoning(p.effort),
+          ...(p.temperature !== undefined && { temperature: p.temperature }),
           messages: [
             { role: "system", content: p.system },
             { role: "user", content: p.user },
@@ -502,6 +515,11 @@ class OpenAiCompatibleProvider implements AiProvider {
     const finish = choice?.finish_reason;
     // Обрізаний JSON не розпарситься — краще явна 503, ніж падіння на JSON.parse.
     if (!text || (finish && finish !== "stop")) {
+      // Причина в логи: `length` означає «стеля затісна», і без цього рядка вона виглядає
+      // знадвору як звичайна недоступність провайдера. Контенту тут немає — лише лічильники.
+      console.error(
+        `[ai] no usable JSON: finish_reason=${finish ?? "none"} prompt=${data.usage?.prompt_tokens ?? "?"} completion=${data.usage?.completion_tokens ?? "?"} cap=${p.maxOutputTokens}`,
+      );
       throw Errors.aiUnavailable(`Provider returned no usable JSON (finish_reason: ${finish ?? "none"})`);
     }
     return {

@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { RefreshCw, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
+  CrisisCard,
   useGetAiQuotaQuery,
   useGetReflectionMutation,
   useGetReflectionsQuery,
@@ -111,6 +112,10 @@ export function AssistantView() {
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
         >
+          {/* Криза заміщує лист повністю: підсумок тижня поруч із такою розмовою недоречний. */}
+          {reflection.crisis ? (
+            <CrisisCard text={reflection.crisis} />
+          ) : reflection.content ? (
           <ReflectionCard
             content={reflection.content}
             periodStart={reflection.periodStart}
@@ -118,6 +123,7 @@ export function AssistantView() {
             createdAt={reflection.createdAt}
             onDiscuss={() => openChat({ type: "reflection", key: reflection.periodKey })}
           />
+          ) : null}
         </motion.div>
       ) : (
         <Card className="flex flex-col items-center gap-2 px-6 py-10 text-center">
