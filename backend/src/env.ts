@@ -38,7 +38,10 @@ const schema = z.object({
   // Модель провайдера; без значення — дефолт за провайдером (див. export `aiModel`).
   AI_MODEL: z.string().min(1).optional(),
   // Денна квота запитів до LLM на користувача (лист/чек-ін/чат) → 429 AI_QUOTA_EXCEEDED.
-  AI_DAILY_MESSAGE_LIMIT: z.coerce.number().int().positive().default(20),
+  // 15 — не dev-значення, а продуктова стеля на ОДНОГО користувача: вона лишається і на платному
+  // тирі. Сенс той самий, обмежує різне: на безкоштовному — спільну стелю ключа, на платному —
+  // рахунок. Один виклик ≈4 200 токенів, тож 15/добу ≈ 63 000 на людину (заміряно 2026-09-09).
+  AI_DAILY_MESSAGE_LIMIT: z.coerce.number().int().positive().default(15),
   // Стеля розміру контекст-паку (токени, орієнтовно) — щоб рахунок не ріс із історією.
   AI_CONTEXT_MAX_TOKENS: z.coerce.number().int().positive().default(6000),
 });

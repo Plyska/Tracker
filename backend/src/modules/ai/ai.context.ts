@@ -111,9 +111,18 @@ export interface ContextPack {
     kind: HabitKind;
     /** count → разів/тиждень; timed → хвилин/тиждень; daily → null. */
     target: number | null;
+    /**
+     * **Обрізане одиницею** (кап 100%/тиждень, ADR 0010) — придатне лише для порівняння з
+     * `prevCompletion` («зросло / просіло»), НЕ для цитування у відсотках. Перевиконання тут
+     * невидиме за побудовою; для нього є `done`/`minutes` проти `target`.
+     */
     completion: number;
     prevCompletion: number | null;
     activeDays: number;
+    /** Сира кількість виконань за період: daily → відмічених днів; count → разів. Без капу. */
+    done: number;
+    /** Лише для щоденних: скільки днів пропущено (`activeDays − done`). Інакше `null`. */
+    missed: number | null;
     /** Лише для часових навичок. */
     minutes?: number;
     streak: { current: number; longest: number; unit: "day" | "week" };
@@ -189,15 +198,31 @@ export async function buildContextPack(
    * Тут рахуємо чесно: доба має дані, якщо в неї є хоч одна виконана відмітка БУДЬ-ЯКОГО типу
    * або запис настрою.
    */
-  const entryDates = await prisma.habitEntry.findMany({
+  const doneEntries = await prisma.habitEntry.findMany({
     where: {
       habitId: { in: habits.map((h) => h.id) },
       done: true,
       date: { gte: bounds.from, lte: bounds.to },
     },
-    select: { date: true },
-    distinct: ["date"],
+    select: { date: true, habitId: true },
   });
+  const entryDates = [...new Set(doneEntries.map((e) => e.date))].map((date) => ({ date }));
+
+  /**
+   * Скільки разів кожну звичку виконано — СИРА кількість, без капу.
+   *
+   * Це не дублікат `completionRate`, а виправлення того, що прогін показав як «модель бреше про
+   * числа». `completionRate` навмисно обрізаний одиницею (кап 100%/тиждень, ADR 0010) — для
+   * статистики правильно, для листа згубно: 270 хвилин при цілі 180 приходили як рівно `1`, і
+   * модель чесно писала «100% цілі» замість «на 50% більше». А в count-звичок сирої кількості не
+   * було взагалі: «Зал» їхав як `target: 3, completion: 1`, тож про четверте тренування модель
+   * НЕ МОГЛА знати — вона переказувала ціль і виглядала як брехуха.
+   *
+   * Заразом прибирає арифметику: щоб сказати «4 з 7», модель множила 0.57 на 7 і подеколи плутала
+   * напрям («пропущено 4 з 7» замість «виконано 4»). Тепер обидва числа готові.
+   */
+  const doneCount = new Map<string, number>();
+  for (const e of doneEntries) doneCount.set(e.habitId, (doneCount.get(e.habitId) ?? 0) + 1);
 
   const nameOf = new Map(habits.map((h) => [h.id, h.name]));
   const breakdown = new Map(stats.habitBreakdown.map((b) => [b.habitId, b]));
@@ -222,6 +247,8 @@ export async function buildContextPack(
         completion: round2(b.completionRate),
         prevCompletion: prev && hasComparison ? round2(prev.completionRate) : null,
         activeDays: b.activeDays,
+        done: doneCount.get(h.id) ?? 0,
+        missed: kind === "daily" ? b.activeDays - (doneCount.get(h.id) ?? 0) : null,
         ...(kind === "timed" ? { minutes: b.totalMinutes } : {}),
         streak: {
           current: streaks.get(h.id)?.current ?? 0,

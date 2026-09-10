@@ -39,7 +39,7 @@ export async function screenForCrisis(
       // різні вердикти між прогонами (2 хибних з 8). Тут випадковість не купує нічого.
       temperature: 0,
     });
-    await consumeQuota(userId, today, result.inputTokens, result.outputTokens);
+    await consumeQuota(userId, today, result.inputTokens, result.outputTokens, false);
     // Лише "crisis" вмикає кризову відповідь: "distress" — це важкий тиждень, і на нього в
     // застосунку є свої, м'якші канали (поле `care` в листі, тепла репліка в чек-іні).
     return (JSON.parse(result.text) as { verdict?: string }).verdict === "crisis";

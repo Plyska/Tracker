@@ -217,7 +217,7 @@ export interface PreferencesDto {
   aiDiaryOptIn: boolean | null;
   aiConsentAt: string | null; // ISO datetime; ставить СЕРВЕР при першому вмиканні (read-only)
   /**
-   * Граматичний рід звертання: 'neutral' | 'masculine' | 'feminine'; null = не питали.
+   * Граматичний рід звертання: 'masculine' | 'feminine'; null = ще не питали.
    * Це форма слів, а не стать: українською «ти зробив» і «ти зробила» — різні речення.
    */
   aiAddressForm: string | null;
@@ -237,7 +237,7 @@ export type UpdatePreferencesRequest = Partial<{
   // пристрої. `aiConsentAt` клієнт не надсилає — це серверне поле.
   aiEnabled: boolean;
   aiDiaryOptIn: boolean;
-  aiAddressForm: "neutral" | "masculine" | "feminine";
+  aiAddressForm: "masculine" | "feminine";
 }>;
 
 // --- AI-помічник (ADR 0012) ---

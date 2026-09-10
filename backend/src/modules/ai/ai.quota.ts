@@ -43,12 +43,21 @@ export async function consumeQuota(
   day: string,
   inputTokens: number,
   outputTokens: number,
+  /**
+   * `false` — записати ВАРТІСТЬ, але не списувати повідомлення. Рівно один випадок: кризовий
+   * скрин (`ai.crisis.ts`). Він коштує ≈350 токенів проти ≈4 200 у звичайного виклику, тобто як
+   * повідомлення обраховувався б удванадцятеро дорожче за себе — і найдорожче саме для того,
+   * хто написав щось тривожне. Запобіжник не має скорочувати людині день.
+   * Токени лишаються в обліку: вони справді витрачені й тиснуть на спільну стелю провайдера.
+   */
+  countsAsMessage = true,
 ): Promise<void> {
+  const messages = countsAsMessage ? 1 : 0;
   await prisma.aiUsage.upsert({
     where: { userId_day: { userId, day } },
-    create: { userId, day, messages: 1, inputTokens, outputTokens },
+    create: { userId, day, messages, inputTokens, outputTokens },
     update: {
-      messages: { increment: 1 },
+      messages: { increment: messages },
       inputTokens: { increment: inputTokens },
       outputTokens: { increment: outputTokens },
     },

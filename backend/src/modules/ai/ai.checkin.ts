@@ -8,7 +8,7 @@ import {
   buildSystemPrompt,
   crisisReply,
   USER_DATA_TAG,
-  type AddressForm,
+  type PromptAddress,
   type AiLocale,
 } from "./ai.prompts.js";
 import { screenForCrisis } from "./ai.crisis.js";
@@ -389,7 +389,7 @@ export async function parseCheckin(
   today: string,
   locale: AiLocale,
   intent: "auto" | "log" | "plan",
-  address: AddressForm,
+  address: PromptAddress,
 ): Promise<CheckinResponse> {
   const ctx = await buildCheckinContext(userId, today);
   if (ctx.habits.length === 0) throw Errors.aiNotEnoughData("No habits to check in against");

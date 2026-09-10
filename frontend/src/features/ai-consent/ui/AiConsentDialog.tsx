@@ -3,9 +3,10 @@ import { Dialog } from "radix-ui";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Sparkles, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useSetAiPrefs, type AddressForm } from "@/entities/ai";
+import { useAiPrefs, useSetAiPrefs, type AddressForm } from "@/entities/ai";
 import { Button, IconButton } from "@/shared/ui";
 import { cn } from "@/shared/lib";
+import { addressFormNeeded } from "../lib/addressForm";
 import { AddressFormPicker } from "./AddressFormPicker";
 import { BetaBadge } from "./BetaBadge";
 
@@ -17,33 +18,110 @@ interface AiConsentDialogProps {
 }
 
 /**
- * Екран згоди на AI-помічника (ADR 0012).
+ * Вміст екрана — окремий компонент, змонтований ЛИШЕ поки діалог відкритий.
  *
- * Це НЕ тумблер, а окремий екран, бо рішення стосується передачі персональних даних третій
- * стороні. Два факти, які тут заборонено ховати (план §3.6): запити можуть використовуватись
- * для вдосконалення моделей і вибірково їх можуть переглядати співробітники. Решта тексту
- * навмисно спокійна: починаємо з користі, нормалізуємо, завершуємо контролем.
- *
- * Щоденник — окремий чекбокс, ВИМКНЕНИЙ за замовчуванням: це найособистіше, що ми надсилаємо.
+ * Це не структурна косметика. Екран показується вже не тільки при першій згоді: якщо форми
+ * звертання немає, він відкривається й із тумблера в Налаштуваннях. А отже поля мусять щоразу
+ * стартувати з ПОТОЧНИХ налаштувань, а не з нулів — інакше людина з увімкненим доступом до
+ * щоденника, повторно натиснувши «Увімкнути», тихо його втратила б. Монтування на кожне
+ * відкриття дає це задарма: ініціалізатори `useState` відпрацьовують заново, без ефектів-синхронів.
  */
-export function AiConsentDialog({
-  open,
-  onOpenChange,
-  onEnabled,
-}: AiConsentDialogProps) {
-  const { t } = useTranslation();
-  const reduce = useReducedMotion();
-  const [diaryOptIn, setDiaryOptIn] = useState(false);
-  // Дефолт `neutral` — не здогадка, а чесне «не питали»: хто пропустив, лишається на
-  // безродових формулюваннях, тобто на поточній поведінці.
-  const [addressForm, setAddressForm] = useState<AddressForm>("neutral");
+function ConsentBody({ onOpenChange, onEnabled }: Omit<AiConsentDialogProps, "open">) {
+  const { t, i18n } = useTranslation();
+  const prefs = useAiPrefs();
+  const [diaryOptIn, setDiaryOptIn] = useState(prefs.diaryOptIn);
+  // Наперед не вибрано нічого: варіантів два, і будь-який дефолт тут — здогадка про людину.
+  // Поки не обрано, кнопка неактивна (див. `needsAddress`).
+  const [addressForm, setAddressForm] = useState<AddressForm | null>(prefs.addressForm);
+  const needsAddress = addressFormNeeded(i18n.language);
   const [setAiPrefs, { isLoading }] = useSetAiPrefs();
 
   const onAccept = async () => {
-    await setAiPrefs({ aiEnabled: true, aiDiaryOptIn: diaryOptIn, aiAddressForm: addressForm });
+    await setAiPrefs({
+      aiEnabled: true,
+      aiDiaryOptIn: diaryOptIn,
+      // Англійський інтерфейс форми не питає — тоді поле просто не надсилаємо («не питали»).
+      ...(addressForm ? { aiAddressForm: addressForm } : {}),
+    });
     onOpenChange(false);
     onEnabled?.();
   };
+
+  return (
+    <>
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <Dialog.Title className="flex items-center gap-2 text-lg font-semibold">
+            <Sparkles className="h-5 w-5 text-primary" aria-hidden />
+            {t("ai.consent.title")}
+            <BetaBadge />
+          </Dialog.Title>
+          <Dialog.Description className="text-sm text-muted-foreground">
+            {t("ai.consent.sees")}
+          </Dialog.Description>
+        </div>
+        <Dialog.Close asChild>
+          <IconButton aria-label={t("common.close")}>
+            <X className="h-4 w-4" />
+          </IconButton>
+        </Dialog.Close>
+      </div>
+
+      <div className="space-y-4 text-sm">
+        <AddressFormPicker value={addressForm} onChange={setAddressForm} />
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-accent/50">
+          <input
+            type="checkbox"
+            checked={diaryOptIn}
+            onChange={(e) => setDiaryOptIn(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--primary)]"
+          />
+          <span>
+            <span className="font-medium">{t("ai.consent.diaryLabel")}</span>
+            <span className="mt-1 block text-xs text-muted-foreground">{t("ai.diaryHint")}</span>
+          </span>
+        </label>
+      </div>
+
+      <div className="mt-6 flex gap-2 border-t border-border pt-4 sm:justify-end">
+        <Dialog.Close asChild>
+          <Button variant="outline" className="flex-1 sm:flex-none">
+            {t("common.cancel")}
+          </Button>
+        </Dialog.Close>
+        <Button
+          onClick={() => void onAccept()}
+          // Без форми звертання помічника не вмикаємо взагалі: безродовий режим модель не
+          // витримує — у прогоні рід прорвався в кризову відповідь 3 рази з 3.
+          disabled={isLoading || (needsAddress && addressForm === null)}
+          className="flex-1 sm:flex-none"
+        >
+          {t("ai.consent.accept")}
+        </Button>
+      </div>
+    </>
+  );
+}
+
+/**
+ * Екран згоди на AI-помічника (ADR 0012).
+ *
+ * Це НЕ тумблер, а окремий екран, бо рішення стосується передачі персональних даних третій
+ * стороні.
+ *
+ * Текст свідомо короткий: довгі абзаци на екрані згоди не читають, а нечитаний абзац не робить
+ * згоду поінформованою — він лише створює її вигляд. Тому лишилось те, без чого рішення ухвалити
+ * не можна: **що бачить** помічник і **куди йдуть дані**.
+ *
+ * Друге тепер живе в підказці біля щоденника — це ЄДИНЕ місце, де сказано про зовнішній сервіс.
+ * Прибираючи звідти цю фразу, екран перестає розкривати передачу даних узагалі.
+ *
+ * Щоденник — окремий чекбокс, ВИМКНЕНИЙ за замовчуванням: це найособистіше, що ми надсилаємо.
+ */
+export function AiConsentDialog({ open, onOpenChange, onEnabled }: AiConsentDialogProps) {
+  const { t } = useTranslation();
+  const reduce = useReducedMotion();
 
   const content = reduce
     ? {
@@ -69,6 +147,7 @@ export function AiConsentDialog({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.32, ease: "easeOut" }}
+                aria-label={t("ai.consent.title")}
               />
             </Dialog.Overlay>
             <Dialog.Content asChild forceMount>
@@ -82,65 +161,7 @@ export function AiConsentDialog({
                 exit={content.exit}
                 transition={{ duration: 0.32, ease: "easeOut" }}
               >
-                <div className="mb-4 flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <Dialog.Title className="flex items-center gap-2 text-lg font-semibold">
-                      <Sparkles className="h-5 w-5 text-primary" aria-hidden />
-                      {t("ai.consent.title")}
-                      <BetaBadge />
-                    </Dialog.Title>
-                    <Dialog.Description className="text-sm text-muted-foreground">
-                      {t("ai.consent.sees")}
-                    </Dialog.Description>
-                  </div>
-                  <Dialog.Close asChild>
-                    <IconButton aria-label={t("common.close")}>
-                      <X className="h-4 w-4" />
-                    </IconButton>
-                  </Dialog.Close>
-                </div>
-
-                <div className="space-y-4 text-sm">
-                  <p className="rounded-lg border border-border bg-background p-3 leading-relaxed text-muted-foreground">
-                    {t("ai.consent.testing")}
-                  </p>
-
-                  <AddressFormPicker value={addressForm} onChange={setAddressForm} />
-
-                  <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-accent/50">
-                    <input
-                      type="checkbox"
-                      checked={diaryOptIn}
-                      onChange={(e) => setDiaryOptIn(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--primary)]"
-                    />
-                    <span>
-                      <span className="font-medium">{t("ai.consent.diaryLabel")}</span>
-                      <span className="mt-1 block text-xs text-muted-foreground">
-                        {t("ai.diaryHint")}
-                      </span>
-                    </span>
-                  </label>
-
-                  <p className="text-xs text-muted-foreground">
-                    {t("ai.consent.control")}
-                  </p>
-                </div>
-
-                <div className="mt-6 flex gap-2 border-t border-border pt-4 sm:justify-end">
-                  <Dialog.Close asChild>
-                    <Button variant="outline" className="flex-1 sm:flex-none">
-                      {t("common.cancel")}
-                    </Button>
-                  </Dialog.Close>
-                  <Button
-                    onClick={() => void onAccept()}
-                    disabled={isLoading}
-                    className="flex-1 sm:flex-none"
-                  >
-                    {t("ai.consent.accept")}
-                  </Button>
-                </div>
+                <ConsentBody onOpenChange={onOpenChange} onEnabled={onEnabled} />
               </motion.div>
             </Dialog.Content>
           </Dialog.Portal>

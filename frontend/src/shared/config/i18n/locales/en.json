@@ -15,7 +15,7 @@
   "ai": {
     "beta": "Beta",
     "betaHint": "The assistant is still in testing — answers can be off.",
-    "diaryHint": "Diary entries are the most personal thing here: like everything else, they go to an external processing service. If you're unsure, leave this off — the assistant works well on habits and mood alone.",
+    "diaryHint": "Your diary is the most personal part here, and it goes to an external service along with the rest. If you're unsure, leave it off.",
     "intro": {
       "title": "Your companion",
       "body": "It reads your habits, check-ins and mood, and writes you a short letter each week — what went well, what slipped, and one thing it noticed.",
@@ -24,9 +24,7 @@
     "consent": {
       "title": "The assistant",
       "sees": "What it sees: habit names, check-ins and mood. Diary entries — only if you allow it.",
-      "testing": "To answer you, the assistant sends requests to an external processing service. Under our agreement with it, your requests are not used to train models and are not stored: temporary technical logs are possible for up to 30 days, only to investigate a failure or abuse.",
       "diaryLabel": "Let it read my diary",
-      "control": "You're always in control: turn the assistant off, keep your diary private, or delete all AI data — one tap in Settings.",
       "accept": "Turn on"
     },
     "reflection": {
@@ -151,8 +149,7 @@
     },
     "address": {
       "label": "How should we address you?",
-      "hint": "Ukrainian verbs carry grammatical gender when addressing someone. This is only about word forms.",
-      "neutral": "No gender",
+      "hint": "Ukrainian verbs carry grammatical gender when addressing someone. This is only about word forms — you can change it any time.",
       "masculine": "Masculine",
       "feminine": "Feminine"
     }

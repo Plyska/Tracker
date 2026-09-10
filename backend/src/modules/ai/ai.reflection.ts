@@ -10,7 +10,7 @@ import {
   crisisReply,
   toAddressForm,
   weekdayCalendar,
-  type AddressForm,
+  type PromptAddress,
   type AiLocale,
 } from "./ai.prompts.js";
 import { screenForCrisis } from "./ai.crisis.js";
@@ -162,7 +162,7 @@ export async function getOrCreateReflection(
   today: string,
   locale: AiLocale,
   diaryOptIn: boolean,
-  address: AddressForm,
+  address: PromptAddress,
 ): Promise<ReflectionResult> {
   const { pack, bounds } = await buildContextPack(userId, period, today, locale, diaryOptIn);
 

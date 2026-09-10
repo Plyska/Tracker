@@ -36,17 +36,31 @@ export type PatternKind = (typeof PATTERN_KINDS)[number];
 /**
  * Контакти допомоги для кризового протоколу — модель цитує їх дослівно.
  *
- * TODO: verify before release — звірити номери й формулювання (docs/ai-agent.md §1: «список — у
- * конфігу, звірити перед релізом»). Для EN свідомо без конкретних номерів: користувачі можуть бути
- * в будь-якій країні, а вигаданий чи чужий номер у кризі гірший за «подзвони на місцеву лінію».
+ * **Звірено 2026-09-09** — і звірка виявилась не формальністю. Тут стояла Lifeline Ukraine (7333),
+ * національна лінія запобігання суїцидам, і вона **не працює**: на сайті оператора висить «Робота
+ * гарячої лінії на паузі. Короткий номер і чати тимчасово не приймають звернення», а з офіційного
+ * переліку «Ти як?» номер зник. Державні й новинні сторінки його ще друкують — вони застаріли.
+ * У кризовій відповіді мертвий номер гірший за відсутність номера, тож 7333 прибрано.
+ *
+ * Заміна — цілодобова безкоштовна лінія «Людина в біді» (є в переліку «Ти як?»). Свідомо НЕ
+ * називаємо її «лінією запобігання суїцидам»: це загальна психологічна підтримка, і приписати їй
+ * спеціалізацію, якої вона не заявляє, — та сама неправда, лише в інший бік.
+ *
+ * 112 звірено окремо: єдиний номер екстрених служб охоплює всю Україну (МВС) і працює в ЄС —
+ * тому в EN-версії він тепер названий явно. Решта EN свідомо без номерів: користувач може бути
+ * будь-де, а чужий номер у кризі гірший за «знайди місцеву лінію».
+ *
+ * **Ці номери псуються.** Одноразової звірки «перед релізом» замало — потрібна періодична, інакше
+ * застаріле джерело переживе продукт. Дата вище — не декорація, а термін придатності.
+ * Будь-яка зміна тут вимагає правки регексу в `CrisisCard` (див. коментар там).
  */
 export const CRISIS_RESOURCES: Record<AiLocale, string> = {
   uk: [
-    "Lifeline Ukraine — 7333 (цілодобово, безкоштовно з мобільного; підтримка при думках про самоушкодження).",
+    "Безкоштовна цілодобова лінія психологічної підтримки — 0 800 210 160 (анонімно, з будь-якого оператора).",
     "Якщо є загроза життю прямо зараз — 103 (швидка) або 112.",
   ].join("\n"),
   en: [
-    "If you're in immediate danger, call your local emergency number.",
+    "If you're in immediate danger, call your local emergency number — 112 works across the EU and in Ukraine.",
     "Most countries have a free crisis line you can call or text right now — search for one in your country, or ask someone you trust to help you find it.",
   ].join("\n"),
 };
@@ -66,24 +80,42 @@ export const CRISIS_RESOURCES: Record<AiLocale, string> = {
  *
  * `neutral` — дефолт для тих, хто не відповів: рівно поточна поведінка, без здогадок.
  */
-export const ADDRESS_FORMS = ["neutral", "masculine", "feminine"] as const;
+export const ADDRESS_FORMS = ["masculine", "feminine"] as const;
 export type AddressForm = (typeof ADDRESS_FORMS)[number];
 
-export const toAddressForm = (v: string | null | undefined): AddressForm =>
-  (ADDRESS_FORMS as readonly string[]).includes(v ?? "") ? (v as AddressForm) : "neutral";
+/**
+ * Що робити, коли форму НЕ питали. Це не третій варіант вибору — його в інтерфейсі немає, і
+ * людині він не пропонується. Це шлях, який лишається можливим технічно: помічник вмикають на
+ * англійському інтерфейсі (де питання про рід не має сенсу й не ставиться), а потім перемикають
+ * застосунок на українську.
+ *
+ * Тут ми свідомо НЕ вгадуємо. Вгадана стать помиляється приблизно в половині випадків, і
+ * найгірше місце для такої помилки — кризова відповідь («ти не сам» жінці). Безродове
+ * формулювання звучить сухіше, але не б'є.
+ */
+export type PromptAddress = AddressForm | "unspecified";
+
+export const toAddressForm = (v: string | null | undefined): PromptAddress =>
+  (ADDRESS_FORMS as readonly string[]).includes(v ?? "") ? (v as AddressForm) : "unspecified";
 
 /**
  * Правило роду для української персони. Англійська його не отримує взагалі: у звертанні на «you»
  * граматичного роду немає, тож поле там просто не має роботи.
  *
- * Про СЕБЕ помічник говорить без роду в усіх трьох випадках — і це не забудькуватість. Ім'я й
- * рід самого помічника ще не визначені (окреме продуктове рішення), а поки їх немає, «помітив» і
- * «помітила» чергуються між репліками навмання. Нейтральна самоназва — тимчасова, до імені.
+ * Варіантів вибору два, і це головна причина, чому правило тепер працює. Раніше третім був
+ * «без роду» — інструкція **заборонна**, а такі слабкі моделі виконують найгірше: у прогоні
+ * кризова відповідь у чаті давала «ти не один» / «ти не сам» / «ти не сам/сама» **3 рази з 3**,
+ * попри пряму заборону. Позитивна інструкція («звертайся в чоловічому роді») обходити нічого не
+ * змушує, тож і ламатися нема чому.
+ *
+ * Про СЕБЕ помічник говорить без роду в усіх випадках — це поки що заглушка: ім'я й рід самого
+ * помічника ще не визначені (окреме продуктове рішення), а без них «помітив» і «помітила»
+ * чергуються між репліками навмання.
  */
-const ADDRESS_RULE_UK: Record<AddressForm, string> = {
-  neutral: `- **Жодних форм із родом, звернених до людини.** Не «ти зробив/зробила», не «ти не один/одна», не «сам/сама». Форму звертання не вказано, а помилка в роді — особливо в тяжкій розмові — коштує довіри. Кажи теперішнім часом, через факт або безособово: «у тебе 4 з 5», «серія тримається», «це важливо», «добре, що вийшло».`,
+const ADDRESS_RULE_UK: Record<PromptAddress, string> = {
   masculine: `- **Звертайся до людини в ЧОЛОВІЧОМУ роді** — вона сама так обрала. «Ти зробив», «ти впорався», «ти не один», «тримав серію». Не обходь минулий час і не пиши безособово там, де жива форма тепліша.`,
   feminine: `- **Звертайся до людини в ЖІНОЧОМУ роді** — вона сама так обрала. «Ти зробила», «ти впоралась», «ти не одна», «тримала серію». Не обходь минулий час і не пиши безособово там, де жива форма тепліша.`,
+  unspecified: `- **Форму звертання не вказано, тож не вживай форм із родом, звернених до людини.** Не «ти зробив/зробила», не «ти не один/одна», не «сам/сама». Кажи теперішнім часом, через факт або безособово: «у тебе 4 з 5», «серія тримається», «це важливо», «добре, що вийшло».`,
 };
 
 /** Про себе — без роду, поки в помічника немає імені й роду. */
@@ -93,7 +125,7 @@ const SELF_RULE_UK = `- **Про себе кажи без роду**: не «п�
 
 /**
  * Відповідь у кризі — НАШ текст, не модельний. Три причини, кожна з прогону тон-тестів:
- *  1. контакти мають бути дослівні — модель одного разу дала 7333 і «забула» 103/112;
+ *  1. контакти мають бути дослівні — модель одного разу дала номер лінії й «забула» 103/112;
  *  2. рід: модель написала «ти не сам» і «ти не одна» — у найгіршому місці для такої помилки.
  *     Свій текст ми пишемо безособово й гарантовано;
  *  3. детермінованість: це єдина відповідь у продукті, яку треба вміти відтворити слово в слово.
@@ -320,7 +352,7 @@ If the text carries signs of self-harm, thoughts of death, or acute crisis, rais
 export function buildSystemPrompt(
   locale: AiLocale,
   surface: AiSurface,
-  address: AddressForm = "neutral",
+  address: PromptAddress = "unspecified",
 ): string {
   const section =
     surface === "chat"
@@ -354,7 +386,7 @@ const reflectionUk = (period: ReflectionPeriod): string => {
   return `Напиши лист-рефлексію за ${periodWord} за даними в <${USER_DATA_TAG}>. Це не звіт і не оцінка — кілька рядків від друга, який дивився на ці дні разом із людиною. Межі періоду й «сьогодні» — у даних; за них не виходь.
 ${scope}
 
-Що є в даних: habits (id, name, kind: daily/count/timed, target — разів або хвилин на тиждень, completion, prevCompletion, minutes для часових, streak), days (по днях: done/total, mood 1–5, minutes), summary (completion, perfectDays, moodAvg, серії — і prev* для порівняння з попереднім періодом), patterns (готові синергії та зв'язки з настроєм — назвами навичок), notes (прапорці: sparse — даних мало; hasComparison — чи є з чим порівнювати; diaryIncluded — чи є уривки щоденника). Якщо notes.hasComparison = false — нічого не порівнюй із «минулим разом».
+Що є в даних: habits (id, name, kind: daily/count/timed, target — разів або хвилин на тиждень, **done** — скільки разів реально виконано, **missed** — скільки днів пропущено (лише щоденні), minutes для часових, completion/prevCompletion, streak), days (по днях: done/total, mood 1–5, minutes), summary (completion, perfectDays, moodAvg, серії — і prev* для порівняння з попереднім періодом), patterns (готові синергії та зв'язки з настроєм — назвами навичок), notes (прапорці: sparse — даних мало; hasComparison — чи є з чим порівнювати; diaryIncluded — чи є уривки щоденника). Якщо notes.hasComparison = false — нічого не порівнюй із «минулим разом».
 
 Поверни СУВОРО один JSON-об'єкт — без markdown, без тексту до чи після — з полями:
 - "headline": одне тепле речення про ${periodWord}. Конкретне, не загальне.
@@ -365,6 +397,9 @@ ${scope}
 - "care": одне тепле речення про підтримку — і ЛИШЕ коли сигнали стійкі: настрій ≤2 кілька днів поспіль, різкий спад проти попереднього періоду. Тоді запропонуй поговорити з тим, кому довіряє, або з фахівцем — як друг, не як припис, без діагнозу й без порад. Решта полів — про звички; це поле — єдине місце, де можна сказати про людину. Немає стійких сигналів → null. Не став сюди мотивацію чи побажання.
 
 Правила:
+- **Числа бери з "done", "missed", "minutes" і "target" — і тільки з них.** "completion" обрізане одиницею: у нього 270 хвилин при цілі 180 виглядають як рівно 1, тобто «100%». Ніколи не називай "completion" у відсотках; воно годиться лише щоб порівняти з "prevCompletion" («більше/менше, ніж минулого разу»). Перевиконання рахуй сам: 270 проти 180 — це «на 50% більше», а не «ціль виконано».
+- Не рахуй у думці того, що вже пораховано: «виконано {done} з {activeDays}» і «пропущено {missed}» — готові числа, не виводь їх із часток.
+- Пиши українською й тоді, коли переказуєш назви полів: не «streak», а «серія»; не «completion», а «виконання».
 - Пиши українською, на «ти». Форму звертання (рід) задано в системній інструкції — тримайся її й не вигадуй іншої.
 - Називай навички їхніми справжніми назвами (habits[].name). Цифри, дні тижня, дати, серії — лише з даних. Не вигадуй чисел, відсотків і причин; хвилини можна округлити до годин («≈2,5 год»), але не змінювати.
 - Якщо текст про конкретну навичку — у "habitId" скопіюй ДОСЛІВНО значення поля id відповідного елемента habits. Якщо текст не про одну навичку — "habitId": null. Не вигадуй і не скорочуй id.
@@ -383,7 +418,7 @@ const reflectionEn = (period: ReflectionPeriod): string => {
   return `Write a reflection letter for the ${periodWord} from the data in <${USER_DATA_TAG}>. It's not a report or a grade; it's a few lines from a friend who has been watching these days alongside them. The period bounds and "today" are in the data; stay inside them.
 ${scope}
 
-What's in the data: habits (id, name, kind: daily/count/timed, target as times or minutes per week, completion, prevCompletion, minutes for timed ones, streak), days (per day: done/total, mood 1–5, minutes), summary (completion, perfectDays, moodAvg, streaks, plus prev* for comparing with the previous period), patterns (ready-made synergies and mood links, by habit name), notes (flags: sparse means little data; hasComparison means there is a previous period to compare with; diaryIncluded means diary excerpts are present). If notes.hasComparison is false, don't compare with "last time" at all.
+What's in the data: habits (id, name, kind: daily/count/timed, target as times or minutes per week, **done** — how many times it was actually completed, **missed** — days skipped (daily habits only), minutes for timed ones, completion/prevCompletion, streak), days (per day: done/total, mood 1–5, minutes), summary (completion, perfectDays, moodAvg, streaks, plus prev* for comparing with the previous period), patterns (ready-made synergies and mood links, by habit name), notes (flags: sparse means little data; hasComparison means there is a previous period to compare with; diaryIncluded means diary excerpts are present). If notes.hasComparison is false, don't compare with "last time" at all.
 
 Return STRICTLY one JSON object, no markdown, no text before or after, with these fields:
 - "headline": one warm sentence about the ${periodWord}. Specific, not generic.
@@ -394,6 +429,8 @@ Return STRICTLY one JSON object, no markdown, no text before or after, with thes
 - "care": one warm sentence about support — and ONLY when signals persist: mood at 2 or below for several days running, or a sharp drop against the previous period. Then suggest talking to someone they trust or a professional, as a friend would, no diagnosis, no advice. Every other field is about habits; this is the only place you can speak about the person. No persistent signal → null. Don't put motivation or good wishes here.
 
 Rules:
+- **Take numbers from "done", "missed", "minutes" and "target" — from nothing else.** "completion" is capped at 1: 270 minutes against a 180 target arrives as exactly 1, i.e. "100%". Never quote "completion" as a percentage; it is only good for comparing against "prevCompletion" ("more/less than last time"). Work out overachievement yourself: 270 against 180 is "50% over", not "goal met".
+- Don't recompute what is already computed: "{done} of {activeDays} done" and "{missed} missed" are given — don't derive them from a fraction.
 - Write in English, informal, like a friend texting. Address them directly.
 - Call habits by their real names (habits[].name). Numbers, weekdays, dates and streaks come only from the data. Don't invent figures, percentages or reasons; minutes may be rounded to hours ("about 2.5h") but never changed.
 - When a text is about one specific habit, set "habitId" to the id field of that habit in the habits array, copied VERBATIM. If a text isn't about a single habit, set "habitId": null. Never invent or shorten an id.

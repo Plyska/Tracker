@@ -11,6 +11,7 @@ import {
 } from "@/entities/ai";
 import { AnimatedText, Button, toast } from "@/shared/ui";
 import { cn, todayISODate } from "@/shared/lib";
+import { addressFormNeeded } from "../lib/addressForm";
 import { AddressFormPicker } from "./AddressFormPicker";
 import { AiConsentDialog } from "./AiConsentDialog";
 import { BetaBadge } from "./BetaBadge";
@@ -59,7 +60,7 @@ function Toggle({
  * висить чесна підказка, що записи теж проходять через провайдера.
  */
 export function AiSettingsCard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { enabled, diaryOptIn, addressForm, consentAt } = useAiPrefs();
   const [setAiPrefs] = useSetAiPrefs();
   const [deleteAiData, { isLoading: deleting }] = useDeleteAiDataMutation();
@@ -72,8 +73,14 @@ export function AiSettingsCard() {
   const hasHidden = hasHiddenInsights(today);
 
   const onToggleEnabled = (next: boolean) => {
-    // Згоди ще не було → замість тихого вмикання показуємо екран із поясненням.
-    if (next && !consentAt) {
+    /**
+     * Екран потрібен не лише для ПЕРШОЇ згоди. Без форми звертання вмикати теж не можна: там,
+     * де її немає, модель мусить обходити рід — і не справляється (у прогоні рід прорвався в
+     * кризову відповідь 3 рази з 3). Обидві умови ведуть в один екран, бо саме там і пояснення,
+     * і сам вибір; тумблер мовчки вмикати помічника в такому стані не має права.
+     */
+    const needsForm = addressFormNeeded(i18n.language) && addressForm === null;
+    if (next && (!consentAt || needsForm)) {
       setConsentOpen(true);
       return;
     }

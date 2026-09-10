@@ -18,7 +18,8 @@ export const updatePreferencesSchema = z
     aiEnabled: z.boolean(),
     aiDiaryOptIn: z.boolean(),
     // Форма звертання (граматичний рід) — не стать: нам потрібен рід дієслова, не ідентичність.
-    aiAddressForm: z.enum(["neutral", "masculine", "feminine"]),
+    // Два значення, без «без роду»: заборонна інструкція моделлю не виконувалась (див. ai.prompts).
+    aiAddressForm: z.enum(["masculine", "feminine"]),
   })
   .partial();
 
