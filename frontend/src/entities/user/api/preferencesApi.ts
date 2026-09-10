@@ -12,6 +12,23 @@ export const preferencesApi = baseApi.injectEndpoints({
     }),
     updatePreferences: build.mutation<PreferencesDto, UpdatePreferencesRequest>({
       query: (body) => ({ url: "/me/preferences", method: "PATCH", body }),
+      // Патчимо кеш відповіддю сервера замість інвалідації: `PreferencesSync` пише сюди на
+      // кожну зміну теми/акценту, і рефетч на кожен PATCH був би зайвим колом запитів.
+      // Заразом це єдиний спосіб, яким UI бачить СЕРВЕРНІ поля (`aiConsentAt`) одразу.
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            preferencesApi.util.updateQueryData(
+              "getPreferences",
+              undefined,
+              () => data,
+            ),
+          );
+        } catch {
+          // Помилку показує errorToastMiddleware; кеш лишається як був.
+        }
+      },
     }),
   }),
 });

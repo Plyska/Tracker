@@ -15,6 +15,7 @@ export {
   todayISODate,
   addDaysISO,
   shiftAnchor,
+  formatDateRange,
 } from "./date";
 export {
   useEntitlement,

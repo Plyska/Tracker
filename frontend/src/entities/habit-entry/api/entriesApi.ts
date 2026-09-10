@@ -23,7 +23,12 @@ export const entriesApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/entries", method: "PUT", body }),
       // Статистика агрегатна → рефетчимо її за тегом (таблиці це не торкається: інших
       // споживачів `Stats/LIST` немає, а `Entry` лишається суто оптимістичним нижче).
-      invalidatesTags: [{ type: "Stats", id: "LIST" }],
+      // Підказки-помічника рахуються з відміток (стріки, тижневі цілі) — інакше картка
+      // «ціль під загрозою» висіла б після того, як користувач її щойно закрив.
+      invalidatesTags: [
+        { type: "Stats", id: "LIST" },
+        { type: "Ai", id: "INSIGHTS" },
+      ],
       // Оптимістично патчимо всі закешовані діапазони, що містять цю дату — без рефетчу
       // (інакше сітка миготіла б). Відкат на помилку.
       async onQueryStarted(arg, { dispatch, getState, queryFulfilled }) {

@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { prisma } from "../../prisma.js";
 import { toDailyLogDto } from "../../lib/mappers.js";
+import { stripHtml } from "../../lib/html.js";
 import type {
   DailyLogRangeInput,
   UpsertDailyLogInput,
@@ -35,13 +36,6 @@ export const listDiaryFeed = async (
   const withNotes = logs.filter((l) => l.notes && stripHtml(l.notes).length > 0);
   res.json(withNotes.map(toDailyLogDto));
 };
-
-/** Грубе зведення HTML до тексту — лише щоб відсіяти «порожні» нотатки (напр. `<p></p>`). */
-const stripHtml = (html: string): string =>
-  html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .trim();
 
 /**
  * PUT /daily-logs — upsert денного логу (sparse, один на день). mood 1–5; notes опційні.

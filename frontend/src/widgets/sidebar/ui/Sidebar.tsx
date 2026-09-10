@@ -7,6 +7,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  Sparkles,
   X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -21,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/planner", labelKey: "nav.planner", icon: CalendarClock },
   { href: "/diary", labelKey: "nav.diary", icon: BookOpen },
   { href: "/statistics", labelKey: "nav.statistics", icon: BarChart3 },
+  { href: "/assistant", labelKey: "nav.assistant", icon: Sparkles },
 ];
 
 const SETTINGS_ITEM: NavItem = {

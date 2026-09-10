@@ -7,6 +7,7 @@ import { AccentPicker } from "@/features/accent";
 import { ProfileForm } from "@/features/auth";
 import { LangSwitcher } from "@/features/locale";
 import { HabitTrash } from "@/features/manage-habits";
+import { AiSettingsCard } from "@/features/ai-consent";
 import { ThemeToggle } from "@/features/theme";
 import { TableLayoutSwitcher, toggleStatWidget } from "@/features/ui-prefs";
 import {
@@ -160,6 +161,10 @@ function SettingsPage() {
 
                   <TiltCard maxTilt={0} hoverScale={1.04}>
                     <TableLayoutSwitcher />
+                  </TiltCard>
+
+                  <TiltCard maxTilt={0} hoverScale={1.04}>
+                    <AiSettingsCard />
                   </TiltCard>
 
                   <TiltCard maxTilt={0} hoverScale={1.04}>

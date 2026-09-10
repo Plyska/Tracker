@@ -36,9 +36,11 @@ export const dailyLogApi = baseApi.injectEndpoints({
     upsertDailyLog: build.mutation<DailyLog, UpsertDailyLogRequest>({
       query: (body) => ({ url: "/daily-logs", method: "PUT", body }),
       transformResponse: toDailyLog,
+      // Настрій живить підказку `lowMoodStreak` — оновлюємо її одразу після оцінки дня.
       invalidatesTags: [
         { type: "DailyLog", id: "LIST" },
         { type: "Stats", id: "LIST" },
+        { type: "Ai", id: "INSIGHTS" },
       ],
     }),
   }),

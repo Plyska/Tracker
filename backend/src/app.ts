@@ -11,6 +11,7 @@ import { dailyLogsRouter } from "./modules/daily-log/daily-log.routes.js";
 import { tasksRouter } from "./modules/tasks/task.routes.js";
 import { statsRouter } from "./modules/stats/stats.routes.js";
 import { preferencesRouter } from "./modules/preferences/preferences.routes.js";
+import { aiRouter } from "./modules/ai/ai.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 
 export const createApp = () => {
@@ -55,6 +56,8 @@ export const createApp = () => {
   app.use("/tasks", tasksRouter);
   app.use("/stats", statsRouter);
   app.use("/me/preferences", preferencesRouter);
+  // AI-компаньйон (ADR 0012): підказки (без LLM), лист тижня, квоти, експорт/видалення даних.
+  app.use("/ai", aiRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

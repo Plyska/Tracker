@@ -19,7 +19,7 @@ export function Toaster() {
   return (
     <RToast.Provider swipeDirection="right" duration={TOAST_DURATION}>
       <AnimatePresence>
-        {toasts.map(({ id, message, variant }) => {
+        {toasts.map(({ id, message, variant, action }) => {
           const Icon = ICONS[variant];
           return (
             <RToast.Root
@@ -57,6 +57,21 @@ export function Toaster() {
                 <RToast.Description className="flex-1 text-base leading-snug">
                   {message}
                 </RToast.Description>
+                {action && (
+                  // altText — вимога Radix для a11y: що озвучити, якщо тост не встигли побачити.
+                  <RToast.Action asChild altText={action.label}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        action.onClick();
+                        dismissToast(id);
+                      }}
+                      className="shrink-0 rounded-sm text-base font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {action.label}
+                    </button>
+                  </RToast.Action>
+                )}
                 <RToast.Close
                   aria-label="Close"
                   className="shrink-0 rounded-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"

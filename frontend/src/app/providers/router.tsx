@@ -73,6 +73,31 @@ export const router = createBrowserRouter([
             handle: { titleKey: "nav.diary" },
           },
           {
+            path: "assistant",
+            handle: { titleKey: "nav.assistant" },
+            children: [
+              {
+                // Ліниво — окремий чанк: помічник потрібен не кожному відкриттю застосунку,
+                // і його код не має важити в основному бандлі (як statistics/diary).
+                index: true,
+                lazy: async () => {
+                  const { AssistantPage } = await import("@/pages/assistant");
+                  return { Component: AssistantPage };
+                },
+              },
+              {
+                // Розмова — той самий чанк (спільні залежності), але власний роут: назад із неї
+                // веде історія браузера, а не прихований стан сторінки.
+                path: "chat",
+                lazy: async () => {
+                  const { AssistantChatPage } = await import("@/pages/assistant");
+                  return { Component: AssistantChatPage };
+                },
+                handle: { titleKey: "ai.chat.title" },
+              },
+            ],
+          },
+          {
             path: "settings",
             element: <SettingsPage />,
             handle: { titleKey: "nav.settings" },

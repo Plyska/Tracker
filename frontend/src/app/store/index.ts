@@ -18,6 +18,11 @@ import {
 import { periodReducer, type Scale } from "@/features/period-navigation";
 import { statsPeriodReducer } from "@/features/stats-period";
 import { authReducer, initialAuthState, type AuthState } from "@/features/auth";
+import {
+  aiChatReducer,
+  initialAiChatState,
+  type AiChatState,
+} from "@/features/ai-chat";
 import { todayISODate } from "@/shared/lib";
 import {
   getStoredLocale,
@@ -35,6 +40,13 @@ const PERIOD_SCALE_KEY = "tracker-period-scale";
 const TASK_LIST_STYLE_KEY = "tracker-task-list-style";
 const EDITOR_SCALE_KEY = "tracker-editor-scale";
 const AUTH_KEY = "tracker-auth";
+/**
+ * Тред чату — у **sessionStorage**, а не localStorage, і це не дрібниця: розмова має вмирати
+ * разом із вкладкою (ADR 0012 — історія не зберігається). Переживає перезавантаження й навігацію,
+ * не переживає закриття браузера й не тече в інші вкладки. Якщо ввімкнено доступ до щоденника,
+ * у треді можуть бути цитати з нього — тим паче нема куди їх класти надовго.
+ */
+const AI_CHAT_KEY = "tracker-ai-chat";
 
 type PersistedState = {
   theme: { value: Theme };
@@ -52,7 +64,31 @@ type PersistedState = {
   period: { anchor: string; scale: Scale };
   // Сесія: рефреш не розлогінює. Нема збереженого → anonymous.
   auth: AuthState;
+  // Тред чату: session-only (див. AI_CHAT_KEY).
+  aiChat: AiChatState;
 };
+
+/**
+ * Тред із `sessionStorage` — із перевіркою форми, а не сліпим `JSON.parse`. Сховище переживає
+ * деплої, тож там може лежати структура зі старої версії; зіпдений тред краще мовчки забути,
+ * ніж уронити на ньому весь чат.
+ */
+function readPersistedChat(): AiChatState {
+  try {
+    const raw = sessionStorage.getItem(AI_CHAT_KEY);
+    if (!raw) return initialAiChatState;
+    const parsed = JSON.parse(raw) as Partial<AiChatState>;
+    if (!Array.isArray(parsed.messages)) return initialAiChatState;
+    return {
+      seed: parsed.seed ?? null,
+      messages: parsed.messages,
+      proposal: parsed.proposal ?? null,
+    };
+  } catch {
+    // private mode / зіпсоване значення
+    return initialAiChatState;
+  }
+}
 
 // Персистимо лише {status, user} (для миттєвого UI без флешу при рехідрації). Жодного токена
 // в localStorage немає: access/refresh/csrf живуть у cookie (Security-фаза, варіант B). На буті
@@ -95,6 +131,7 @@ function loadPersistedState(): PersistedState | undefined {
       scale: read<Scale>(PERIOD_SCALE_KEY, "week"),
     },
     auth: readPersistedAuth(),
+    aiChat: readPersistedChat(),
   };
 }
 
@@ -111,6 +148,8 @@ export const store = configureStore({
     statsPeriod: statsPeriodReducer,
     // Сесія користувача (персист у tracker-auth нижче).
     auth: authReducer,
+    // Тред розмови з помічником (персист у sessionStorage нижче).
+    aiChat: aiChatReducer,
     // Серверний стан (навички/відмітки/auth) — RTK Query. Кеш session-only (без persist).
     [baseApi.reducerPath]: baseApi.reducer,
   },
@@ -171,6 +210,8 @@ store.subscribe(() => {
         user: state.auth.user,
       } satisfies PersistedAuth),
     );
+    // Тред чату — свідомо в ІНШЕ сховище: має вмирати разом із вкладкою.
+    sessionStorage.setItem(AI_CHAT_KEY, JSON.stringify(state.aiChat));
   } catch {
     // ignore (private mode / quota)
   }

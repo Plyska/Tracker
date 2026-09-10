@@ -15,14 +15,36 @@ export type AuthAuditEvent =
   | "logout"
   | "profile.update";
 
+/**
+ * AI-компаньйон (ADR 0012): факт виклику + вартість (модель, токени), НІКОЛИ не контент —
+ * запити містять щоденник/настрій (план §8: нічого зі щоденника в логи).
+ */
+export type AiAuditEvent =
+  | "ai.reflection" // згенеровано лист (або віддано з кешу — cached:true)
+  | "ai.insights"
+  | "ai.checkin"
+  | "ai.chat"
+  | "ai.data.export"
+  | "ai.data.delete";
+
+export type AuditEvent = AuthAuditEvent | AiAuditEvent;
+
 interface AuditFields {
   userId?: string;
   email?: string;
   ip?: string;
   family?: string;
+  // AI
+  model?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  period?: string;
+  cached?: boolean;
+  /** Причина зупинки генерації: `MAX_TOKENS` в аудиті — сигнал, що стеля бюджету затісна. */
+  finishReason?: string;
 }
 
-export const audit = (event: AuthAuditEvent, fields: AuditFields = {}): void => {
+export const audit = (event: AuditEvent, fields: AuditFields = {}): void => {
   console.log(
     JSON.stringify({
       kind: "audit",
