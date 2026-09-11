@@ -17,15 +17,24 @@ import {
   rotateRefreshToken,
 } from "../../lib/refreshTokens.js";
 import {
+  changePassword,
   getUserById,
   loginUser,
   registerUser,
+  requestPasswordReset,
+  resetPassword,
+  sendVerificationEmail,
   updateUserProfile,
+  verifyEmail,
 } from "./auth.service.js";
 import type {
+  ChangePasswordInput,
+  ForgotPasswordInput,
   LoginInput,
   RegisterInput,
+  ResetPasswordInput,
   UpdateProfileInput,
+  VerifyEmailInput,
 } from "./auth.schema.js";
 
 /**
@@ -43,6 +52,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   const user = await registerUser(req.body as RegisterInput);
   await issueSession(res, user.id);
   audit("register", { userId: user.id, email: user.email, ip: req.ip });
+  // Лист навздогін, не блокуючи відповідь: реєстрація не має падати через збій пошти, а
+  // `sendEmailSafely` усередині вже ковтає помилки провайдера й пише їх у лог.
+  void sendVerificationEmail(user.id, user.email, user.emailVerifiedAt);
   res.status(201).json({ user: toUserDto(user) });
 };
 
@@ -98,4 +110,46 @@ export const updateMe = async (req: Request, res: Response): Promise<void> => {
 /** OAuth відкладено (Google — окрема ітерація). Шов збережено: 501. */
 export const oauth = async (_req: Request, _res: Response): Promise<void> => {
   throw Errors.notImplemented("OAuth sign-in is not yet available");
+};
+
+// ── Пошта: підтвердження адреси, скидання й зміна пароля ───────────────────────────────────
+
+/**
+ * POST /auth/forgot-password — **завжди 204**, є така адреса чи ні.
+ *
+ * Це не недбалість, а вимога: різна відповідь перетворила б форму на перевірку «чи зареєстрований
+ * тут такий-то». З тієї ж причини не показуємо і збій надсилання (він іде в лог сервера).
+ */
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  await requestPasswordReset((req.body as ForgotPasswordInput).email);
+  res.status(204).end();
+};
+
+/** POST /auth/reset-password — новий пароль за токеном із листа. Усі сесії відкликаються. */
+export const resetPasswordHandler = async (req: Request, res: Response): Promise<void> => {
+  const { token, password } = req.body as ResetPasswordInput;
+  await resetPassword(token, password);
+  res.status(204).end();
+};
+
+/** POST /auth/verify-email — підтвердити адресу за токеном із листа. */
+export const verifyEmailHandler = async (req: Request, res: Response): Promise<void> => {
+  await verifyEmail((req.body as VerifyEmailInput).token);
+  res.status(204).end();
+};
+
+/** POST /auth/verify-email/request — надіслати лист ще раз (для залогіненого). */
+export const requestVerification = async (req: Request, res: Response): Promise<void> => {
+  const user = await getUserById(req.userId!);
+  if (user) await sendVerificationEmail(user.id, user.email, user.emailVerifiedAt);
+  res.status(204).end();
+};
+
+/** POST /auth/change-password — зміна пароля залогіненим (потрібен поточний). Сесії відкликаються. */
+export const changePasswordHandler = async (req: Request, res: Response): Promise<void> => {
+  const { currentPassword, newPassword } = req.body as ChangePasswordInput;
+  await changePassword(req.userId!, currentPassword, newPassword);
+  // Свою сесію теж завершено — чистимо cookie, щоб клієнт не тримав мертвий стан «залогінений».
+  clearAuthCookies(res);
+  res.status(204).end();
 };

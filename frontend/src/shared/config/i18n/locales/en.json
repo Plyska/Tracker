@@ -616,7 +616,47 @@
       "emailInvalid": "Invalid email address",
       "passwordRequired": "Enter your password",
       "passwordMin": "Password must be at least 8 characters",
-      "passwordMismatch": "Passwords don't match"
+      "passwordMismatch": "Passwords don't match",
+      "passwordSame": "The new password is the same as the current one"
+    },
+    "forgot": {
+      "link": "Forgot password?",
+      "title": "Reset your password",
+      "body": "Enter your email and we'll send a link to set a new password.",
+      "cta": "Send the link",
+      "sentTitle": "Check your inbox",
+      "sentBody": "If an account for {{email}} exists, the link is on its way. It works for one hour.",
+      "backToLogin": "Back to login"
+    },
+    "reset": {
+      "title": "New password",
+      "body": "Choose a new password. All sessions will end, so you'll need to log in again.",
+      "newPassword": "New password",
+      "cta": "Save password",
+      "done": "Password changed. Log in with the new one.",
+      "invalidTitle": "This link didn't work",
+      "invalidBody": "It has been used already or expired — links work for one hour.",
+      "requestAgain": "Send a new one"
+    },
+    "changePassword": {
+      "title": "Password",
+      "body": "Changing it ends every session — including this device.",
+      "current": "Current password",
+      "new": "New password",
+      "cta": "Change password",
+      "done": "Password changed. Log in with the new one.",
+      "wrongCurrent": "Current password is incorrect"
+    },
+    "verify": {
+      "noticeBody": "Your email isn't confirmed yet. Without it, password recovery won't reach you.",
+      "resend": "Send the email",
+      "sent": "Email sent to {{email}}",
+      "pending": "Confirming…",
+      "doneTitle": "Email confirmed",
+      "doneBody": "Password recovery will reach you now, if you ever need it.",
+      "failedTitle": "This link didn't work",
+      "failedBody": "It has been used already or expired. Send a new one from Settings.",
+      "toApp": "Go to the app"
     }
   },
   "userMenu": {

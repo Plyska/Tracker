@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { AccentPicker } from "@/features/accent";
-import { ProfileForm } from "@/features/auth";
+import { ChangePasswordForm, ProfileForm, VerifyEmailNotice } from "@/features/auth";
 import { LangSwitcher } from "@/features/locale";
 import { HabitTrash } from "@/features/manage-habits";
 import { AiSettingsCard } from "@/features/ai-consent";
@@ -197,10 +197,18 @@ function SettingsPage() {
                   </TiltCard>
                 </div>
               ) : tab === "profile" ? (
-                // Налаштування юзера.
-                <TiltCard maxTilt={0} hoverScale={1.04}>
-                  <ProfileForm />
-                </TiltCard>
+                // Налаштування юзера: профіль, підтвердження пошти, пароль.
+                <div className="space-y-4">
+                  <VerifyEmailNotice />
+                  <TiltCard maxTilt={0} hoverScale={1.04}>
+                    <ProfileForm />
+                  </TiltCard>
+                  {/* Окремою карткою, а не полем у профілі: зміна пароля завершує всі сесії,
+                      тобто це дія іншої ваги, ніж правка імені. */}
+                  <TiltCard maxTilt={0} hoverScale={1.04}>
+                    <ChangePasswordForm />
+                  </TiltCard>
+                </div>
               ) : (
                 // Кошик видалених навичок.
                 <TiltCard maxTilt={0} hoverScale={1.04}>

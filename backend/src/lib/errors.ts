@@ -25,6 +25,10 @@ export const Errors = {
   forbidden: (message = "Forbidden") => new AppError(403, "FORBIDDEN", message),
   emailTaken: (message = "Email already registered") =>
     new AppError(409, "EMAIL_TAKEN", message),
+  // Посилання з листа: не існує / чужого типу / протухло / вже використане — усе одна помилка.
+  // Розрізняти причини означало б підказувати, які токени колись існували.
+  invalidToken: (message = "This link is invalid or has expired") =>
+    new AppError(400, "INVALID_TOKEN", message),
   habitNotFound: (message = "Habit not found") =>
     new AppError(404, "HABIT_NOT_FOUND", message),
   taskNotFound: (message = "Task not found") =>

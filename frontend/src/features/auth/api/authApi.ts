@@ -1,11 +1,15 @@
 import { baseApi } from "@/shared/api";
 import type {
   AuthResponse,
+  ChangePasswordRequest,
+  ForgotPasswordRequest,
   LoginRequest,
   OAuthProvider,
   RegisterRequest,
+  ResetPasswordRequest,
   UpdateProfileRequest,
   UserDto,
+  VerifyEmailRequest,
 } from "@/shared/api";
 import type { User } from "@/entities/user";
 
@@ -17,6 +21,7 @@ const toUser = (dto: UserDto): User => ({
   avatarUrl: dto.avatarUrl ?? undefined,
   plan: dto.plan,
   role: dto.role,
+  emailVerified: dto.emailVerified,
 });
 
 export interface AuthResult {
@@ -59,6 +64,29 @@ export const authApi = baseApi.injectEndpoints({
     }),
     // Оновлення профілю (наразі ім'я). Повертає свіжий `UserDto`; виклик-сайт синхронить
     // `authSlice` через `userLoaded`. Інвалідує `Me`-кеш (рехідрація сесії підхопить нове ім'я).
+    /**
+     * «Забув пароль». Відповідь **завжди** 204 — сервер навмисно не каже, чи існує адреса, тож
+     * і UI не має чого розрізняти: показуємо «перевір пошту» в будь-якому разі.
+     */
+    forgotPassword: build.mutation<void, ForgotPasswordRequest>({
+      query: (body) => ({ url: "/auth/forgot-password", method: "POST", body }),
+    }),
+    resetPassword: build.mutation<void, ResetPasswordRequest>({
+      query: (body) => ({ url: "/auth/reset-password", method: "POST", body }),
+    }),
+    verifyEmail: build.mutation<void, VerifyEmailRequest>({
+      query: (body) => ({ url: "/auth/verify-email", method: "POST", body }),
+      // Статус підтвердження живе в `UserDto`, тож рехідрація сесії має його перечитати.
+      invalidatesTags: [{ type: "Me", id: "CURRENT" }],
+    }),
+    requestVerification: build.mutation<void, void>({
+      query: () => ({ url: "/auth/verify-email/request", method: "POST" }),
+    }),
+    // Після успіху сервер відкликає ВСІ сесії й чистить cookie — виклик-сайт мусить розлогінити
+    // локальний стан, інакше застосунок вважатиме себе залогіненим до першого 401.
+    changePassword: build.mutation<void, ChangePasswordRequest>({
+      query: (body) => ({ url: "/auth/change-password", method: "POST", body }),
+    }),
     updateProfile: build.mutation<User, UpdateProfileRequest>({
       query: (body) => ({ url: "/auth/me", method: "PATCH", body }),
       transformResponse: toUser,
@@ -74,4 +102,9 @@ export const {
   useLogoutMutation,
   useGetMeQuery,
   useUpdateProfileMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+  useVerifyEmailMutation,
+  useRequestVerificationMutation,
+  useChangePasswordMutation,
 } = authApi;

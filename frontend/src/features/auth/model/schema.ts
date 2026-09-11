@@ -37,3 +37,39 @@ export const profileSchema = z.object({
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
 export type ProfileValues = z.infer<typeof profileSchema>;
+
+// ── Флоу з листами ────────────────────────────────────────────────────────────────────────
+
+export const forgotPasswordSchema = z.object({ email });
+
+// Токен приходить із URL, а не з форми — у схемі його немає: підставляє сторінка.
+export const resetPasswordSchema = z
+  .object({
+    password: z.string().min(PASSWORD_MIN, "auth.validation.passwordMin"),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "auth.validation.passwordMismatch",
+    path: ["confirmPassword"],
+  });
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "auth.validation.passwordRequired"),
+    newPassword: z.string().min(PASSWORD_MIN, "auth.validation.passwordMin"),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, {
+    message: "auth.validation.passwordMismatch",
+    path: ["confirmPassword"],
+  })
+  // Пароль, що «змінили» на той самий, — не зміна: людина вважатиме, що захистилась, а сесії
+  // відкликано ні за що.
+  .refine((d) => d.newPassword !== d.currentPassword, {
+    message: "auth.validation.passwordSame",
+    path: ["newPassword"],
+  });
+
+export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;

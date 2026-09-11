@@ -37,6 +37,8 @@ export interface UserDto {
   avatarUrl: string | null;
   plan: Plan;
   role: "user" | "admin";
+  /** Чи підтверджено пошту. Без підтвердження відновлення пароля не має куди слати лист. */
+  emailVerified: boolean;
 }
 
 export interface DailyLogDto {
@@ -311,6 +313,22 @@ export interface ReflectionRequest {
  * Чек-ін (фаза B1): текст → дії. Сервер лише **пропонує** — записує клієнт після підтвердження,
  * через ті самі мутації, що й ручні дії (ADR 0012: модель не пише в БД).
  */
+/** Флоу з листами: у відповідь усі віддають 204, тіла немає — тому лише запити. */
+export interface ForgotPasswordRequest {
+  email: string;
+}
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+export interface VerifyEmailRequest {
+  token: string;
+}
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface CheckinRequest {
   text: string;
   today: string;
