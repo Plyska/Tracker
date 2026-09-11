@@ -24,6 +24,19 @@ const schema = z.object({
   // Кома-розділений список дозволених origin-ів для CORS.
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
 
+  // ── Транзакційна пошта (підтвердження адреси, скидання пароля) ───────────────────────────
+  // Провайдер за швом `EmailTransport` (lib/email) — як і в AI. Без ключа працює `console`:
+  // лист друкується в stdout разом із посиланням. Це не заглушка «щоб компілювалось», а робочий
+  // режим розробки: обидва флоу можна пройти повністю до того, як зʼявиться домен і DNS.
+  EMAIL_PROVIDER: z.enum(["resend", "console"]).optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  // Відправник. Домен мусить бути верифікований у провайдера (SPF/DKIM), інакше лист або не піде,
+  // або впаде в спам. Приклад: "Tracker <no-reply@tracker.app>".
+  EMAIL_FROM: z.string().min(3).default("Tracker <onboarding@resend.dev>"),
+  // Базовий URL фронтенду для посилань у листах. Не виводимо з CORS_ORIGIN: там може бути список,
+  // а в лист треба рівно одну адресу — і помилка тут відправляє людину в чужий застосунок.
+  APP_URL: z.string().url().default("http://localhost:5173"),
+
   // ── AI-компаньйон (ADR 0012) ─────────────────────────────────────────────────────────────
   // Провайдер — за швом `AiProvider` (modules/ai/ai.client.ts); зміна = env, не код.
   AI_PROVIDER: z.enum(["groq", "gemini", "anthropic"]).default("groq"),
@@ -95,6 +108,20 @@ if (raw.NODE_ENV === "production" && !aiApiKey) {
   process.exit(1);
 }
 
+/**
+ * Пошта в проді мусить бути справжньою. `console`-транспорт там означає, що людина, яка забула
+ * пароль, ніколи не отримає листа, а ми про це не дізнаємось: усі ендпоінти віддають 204 навмисно
+ * (щоб не розкривати, чи існує адреса), тож мовчазна відмова виглядає як успіх. Краще не стартувати.
+ */
+if (raw.NODE_ENV === "production" && (raw.EMAIL_PROVIDER ?? "console") === "console") {
+  // eslint-disable-next-line no-console
+  console.error(
+    "Refusing to start: transactional email is not configured " +
+      "(set RESEND_API_KEY, or EMAIL_PROVIDER explicitly).",
+  );
+  process.exit(1);
+}
+
 // Дефолтна модель за провайдером. Gemini — Flash на free tier (ADR 0012 / план §3.5);
 // Anthropic — Opus 5 (поточна рекомендація). Перекривається AI_MODEL.
 //
@@ -128,4 +155,8 @@ export const env = {
   aiBaseUrl: raw.AI_BASE_URL ?? AI_DEFAULT_BASE_URL[raw.AI_PROVIDER],
   aiDailyMessageLimit: raw.AI_DAILY_MESSAGE_LIMIT,
   aiContextMaxTokens: raw.AI_CONTEXT_MAX_TOKENS,
+  // Без ключа — `console`: у розробці це нормальний режим, у проді guard нижче не дасть стартувати.
+  emailProvider: raw.EMAIL_PROVIDER ?? (raw.RESEND_API_KEY ? "resend" : "console"),
+  emailFrom: raw.EMAIL_FROM,
+  appUrl: raw.APP_URL.replace(/\/+$/, ""),
 };

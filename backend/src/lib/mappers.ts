@@ -20,6 +20,9 @@ export interface UserDto {
   avatarUrl: string | null;
   plan: "free" | "pro";
   role: "user" | "admin";
+  /** Чи підтверджено пошту. Булевим, а не датою: клієнту потрібен лише факт, а «коли» — привід
+   *  показати ще одну дату, яку ніхто не читає. Сама дата лишається в БД для підтримки. */
+  emailVerified: boolean;
 }
 
 export interface HabitDto {
@@ -106,6 +109,7 @@ export const toUserDto = (u: User): UserDto => ({
   // Політика релізу: усі фічі відкриті. На фазі монетизації — похідне від активної підписки.
   plan: "pro",
   role: u.role,
+  emailVerified: u.emailVerifiedAt !== null,
 });
 
 export const toHabitDto = (h: Habit): HabitDto => ({

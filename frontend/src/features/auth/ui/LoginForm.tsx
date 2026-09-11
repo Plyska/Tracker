@@ -1,10 +1,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAppDispatch } from "@/app/store/hooks";
 import { Button, Field, Input } from "@/shared/ui";
+import { paths } from "@/shared/config/paths";
 import { loginSchema, type LoginValues } from "../model/schema";
 import { useLoginMutation } from "../api/authApi";
 import { useFromPath } from "../lib/useFromPath";
@@ -73,6 +74,14 @@ export function LoginForm() {
           {...register("password")}
         />
       </Field>
+
+      {/* Під полем пароля, а не внизу форми: шукають це посилання рівно тоді, коли пароль не
+          згадується — тобто дивлячись саме сюди. */}
+      <p className="-mt-2 text-right text-sm">
+        <Link to={paths.forgotPassword} className="text-muted-foreground hover:text-foreground hover:underline">
+          {t("auth.forgot.link")}
+        </Link>
+      </p>
 
       {errors.root && (
         <p className="text-sm text-destructive" role="alert">

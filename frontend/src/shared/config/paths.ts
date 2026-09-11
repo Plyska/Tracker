@@ -1,6 +1,11 @@
 export const paths = {
   login: "/auth/login",
   register: "/auth/register",
+  forgotPassword: "/auth/forgot-password",
+  // Ці двоє — поза зоною `RedirectIfAuth`: людина приходить із листа, і посилання мусить
+  // спрацювати незалежно від того, залогінена вона зараз чи ні.
+  resetPassword: "/auth/reset-password",
+  verifyEmail: "/verify-email",
   dashboard: "/dashboard",
   planner: "/planner",
   /** Сторінка «Загальної» картки (задачі без дати). */

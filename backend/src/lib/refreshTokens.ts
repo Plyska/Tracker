@@ -99,6 +99,21 @@ export const revokeRefreshToken = async (rawToken: string): Promise<void> => {
  * reuse-detection (видалений токен виглядав би як «невідомий», а не як «повторно використаний»).
  * Повертає кількість видалених рядків.
  */
+/**
+ * Відкликати ВСІ активні сесії користувача.
+ *
+ * Викликається при зміні та скиданні пароля, і це не формальність: без цього кроку зміна пароля
+ * не виганяє того, хто вже всередині, — сесія живе на власному refresh-токені й пароля не питає.
+ * Тобто «я змінив пароль, бо мене зламали» без цього рядка не робить нічого.
+ */
+export const revokeAllUserSessions = async (userId: string): Promise<number> => {
+  const { count } = await prisma.refreshToken.updateMany({
+    where: { userId, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+  return count;
+};
+
 export const deleteExpiredRefreshTokens = async (): Promise<number> => {
   const { count } = await prisma.refreshToken.deleteMany({
     where: { expiresAt: { lt: new Date() } },

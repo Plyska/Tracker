@@ -5,6 +5,9 @@ import { AuthLayout } from "@/app/layouts/AuthLayout";
 import { MainLayout } from "@/app/layouts/MainLayout";
 import { LoginPage } from "@/pages/login";
 import { RegisterPage } from "@/pages/register";
+import { ForgotPasswordPage } from "@/pages/forgot-password";
+import { ResetPasswordPage } from "@/pages/reset-password";
+import { VerifyEmailPage } from "@/pages/verify-email";
 import { DashboardPage } from "@/pages/dashboard";
 import { PlannerPage, DayDetailPage } from "@/pages/planner";
 import { SettingsPage } from "@/pages/settings";
@@ -26,9 +29,27 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to={paths.login} replace /> },
           { path: "login", element: <LoginPage /> },
           { path: "register", element: <RegisterPage /> },
+          { path: "forgot-password", element: <ForgotPasswordPage /> },
         ],
       },
     ],
+  },
+  {
+    /**
+     * Сторінки за посиланням із листа — БЕЗ `RedirectIfAuth`.
+     *
+     * Той гард відправив би залогіненого на дашборд, тобто підтвердити пошту або скинути пароль
+     * можна було б лише вийшовши з акаунта. А приходять сюди зазвичай із телефона, де сесія якраз
+     * є. Авторизує тут сам одноразовий токен.
+     */
+    path: "auth",
+    element: <AuthLayout />,
+    children: [{ path: "reset-password", element: <ResetPasswordPage /> }],
+  },
+  {
+    path: "verify-email",
+    element: <AuthLayout />,
+    children: [{ index: true, element: <VerifyEmailPage /> }],
   },
   {
     // Приватна зона: анонімних відправляє на /auth/login (з памʼяттю `from`).

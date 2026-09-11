@@ -25,9 +25,15 @@ model User {
   passwordHash String? // null = OAuth-only акаунт (шов на майбутнє)
   role         Role     @default(user)
   createdAt    DateTime @default(now())
+  // Момент підтвердження пошти; null = не підтверджено. Датою, а не булевим: «коли» потрібне і
+  // для підтримки («лист точно дійшов о такій-то»), і як доказ, що адреса була робочою.
+  // Користуватись застосунком це НЕ блокує (рішення: конверсія важливіша) — але без підтвердження
+  // відновлення пароля не має куди слати лист, тож ми про це нагадуємо.
+  emailVerifiedAt DateTime?
 
   habits        Habit[]
   refreshTokens RefreshToken[]
+  emailTokens   EmailToken[]
   dailyLogs     DailyLog[]
   tasks         Task[]
   preferences   UserPreferences?
@@ -51,9 +57,11 @@ model UserPreferences {
   aiEnabled    Boolean? // помічник увімкнено (гейт /ai/*; вмикається через екран згоди)
   aiDiaryOptIn Boolean? // ОКРЕМИЙ дозвіл читати щоденник (OFF за замовч.; без нього notes не потрапляють у контекст)
   aiConsentAt  DateTime? // момент згоди — ставить сервер при першому aiEnabled=true (GDPR-доказ)
-  // Граматичний рід звертання: 'neutral' | 'masculine' | 'feminine'. Питаємо НЕ стать, а форму
-  // звертання: потрібен рід дієслова, не ідентичність. null = не задано → нейтрально (поточна
-  // поведінка). Має значення лише для української; в англійському промпті не використовується.
+  // Граматичний рід звертання: 'masculine' | 'feminine'. Питаємо НЕ стать, а форму звертання:
+  // потрібен рід дієслова, не ідентичність. Третього значення немає свідомо — заборонна
+  // інструкція («не вживай форм із родом») моделлю не виконувалась. null = не питали (згоду дано
+  // на англійському інтерфейсі); тоді промпт обходиться без роду.
+  // Має значення лише для української; в англійському промпті не використовується.
   aiAddressForm String?
   updatedAt         DateTime @updatedAt
   // Прим.: ширина колонки навичок (habitColWidth) свідомо лишається лише в localStorage
@@ -174,6 +182,29 @@ model AiUsage {
 
 // Refresh-токени: ротація + reuse-detection. Зберігаємо лише SHA-256 хеш непрозорого токена.
 // При повторному використанні відкликаного токена відкликаємо всю `family` (захист від крадіжки).
+/**
+ * Одноразові токени, що приходять поштою: підтвердження адреси й скидання пароля.
+ *
+ * Одна таблиця на обидва призначення, бо життєвий цикл ідентичний (видали → надіслали → спожили
+ * або протух), а різниця лише в `type` і TTL. Дві таблиці дублювали б і код, і прибирання.
+ *
+ * У БД — **лише SHA-256 хеш**, як у `RefreshToken`: дамп бази не має давати можливості скинути
+ * комусь пароль. Сирий токен існує рівно один раз — у листі.
+ */
+model EmailToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // 'verify' | 'reset'
+  tokenHash String    @unique // sha256(opaque token)
+  expiresAt DateTime
+  usedAt    DateTime? // одноразовість: спожитий токен не приймається вдруге
+  createdAt DateTime  @default(now())
+
+  @@index([userId, type])
+  @@index([expiresAt]) // для прибирання простроченого (db:cleanup)
+}
+
 model RefreshToken {
   id        String    @id @default(cuid())
   userId    String

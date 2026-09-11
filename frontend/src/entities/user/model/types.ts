@@ -16,4 +16,6 @@ export interface User {
   // plan похідний від активної підписки (monetization.md); на старті — 'pro' (політика релізу)
   plan: Plan;
   role: Role;
+  /** Підтверджена пошта. Доступ не обмежує — але без неї відновлення пароля не спрацює. */
+  emailVerified: boolean;
 }

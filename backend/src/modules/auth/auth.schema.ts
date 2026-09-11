@@ -32,3 +32,22 @@ export const updateProfileSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+// ── Пошта: підтвердження, скидання й зміна пароля ──────────────────────────────────────────
+
+// Токен приходить із URL листа; довжину не перевіряємо строго — форма може змінитись, а невірний
+// токен усе одно відсіється в `consumeEmailToken` тією самою помилкою, що й підроблений.
+const emailToken = z.string().trim().min(1, "Token is required").max(512);
+
+export const forgotPasswordSchema = z.object({ email });
+export const resetPasswordSchema = z.object({ token: emailToken, password });
+export const verifyEmailSchema = z.object({ token: emailToken });
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: password,
+});
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
