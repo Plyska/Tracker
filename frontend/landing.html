@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Шрифт заголовків — self-hosted (жодних запитів до сторонніх хостів із origin застосунку). -->
+    <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- SEO-шапка (title, description, canonical, hreflang, OG, Twitter, JSON-LD) — генерується
+         з src/landing/seo.ts: у dev — плагіном Vite, у білді — scripts/prerender-landing.mjs. -->
+    <!--landing-head-->
+    <script>
+      // Та сама логіка, що в index.html застосунку: тема/акцент до першого рендеру (без FOUC).
+      // Ключі спільні з застосунком, тож перехід лендінг → продукт не стрибає темою.
+      (function () {
+        try {
+          var stored = localStorage.getItem('tracker-theme');
+          var theme = stored ? JSON.parse(stored) : null;
+          if (theme !== 'light' && theme !== 'dark') {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.classList.toggle('dark', theme === 'dark');
+          var accent = JSON.parse(localStorage.getItem('tracker-accent'));
+          if (accent) document.documentElement.dataset.accent = accent;
+        } catch (e) {
+          /* localStorage недоступний/порожній — лишаємо дефолт (тема за prefers-color-scheme) */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Пререндер підставляє сюди статичний HTML лендінгу; клієнт гідрує. -->
+    <div id="root"><!--landing-html--></div>
+    <script type="module" src="/src/landing/main.tsx"></script>
+  </body>
+</html>

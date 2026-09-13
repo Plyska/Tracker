@@ -1,0 +1,178 @@
+/*
+ * CSS лендінгу — окремий Tailwind-entry.
+ * `source(none)` вимикає автосканування всього проєкту: у бандл лендінгу потрапляють лише
+ * утиліти з `src/landing` і тих примітивів `shared/ui`, які він реально імпортує.
+ * Токени — ті самі, що в застосунку (shared/styles/tokens.css), жодних власних hex.
+ */
+@import "tailwindcss" source(none);
+@source "../";
+@source "../../shared/ui/Button";
+
+/* Class-based dark mode — як у застосунку (клас .dark на <html>; локально — на обгортці). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@import "../../shared/styles/tokens.css";
+
+/* Manrope (OFL) — лише для заголовків. Два сабсети, variable weight. `swap`, щоб текст
+ * показався системним шрифтом одразу, а не чекав завантаження. */
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/fonts/manrope-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/fonts/manrope-cyrillic.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@theme inline {
+  /* `font-display` утиліта — заголовки лендінгу */
+  --font-display: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* landing-scoped: кольори демо-навичок. У застосунку це дані користувача (hex у БД),
+   * тут — токени, щоб компоненти лендінгу теж не хардкодили hex. */
+  --color-habit-water: #3b82f6;
+  --color-habit-read: #8b5cf6;
+  --color-habit-med: #10b981;
+  --color-habit-run: #ec4899;
+  --color-habit-gym: #f97316;
+  --color-habit-english: #06b6d4;
+  --color-habit-guitar: #a855f7;
+  /* Дельти в статистиці: зростання/падіння (у застосунку — emerald/red з палітри Tailwind). */
+  --color-positive: #10b981;
+}
+
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  line-height: 1.5;
+  color-scheme: light dark;
+  /* Якорі під sticky-навбаром */
+  scroll-padding-top: 4.5rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Плавна зміна поверхонь при перемиканні теми — як у застосунку. Лише фон/бордер (див.
+ * пояснення у app/styles/index.css, чому не color). */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Glow-мотив (той самий, що на AuthLayout і Settings застосунку): м'яка радіальна пляма акценту. */
+.glow-hero {
+  background:
+    radial-gradient(
+      60% 55% at 78% 0%,
+      color-mix(in srgb, var(--primary) 26%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      45% 45% at 0% 100%,
+      color-mix(in srgb, var(--primary) 12%, transparent),
+      transparent 65%
+    );
+}
+.dark .glow-hero {
+  background:
+    radial-gradient(
+      60% 55% at 78% 0%,
+      color-mix(in srgb, var(--primary) 34%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      45% 45% at 0% 100%,
+      color-mix(in srgb, var(--primary) 16%, transparent),
+      transparent 65%
+    );
+}
+
+/* Курсор друку в демо чек-іну. Під reduced-motion не блимає. */
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.caret-blink {
+  animation: caret-blink 1s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .caret-blink {
+    animation: none;
+  }
+}
+
+/* Поява елементів героя при завантаженні: CSS-keyframes, не залежить від observer/JS-стану
+ * (контент видимий за 0.7 с навіть без гідрації). Затримка — через --rise-delay. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--rise-delay, 0s);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+}
+
+/* FAQ: розкриття відповіді — легкий fade-down. */
+@keyframes faq-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+details[open] > .faq-body {
+  animation: faq-open 0.25s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  details[open] > .faq-body {
+    animation: none;
+  }
+}
+
+/* FAQ: стрілка розгортання — чистий CSS, без JS. */
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details[open] .faq-chevron {
+  transform: rotate(180deg);
+}
