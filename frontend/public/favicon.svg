@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Знак Tellday «колонка дня»: сітка 3×3, сьогоднішня колонка залита. Геометрія — у
+       shared/ui/BrandMark/geometry.ts; цей файл = вивід brandFaviconSvg() для дефолтного акценту
+       (інші акценти підставляються на льоту: applyBrandFavicon у тому ж модулі). Медіазапити
+       читають розмір, у якому браузер растеризує іконку: у вкладці 16px сітка 3×3 стає текстурою,
+       тож віддаємо зріз 2×2; від ~24px — повну сітку. Плашка в темній темі — violet-500, як
+       primary-токен застосунку. (Два дефіси поспіль у XML-коменті ламають весь SVG.) -->
+  <style>.p{fill:#6d28d9}@media (prefers-color-scheme:dark){.p{fill:#8b5cf6}}.s{display:none}@media (max-width:20px){.g{display:none}.s{display:inline}}</style>
+  <rect class="p" width="32" height="32" rx="8"/>
+  <g class="g" fill="#fff" transform="translate(4 4) scale(.75)"><rect x="1.5" y="1.5" width="7" height="7" rx="1.75" opacity="0.26"/><rect x="12.5" y="1.5" width="7" height="7" rx="1.75" opacity="0.26"/><rect x="23.5" y="1.5" width="7" height="7" rx="1.75"/><rect x="1.5" y="12.5" width="7" height="7" rx="1.75" opacity="0.26"/><rect x="12.5" y="12.5" width="7" height="7" rx="1.75" opacity="0.26"/><rect x="23.5" y="12.5" width="7" height="7" rx="1.75"/><rect x="1.5" y="23.5" width="7" height="7" rx="1.75" opacity="0.26"/><rect x="12.5" y="23.5" width="7" height="7" rx="1.75" opacity="0.26"/><rect x="23.5" y="23.5" width="7" height="7" rx="1.75"/></g>
+  <g class="s" fill="#fff" transform="translate(4.48 4.48) scale(.72)"><rect x="5" y="5" width="9.5" height="9.5" rx="2.4" opacity="0.26"/><rect x="17.5" y="5" width="9.5" height="9.5" rx="2.4"/><rect x="5" y="17.5" width="9.5" height="9.5" rx="2.4" opacity="0.26"/><rect x="17.5" y="17.5" width="9.5" height="9.5" rx="2.4"/></g>
+</svg>

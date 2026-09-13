@@ -13,11 +13,9 @@ import { PlannerPage, DayDetailPage } from "@/pages/planner";
 import { SettingsPage } from "@/pages/settings";
 import { NotFoundPage } from "@/pages/not-found";
 
+// Корінь `/` навмисно НЕ в роутері: ним володіє маркетинговий лендінг — окрема точка входу Vite
+// (landing.html → src/landing). У dev його віддає плагін у vite.config.ts, у проді — Express.
 export const router = createBrowserRouter([
-  {
-    index: true,
-    element: <Navigate to={paths.dashboard} replace />,
-  },
   {
     // Залогінених на /auth/* перекидає на dashboard.
     element: <RedirectIfAuth />,

@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { useAppSelector } from "@/app/store/hooks";
+import { applyBrandFavicon } from "@/shared/ui/BrandMark";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const theme = useAppSelector((s) => s.theme.value);
@@ -11,6 +12,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.dataset.accent = accent;
+    applyBrandFavicon(accent);
   }, [accent]);
 
   return children;

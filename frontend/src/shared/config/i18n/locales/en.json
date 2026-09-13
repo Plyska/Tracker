@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "Tracker",
-    "versionFull": "Tracker v0.1.0",
+    "name": "Tellday",
+    "versionFull": "Tellday v0.1.0",
     "versionShort": "v0.1"
   },
   "nav": {

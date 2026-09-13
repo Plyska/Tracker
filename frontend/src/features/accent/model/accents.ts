@@ -1,15 +1,14 @@
-export type AccentKey = "violet" | "emerald" | "blue" | "orange";
+import { ACCENT_COLORS, ACCENT_KEYS, type AccentKey } from "@/shared/config/accents";
+
+export { DEFAULT_ACCENT, type AccentKey } from "@/shared/config/accents";
 
 export interface AccentOption {
   key: AccentKey;
+  /** `--primary` світлої теми — свотч у Settings. */
   swatch: string;
 }
 
-export const ACCENTS: AccentOption[] = [
-  { key: "violet", swatch: "#6d28d9" },
-  { key: "emerald", swatch: "#059669" },
-  { key: "blue", swatch: "#2563eb" },
-  { key: "orange", swatch: "#ea580c" },
-];
-
-export const DEFAULT_ACCENT: AccentKey = "violet";
+export const ACCENTS: AccentOption[] = ACCENT_KEYS.map((key) => ({
+  key,
+  swatch: ACCENT_COLORS[key].light,
+}));

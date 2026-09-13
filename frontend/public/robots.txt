@@ -1,0 +1,15 @@
+# Індексуємо лише публічний лендінг; маршрути застосунку — приватні.
+User-agent: *
+Allow: /$
+Allow: /uk
+Disallow: /dashboard
+Disallow: /planner
+Disallow: /diary
+Disallow: /statistics
+Disallow: /assistant
+Disallow: /settings
+Disallow: /auth/
+Disallow: /verify-email
+Disallow: /api/
+
+Sitemap: https://tellday.app/sitemap.xml
