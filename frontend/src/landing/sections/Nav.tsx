@@ -3,22 +3,19 @@ import { useMotionValueEvent, useScroll } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 import { paths } from "@/shared/config/paths";
 import { cn } from "@/shared/lib/cn";
+import { BrandBadge } from "@/shared/ui/BrandMark";
 import { localePath } from "../i18n";
 import { useLocale } from "../lib/localeContext";
 import { applyTheme, readTheme, useTheme, type Theme } from "../lib/theme";
 import { Container } from "../ui/Section";
 import { ButtonLink } from "../ui/primitives";
 
-/** Логотип-марка: плашка з «T» + Manrope-вордмарк. */
+/** Логотип: знак «колонка дня» у плашці + Manrope-вордмарк. */
 export function Logo({ className }: { className?: string }) {
   const { locale } = useLocale();
   return (
     <a href={localePath(locale)} className={cn("inline-flex items-center gap-2 no-underline", className)} aria-label="Tellday">
-      <span aria-hidden className="grid h-7 w-7 place-items-center rounded-lg bg-primary text-primary-foreground">
-        <svg viewBox="0 0 32 32" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round">
-          <path d="M9 11h14M16 11v11" />
-        </svg>
-      </span>
+      <BrandBadge />
       <span className="font-display text-lg font-extrabold tracking-[-0.02em] text-foreground">Tellday</span>
     </a>
   );

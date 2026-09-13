@@ -13,7 +13,7 @@ import {
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/lib/cn";
-import { IconButton } from "@/shared/ui";
+import { BrandBadge, IconButton } from "@/shared/ui";
 import { useMediaQuery } from "@/shared/lib/hooks/useMediaQuery";
 import type { NavItem, SidebarProps } from "../model/types";
 
@@ -108,7 +108,10 @@ export function Sidebar({
         aria-hidden={!isDesktop && !open}
       >
         <div className="flex h-16 items-center justify-between border-b border-border px-4 md:hidden">
-          <h1 className="text-lg font-bold">{t("app.name")}</h1>
+          <div className="flex items-center gap-2.5">
+            <BrandBadge />
+            <h1 className="text-lg font-bold tracking-tight">{t("app.name")}</h1>
+          </div>
           <IconButton size="sm" onClick={onClose} aria-label={t("sidebar.close")}>
             <X className="h-4 w-4" />
           </IconButton>
@@ -130,12 +133,10 @@ export function Sidebar({
           </IconButton>
           <AnimatePresence initial={false}>
             {!isCollapsed && (
-              <motion.h1
-                className="whitespace-nowrap text-lg font-bold"
-                {...LABEL_MOTION}
-              >
-                {t("app.name")}
-              </motion.h1>
+              <motion.div className="flex items-center gap-2.5" {...LABEL_MOTION}>
+                <BrandBadge />
+                <h1 className="whitespace-nowrap text-lg font-bold tracking-tight">{t("app.name")}</h1>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

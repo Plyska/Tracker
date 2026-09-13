@@ -9,7 +9,7 @@ import { NavLink, useLocation, useOutlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { paths } from "@/shared/config/paths";
-import { Card } from "@/shared/ui";
+import { BrandBadge, Card } from "@/shared/ui";
 import { cn } from "@/shared/lib/cn";
 
 const tabs = [
@@ -62,7 +62,10 @@ export function AuthLayout() {
       />
 
       <Card className="relative w-full max-w-md p-7 sm:p-8">
-        <h1 className="mb-7 text-center text-3xl font-bold">{t("app.name")}</h1>
+        <div className="mb-7 flex items-center justify-center gap-3">
+          <BrandBadge className="h-9 w-9 [&>svg]:h-6 [&>svg]:w-6" />
+          <h1 className="text-3xl font-bold tracking-tight">{t("app.name")}</h1>
+        </div>
 
         <nav className="mb-6 flex gap-1 rounded-lg bg-muted p-1">
           {tabs.map(({ to, key }) => (

@@ -7,6 +7,7 @@
 @import "tailwindcss" source(none);
 @source "../";
 @source "../../shared/ui/Button";
+@source "../../shared/ui/BrandMark";
 
 /* Class-based dark mode — як у застосунку (клас .dark на <html>; локально — на обгортці). */
 @custom-variant dark (&:where(.dark, .dark *));

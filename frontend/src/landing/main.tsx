@@ -3,6 +3,7 @@ import { createRoot, hydrateRoot } from "react-dom/client";
 import "./styles/landing.css";
 import { localeFromPath } from "./i18n";
 import { LandingApp } from "./LandingApp";
+import { syncAccent } from "./lib/accent";
 
 /**
  * Точка входу лендінгу (landing.html). Окремий бандл від застосунку: анонімний відвідувач не
@@ -24,3 +25,6 @@ if (root.firstElementChild) {
 } else {
   createRoot(root).render(app);
 }
+
+// Фавікон — у колір акценту, який FOUC-скрипт уже поклав у data-accent; далі стежимо за зміною.
+syncAccent();
