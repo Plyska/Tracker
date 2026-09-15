@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useAppSelector } from "@/app/store/hooks";
+import { selectHiddenStatWidgets } from "@/features/ui-prefs";
 import { useGetHabitsQuery } from "@/entities/habit";
 import { Card, Skeleton, Tilt } from "@/shared/ui";
 import { cn } from "@/shared/lib";
@@ -27,7 +28,7 @@ export function StatisticsView() {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
   const { data: habits, isLoading } = useGetHabitsQuery();
-  const hidden = useAppSelector((s) => s.uiPrefs.hiddenStatWidgets);
+  const hidden = useAppSelector(selectHiddenStatWidgets);
   const show = (key: string) => !hidden.includes(key);
   // Графік і настрій ділять ряд лише коли обидва видимі; інакше видиме займає всю ширину.
   const bothChartMood = show("activity") && show("mood");

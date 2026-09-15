@@ -16,6 +16,7 @@ import {
   type StatWidgetMeta,
 } from "@/widgets/statistics";
 import { AnimatedText, TiltCard, Tabs, type TabItem } from "@/shared/ui";
+import { STAT_WIDGET_SETTINGS_ENABLED } from "@/shared/config/features";
 import { cn } from "@/shared/lib";
 
 /** Той самий glow-фон, що на AuthLayout: зсувається залежно від активного таба. */
@@ -167,34 +168,39 @@ function SettingsPage() {
                     <AiSettingsCard />
                   </TiltCard>
 
-                  <TiltCard maxTilt={0} hoverScale={1.04}>
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        <AnimatedText>
-                          {t("settings.statWidgets.title")}
-                        </AnimatedText>
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        <AnimatedText>
-                          {t("settings.statWidgets.description")}
-                        </AnimatedText>
-                      </p>
-                    </div>
-                    <div className="mt-4 space-y-4">
+                  {/* Приховано до пори: налаштування дрібного калібру, яке роздуває екран
+                      набором плиток. Разом із ним перестає діяти й збережений вибір —
+                      див. `selectHiddenStatWidgets`. */}
+                  {STAT_WIDGET_SETTINGS_ENABLED && (
+                    <TiltCard maxTilt={0} hoverScale={1.04}>
                       <div>
-                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                          {t("settings.statWidgets.metricsGroup")}
+                        <h3 className="text-lg font-semibold">
+                          <AnimatedText>
+                            {t("settings.statWidgets.title")}
+                          </AnimatedText>
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          <AnimatedText>
+                            {t("settings.statWidgets.description")}
+                          </AnimatedText>
                         </p>
-                        {renderWidgetTiles(STAT_METRICS)}
                       </div>
-                      <div>
-                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                          {t("settings.statWidgets.widgetsGroup")}
-                        </p>
-                        {renderWidgetTiles(STAT_WIDGETS)}
+                      <div className="mt-4 space-y-4">
+                        <div>
+                          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            {t("settings.statWidgets.metricsGroup")}
+                          </p>
+                          {renderWidgetTiles(STAT_METRICS)}
+                        </div>
+                        <div>
+                          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            {t("settings.statWidgets.widgetsGroup")}
+                          </p>
+                          {renderWidgetTiles(STAT_WIDGETS)}
+                        </div>
                       </div>
-                    </div>
-                  </TiltCard>
+                    </TiltCard>
+                  )}
                 </div>
               ) : tab === "profile" ? (
                 // Налаштування юзера: профіль, підтвердження пошти, пароль.

@@ -32,3 +32,8 @@ CLAUDE.md
 *.njsproj
 *.sln
 *.sw?
+
+# Vercel: `.vercel/` створює CLI при `vercel link` (id проєкту й організації — не секрет, але
+# в репозиторії їм не місце). `.vercel-token` — на випадок, якщо токен таки зберігається файлом.
+.vercel
+.vercel-token
