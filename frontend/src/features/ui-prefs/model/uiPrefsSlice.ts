@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { STAT_WIDGET_SETTINGS_ENABLED } from "@/shared/config/features";
 
 /** Межі ручного ресайзу колонки назви в таблиці навичок (px). */
 export const HABIT_COL_MIN = 140;
@@ -99,3 +100,18 @@ export const {
   setEditorScale,
 } = uiPrefsSlice.actions;
 export default uiPrefsSlice.reducer;
+
+/** Стабільне порожнє посилання: новий `[]` щоразу давав би зайві ререндери в `useAppSelector`. */
+const NO_HIDDEN: string[] = [];
+
+/**
+ * Приховані віджети статистики — **з урахуванням того, чи керування взагалі доступне**.
+ *
+ * Коли блок у Налаштуваннях прихований (`STAT_WIDGET_SETTINGS_ENABLED`), збережений вибір
+ * ігнорується й показується все. Інакше людина, яка колись щось приховала, лишилась би без цих
+ * віджетів назавжди: стан персиститься, а кнопки, щоб його скинути, на екрані вже немає.
+ *
+ * Сам стан не чистимо — повернувши прапорець, повернемо й вибір.
+ */
+export const selectHiddenStatWidgets = (state: { uiPrefs: UiPrefsState }): string[] =>
+  STAT_WIDGET_SETTINGS_ENABLED ? state.uiPrefs.hiddenStatWidgets : NO_HIDDEN;

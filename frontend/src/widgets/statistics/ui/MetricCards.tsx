@@ -11,6 +11,7 @@ import {
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useAppSelector } from "@/app/store/hooks";
+import { selectHiddenStatWidgets } from "@/features/ui-prefs";
 import { useStatsData } from "@/features/stats-period";
 import { Skeleton, TiltCard } from "@/shared/ui";
 import { DeltaBadge } from "./DeltaBadge";
@@ -68,7 +69,7 @@ function Metric({
 export function MetricCards() {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
-  const hidden = useAppSelector((s) => s.uiPrefs.hiddenStatWidgets);
+  const hidden = useAppSelector(selectHiddenStatWidgets);
   const { stats, isLoading, habits, comparison, key } = useStatsData(undefined, {
     withComparison: true,
   });

@@ -5,6 +5,7 @@ export {
   setStatsGoal,
   toggleStatWidget,
   setHiddenStatWidgets,
+  selectHiddenStatWidgets,
   setTaskListStyle,
   setEditorScale,
   HABIT_COL_MIN,
