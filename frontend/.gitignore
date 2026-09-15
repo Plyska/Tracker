@@ -15,7 +15,6 @@ dist-ssr
 # Local env (keep .env.example tracked)
 .env
 .env.*
-!.env.example
 
 # Editor directories and files
 .vscode/*
@@ -35,3 +34,8 @@ storybook-static
 .env.sentry-build-plugin
 # Деякі версії майстра кладуть auth-токен сюди — теж секрет.
 .sentryclirc
+
+# Виняток НАПРИКІНЦІ навмисно: у git виграє останній збіг, а `vercel link` любить дописувати
+# в кінець голе `.env*`, яке інакше перекриває це правило й ховає приклад конфігурації з репо.
+.env*
+!.env.example
