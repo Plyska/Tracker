@@ -62,6 +62,13 @@ export const changePasswordSchema = z.object({
   newPassword: password,
 });
 
+// Видалення акаунта — з паролем. Це найнезворотніша дія в продукті, і чужа рука на відкритій
+// вкладці не має її вчинити: пароль — те, чого в неї немає.
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, "Password is required"),
+});
+
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;

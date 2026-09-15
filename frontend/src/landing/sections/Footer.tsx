@@ -1,5 +1,5 @@
 import { paths } from "@/shared/config/paths";
-import { localePath } from "../i18n";
+import { pagePath } from "../i18n";
 import { useLocale } from "../lib/localeContext";
 import { Container } from "../ui/Section";
 import { Reveal } from "../ui/Reveal";
@@ -31,7 +31,7 @@ export function FinalCta() {
 }
 
 export function Footer() {
-  const { t, locale } = useLocale();
+  const { t, locale, page } = useLocale();
   const other = locale === "en" ? "uk" : "en";
   return (
     <footer className="border-t border-border py-10">
@@ -43,7 +43,13 @@ export function Footer() {
         <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
           <a href={paths.login} className="no-underline hover:text-foreground">{t.footer.login}</a>
           <a href={paths.register} className="no-underline hover:text-foreground">{t.footer.register}</a>
-          <a href={localePath(other)} hrefLang={other} lang={other} className="no-underline hover:text-foreground">
+          <a href={pagePath(locale, "privacy")} className="no-underline hover:text-foreground">
+            {t.legal.privacy}
+          </a>
+          <a href={pagePath(locale, "terms")} className="no-underline hover:text-foreground">
+            {t.legal.terms}
+          </a>
+          <a href={pagePath(other, page)} hrefLang={other} lang={other} className="no-underline hover:text-foreground">
             {t.nav.lang}
           </a>
           <span className="text-muted-foreground/70">{t.footer.made}</span>

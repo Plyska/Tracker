@@ -141,6 +141,21 @@ export function RegisterForm() {
         {isSubmitting && <Loader2 className="size-4 animate-spin" />}
         {t("auth.registerCta")}
       </Button>
+
+      {/* Згода одним рядком під кнопкою, без чекбокса: підстава обробки тут — договір, а не
+          згода, тож окремої галочки закон не вимагає. Посилання — на статику лендінгу (повна
+          навігація), у мові застосунку. */}
+      <p className="text-center text-xs leading-5 text-muted-foreground">
+        {t("auth.consent.prefix")}{" "}
+        <a href={paths.legal("terms", i18n.language)} className="underline underline-offset-4 hover:text-foreground">
+          {t("auth.consent.terms")}
+        </a>{" "}
+        {t("auth.consent.and")}{" "}
+        <a href={paths.legal("privacy", i18n.language)} className="underline underline-offset-4 hover:text-foreground">
+          {t("auth.consent.privacy")}
+        </a>
+        .
+      </p>
     </form>
   );
 }

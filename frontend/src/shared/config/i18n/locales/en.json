@@ -665,6 +665,23 @@
       "doneTitle": "Email confirmed",
       "doneBody": "Password recovery will work now, if you ever need it.",
       "toApp": "Go to the app"
+    },
+    "deleteAccount": {
+      "title": "Delete account",
+      "body": "Removes everything: habits, marks, diary, tasks and the assistant's letters. Immediately and for good — there is no trash here.",
+      "cta": "Delete account",
+      "confirmTitle": "Delete for good?",
+      "confirmBody": "This can't be undone. Enter your password to confirm it's you.",
+      "password": "Password",
+      "confirmCta": "Yes, delete everything",
+      "done": "Account deleted. Thank you for being here.",
+      "wrongPassword": "Wrong password"
+    },
+    "consent": {
+      "prefix": "By creating an account you agree to the",
+      "terms": "Terms of Service",
+      "and": "and",
+      "privacy": "Privacy Policy"
     }
   },
   "userMenu": {

@@ -2,6 +2,10 @@
 User-agent: *
 Allow: /$
 Allow: /uk
+Allow: /privacy
+Allow: /terms
+Allow: /uk/privacy
+Allow: /uk/terms
 Disallow: /dashboard
 Disallow: /planner
 Disallow: /diary

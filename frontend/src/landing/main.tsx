@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import "./styles/landing.css";
-import { localeFromPath } from "./i18n";
+import { localeFromPath, pageFromPath } from "./i18n";
 import { LandingApp } from "./LandingApp";
 import { syncAccent } from "./lib/accent";
 
@@ -14,9 +14,10 @@ import { syncAccent } from "./lib/accent";
  */
 const root = document.getElementById("root")!;
 const locale = localeFromPath(window.location.pathname);
+const page = pageFromPath(window.location.pathname);
 const app = (
   <StrictMode>
-    <LandingApp locale={locale} />
+    <LandingApp locale={locale} page={page} />
   </StrictMode>
 );
 

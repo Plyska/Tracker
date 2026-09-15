@@ -1,5 +1,6 @@
 import { LazyMotion, domAnimation } from "framer-motion";
-import type { Locale } from "./i18n";
+import type { Locale, Page } from "./i18n";
+import { LEGAL_DOCS, LegalPage } from "./legal";
 import { LocaleProvider } from "./lib/locale";
 import { Nav } from "./sections/Nav";
 import { Hero } from "./sections/Hero";
@@ -17,23 +18,31 @@ import { FinalCta, Footer } from "./sections/Footer";
  * `motion.*`, щоб у бандл потрапила тільки DOM-анімація, без layout/drag).
  * Той самий компонент рендериться і на клієнті (main.tsx), і в пререндері (prerender.tsx).
  */
-export function LandingApp({ locale }: { locale: Locale }) {
+export function LandingApp({ locale, page = "home" }: { locale: Locale; page?: Page }) {
   return (
-    <LocaleProvider locale={locale}>
+    <LocaleProvider locale={locale} page={page}>
       <LazyMotion features={domAnimation} strict>
-        <Nav />
-        <main id="main">
-          <Hero />
-          <Problem />
-          <FeatureTour />
-          <Stats />
-          <Companion />
-          <Personalization />
-          <Pricing />
-          <Faq />
-          <FinalCta />
-        </main>
-        <Footer />
+        {page === "home" ? (
+          <>
+            <Nav />
+            <main id="main">
+              <Hero />
+              <Problem />
+              <FeatureTour />
+              <Stats />
+              <Companion />
+              <Personalization />
+              <Pricing />
+              <Faq />
+              <FinalCta />
+            </main>
+            <Footer />
+          </>
+        ) : (
+          // Юридичні документи — той самий entry (спільні Nav/Footer, токени, пререндер),
+          // але без маркетингових секцій і без CTA-блоку.
+          <LegalPage doc={LEGAL_DOCS[page][locale]} />
+        )}
       </LazyMotion>
     </LocaleProvider>
   );

@@ -32,19 +32,31 @@ const server = await createServer({
 
 try {
   const { render } = await server.ssrLoadModule("/src/landing/prerender.tsx");
-  const targets = [
-    { locale: "en", file: templatePath },
-    { locale: "uk", file: path.join(dist, "uk", "index.html") },
-  ];
-  for (const { locale, file } of targets) {
-    const { html, head } = render(locale);
+  // Головна + юридичні документи, кожна двома мовами. Vercel віддає `/privacy` як
+  // `privacy/index.html` сам (directory index), тож вкладені теки — це і є «чисті» URL.
+  // en-головна пишеться в сам шаблон: він уже прочитаний у `template`, тож перезапис безпечний.
+  const targets = [];
+  for (const locale of ["en", "uk"]) {
+    const base = locale === "uk" ? path.join(dist, "uk") : dist;
+    for (const page of ["home", "privacy", "terms"]) {
+      const file =
+        page === "home"
+          ? locale === "en"
+            ? templatePath
+            : path.join(base, "index.html")
+          : path.join(base, page, "index.html");
+      targets.push({ locale, page, file });
+    }
+  }
+  for (const { locale, page, file } of targets) {
+    const { html, head } = render(locale, page);
     const out = template
       .replace("<!--landing-head-->", head)
       .replace("<!--landing-html-->", html)
       .replace('<html lang="en">', `<html lang="${locale}">`);
     await fs.mkdir(path.dirname(file), { recursive: true });
     await fs.writeFile(file, out, "utf8");
-    console.log(`prerender: ${path.relative(root, file)} (${locale}, ${(out.length / 1024).toFixed(1)} KB)`);
+    console.log(`prerender: ${path.relative(root, file)} (${locale}/${page}, ${(out.length / 1024).toFixed(1)} KB)`);
   }
 } finally {
   await server.close();

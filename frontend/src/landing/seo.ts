@@ -5,7 +5,7 @@
  *
  * Лише відносні імпорти: файл тягне `vite.config.ts`, де alias `@/` не працює.
  */
-import { dictionaries, localePath, type Locale } from "./i18n.ts";
+import { dictionaries, pagePath, type Locale, type Page } from "./i18n.ts";
 
 export const SITE_URL = "https://tellday.app";
 export const OG_IMAGE_PATH = "/og.png";
@@ -18,33 +18,48 @@ const escapeHtml = (s: string) =>
 /** Мітка локалі для og:locale. */
 const OG_LOCALE: Record<Locale, string> = { en: "en_US", uk: "uk_UA" };
 
-export function buildHead(locale: Locale): string {
+export function buildHead(locale: Locale, page: Page = "home"): string {
   const t = dictionaries[locale];
-  const url = absolute(localePath(locale));
-  const title = escapeHtml(t.meta.title);
-  const description = escapeHtml(t.meta.description);
+  const url = absolute(pagePath(locale, page));
+  // Юридичні сторінки мають власні title/description; решта шапки спільна.
+  const meta = page === "home" ? t.meta : t.legal.meta[page];
+  const title = escapeHtml(meta.title);
+  const description = escapeHtml(meta.description);
   const image = absolute(OG_IMAGE_PATH);
+  const inLanguage = [locale, ...(locale === "en" ? ["uk"] : ["en"])];
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: "Tellday",
-    url,
-    description: t.meta.description,
-    applicationCategory: "LifestyleApplication",
-    operatingSystem: "Web",
-    inLanguage: [locale, ...(locale === "en" ? ["uk"] : ["en"])],
-    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-    image,
-  };
+  const jsonLd =
+    page === "home"
+      ? {
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "Tellday",
+          url,
+          description: meta.description,
+          applicationCategory: "LifestyleApplication",
+          operatingSystem: "Web",
+          inLanguage,
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+          image,
+        }
+      : {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: meta.title,
+          url,
+          description: meta.description,
+          inLanguage,
+          isPartOf: { "@type": "WebSite", name: "Tellday", url: SITE_URL },
+        };
 
   return [
     `<title>${title}</title>`,
     `<meta name="description" content="${description}" />`,
     `<link rel="canonical" href="${url}" />`,
-    `<link rel="alternate" hreflang="en" href="${absolute("/")}" />`,
-    `<link rel="alternate" hreflang="uk" href="${absolute("/uk")}" />`,
-    `<link rel="alternate" hreflang="x-default" href="${absolute("/")}" />`,
+    // hreflang — на ту саму сторінку іншою мовою, не на головну.
+    `<link rel="alternate" hreflang="en" href="${absolute(pagePath("en", page))}" />`,
+    `<link rel="alternate" hreflang="uk" href="${absolute(pagePath("uk", page))}" />`,
+    `<link rel="alternate" hreflang="x-default" href="${absolute(pagePath("en", page))}" />`,
     `<meta property="og:type" content="website" />`,
     `<meta property="og:site_name" content="Tellday" />`,
     `<meta property="og:url" content="${url}" />`,
@@ -68,8 +83,8 @@ export function buildHead(locale: Locale): string {
 }
 
 /** Підставляє шапку й `lang` у шаблон `landing.html` (плейсхолдер `<!--landing-head-->`). */
-export function injectLandingHead(template: string, locale: Locale): string {
+export function injectLandingHead(template: string, locale: Locale, page: Page = "home"): string {
   return template
-    .replace("<!--landing-head-->", buildHead(locale))
+    .replace("<!--landing-head-->", buildHead(locale, page))
     .replace('<html lang="en">', `<html lang="${locale}">`);
 }

@@ -6,6 +6,7 @@ import { requireCsrf } from "../../lib/csrf.js";
 import { authLimiter, emailLimiter, verifyCodeLimiter } from "../../middleware/rateLimit.js";
 import {
   changePasswordSchema,
+  deleteAccountSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -83,6 +84,18 @@ authRouter.post(
   requireCsrf,
   validate(changePasswordSchema),
   asyncHandler(ctrl.changePasswordHandler),
+);
+
+// Видалення акаунта: сесія + CSRF + пароль у тілі. `authLimiter` — бо невірний пароль тут
+// такий самий перебір, як на логіні (він рахує лише невдалі спроби, тож успішне видалення
+// ліміту не торкається).
+authRouter.delete(
+  "/me",
+  requireAuth,
+  requireCsrf,
+  authLimiter,
+  validate(deleteAccountSchema),
+  asyncHandler(ctrl.deleteAccountHandler),
 );
 
 // Шов OAuth (Google відкладено) — 501.

@@ -23,6 +23,7 @@ export type {
   ResetPasswordRequest,
   VerifyEmailRequest,
   ChangePasswordRequest,
+  DeleteAccountRequest,
   AuthResponse,
   OAuthProvider,
   PreferencesDto,

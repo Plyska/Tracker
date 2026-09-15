@@ -5,7 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 import path from "node:path";
 import { injectLandingHead } from "./src/landing/seo.ts";
-import { localeFromPath } from "./src/landing/i18n.ts";
+import { localeFromPath, pageFromPath } from "./src/landing/i18n.ts";
 
 const dirname = import.meta.dirname;
 
@@ -15,6 +15,8 @@ const dirname = import.meta.dirname;
  * `/` і `/uk` → landing.html; решта не-API шляхів → index.html (SPA).
  * У білді head підставляє постбілд-пререндер (`scripts/prerender-landing.mjs`), тому `apply: "serve"`.
  */
+const LANDING_PATHS = new Set(["/", "/uk", "/privacy", "/terms", "/uk/privacy", "/uk/terms"]);
+
 function landingDevPlugin(): Plugin {
   return {
     name: "tellday-landing-dev",
@@ -23,7 +25,10 @@ function landingDevPlugin(): Plugin {
       server.middlewares.use((req, _res, next) => {
         const raw = req.url ?? "";
         const [pathname, query] = raw.split("?");
-        if (pathname === "/" || pathname === "/uk" || pathname === "/uk/") {
+        // Усі сторінки лендінг-entry (головна + юридичні, обома мовами) → один шаблон;
+        // яку саме рендерити, вирішує `pageFromPath` уже в застосунку.
+        const clean = pathname.replace(/\/+$/, "") || "/";
+        if (LANDING_PATHS.has(clean)) {
           req.url = `/landing.html${query ? `?${query}` : ""}`;
         }
         next();
@@ -33,8 +38,8 @@ function landingDevPlugin(): Plugin {
       order: "pre",
       handler(html, ctx) {
         if (!ctx.filename.endsWith("landing.html")) return html;
-        const locale = localeFromPath((ctx.originalUrl ?? "/").split("?")[0]);
-        return injectLandingHead(html, locale);
+        const url = (ctx.originalUrl ?? "/").split("?")[0];
+        return injectLandingHead(html, localeFromPath(url), pageFromPath(url));
       },
     },
   };

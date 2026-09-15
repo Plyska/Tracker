@@ -43,6 +43,9 @@ const schema = z.object({
   // або впаде в спам. Тримаємо на ПІДДОМЕНІ, щоб репутація відправлення не змішувалась із доменом
   // бренду: "Tellday <no-reply@mail.tellday.app>" (docs/dns-subdomains.md).
   EMAIL_FROM: z.string().min(3).default("Tellday <onboarding@resend.dev>"),
+  // Адреса для звернень людини у листах (напр. «якщо це був не ти — напиши нам»). Скринька на
+  // домені не обов'язкова: Porkbun безкоштовно пересилає на будь-яку пошту.
+  SUPPORT_EMAIL: z.string().email().default("support@tellday.app"),
   // Базовий URL фронтенду для посилань у листах. Не виводимо з CORS_ORIGIN: там може бути список,
   // а в лист треба рівно одну адресу — і помилка тут відправляє людину в чужий застосунок.
   APP_URL: z.string().url().default("http://localhost:5173"),
@@ -213,4 +216,5 @@ export const env = {
   emailProvider,
   emailFrom: raw.EMAIL_FROM,
   appUrl: raw.APP_URL.replace(/\/+$/, ""),
+  supportEmail: raw.SUPPORT_EMAIL,
 };

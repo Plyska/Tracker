@@ -76,6 +76,12 @@ export const verifyEmailSchema = z.object({
   code: z.string().regex(/^\d{6}$/, "auth.validation.codeInvalid"),
 });
 
+// Видалення акаунта: лише пароль. Довжину не перевіряємо — це підтвердження, не реєстрація.
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, "auth.validation.passwordRequired"),
+});
+
+export type DeleteAccountValues = z.infer<typeof deleteAccountSchema>;
 export type VerifyEmailValues = z.infer<typeof verifyEmailSchema>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;

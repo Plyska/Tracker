@@ -17,6 +17,25 @@ export const localePath = (locale: Locale): string => (locale === "uk" ? "/uk" :
 export const localeFromPath = (pathname: string): Locale =>
   pathname === "/uk" || pathname.startsWith("/uk/") ? "uk" : "en";
 
+/**
+ * Сторінки лендінг-entry. Головна плюс юридичні документи: вони живуть тут, а не в SPA, бо мають
+ * читатись без JS, індексуватись і не тягнути мегабайтний бандл застосунку заради тексту.
+ */
+export type Page = "home" | "privacy" | "terms";
+export const PAGES: readonly Page[] = ["home", "privacy", "terms"];
+
+/** URL сторінки для локалі: `/`, `/uk`, `/privacy`, `/uk/terms`. Дзеркало `pageFromPath`. */
+export const pagePath = (locale: Locale, page: Page): string => {
+  const base = locale === "uk" ? "/uk" : "";
+  return page === "home" ? base || "/" : `${base}/${page}`;
+};
+
+/** Сторінка з URL; хвостові слеші й префікс локалі ігноруються. Невідоме → головна. */
+export const pageFromPath = (pathname: string): Page => {
+  const rest = pathname.replace(/^\/uk(?=\/|$)/, "").replace(/\/+$/, "");
+  return rest === "/privacy" ? "privacy" : rest === "/terms" ? "terms" : "home";
+};
+
 const en = {
   meta: {
     title: "Tellday — tell your day, keep the rest",
@@ -245,6 +264,23 @@ const en = {
     register: "Create account",
     made: "Made in Ukraine",
     rights: "Tellday",
+  },
+  legal: {
+    eyebrow: "Legal",
+    privacy: "Privacy Policy",
+    terms: "Terms of Service",
+    updated: "Last updated",
+    contents: "Contents",
+    meta: {
+      privacy: {
+        title: "Privacy Policy — Tellday",
+        description: "What Tellday collects, why, where it goes, and what you can do about it.",
+      },
+      terms: {
+        title: "Terms of Service — Tellday",
+        description: "The rules for using Tellday, in plain language.",
+      },
+    },
   },
 };
 
@@ -477,6 +513,23 @@ const uk: Dict = {
     register: "Створити акаунт",
     made: "Зроблено в Україні",
     rights: "Tellday",
+  },
+  legal: {
+    eyebrow: "Документи",
+    privacy: "Політика конфіденційності",
+    terms: "Умови користування",
+    updated: "Оновлено",
+    contents: "Зміст",
+    meta: {
+      privacy: {
+        title: "Політика конфіденційності — Tellday",
+        description: "Які дані збирає Tellday, навіщо, куди вони йдуть і що ви можете з цим зробити.",
+      },
+      terms: {
+        title: "Умови користування — Tellday",
+        description: "Правила користування Tellday простою мовою.",
+      },
+    },
   },
 };
 

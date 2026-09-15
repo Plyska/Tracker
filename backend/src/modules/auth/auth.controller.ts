@@ -18,6 +18,7 @@ import {
 } from "../../lib/refreshTokens.js";
 import {
   changePassword,
+  deleteAccount,
   getUserById,
   loginUser,
   registerUser,
@@ -29,6 +30,7 @@ import {
 } from "./auth.service.js";
 import type {
   ChangePasswordInput,
+  DeleteAccountInput,
   ForgotPasswordInput,
   LoginInput,
   RegisterInput,
@@ -105,6 +107,19 @@ export const updateMe = async (req: Request, res: Response): Promise<void> => {
   const user = await updateUserProfile(req.userId!, req.body as UpdateProfileInput);
   audit("profile.update", { userId: user.id, ip: req.ip });
   res.json(toUserDto(user));
+};
+
+/**
+ * DELETE /auth/me — видалити акаунт разом з усіма даними (право на стирання). Після успіху
+ * чистимо cookie: сесії вже немає в БД (каскад зніс refresh-токени), а клієнт не має лишатись
+ * у стані «залогінений». В audit — лише userId: адреси в базі вже нема, і в логах їй теж не місце.
+ */
+export const deleteAccountHandler = async (req: Request, res: Response): Promise<void> => {
+  const userId = req.userId!;
+  await deleteAccount(userId, (req.body as DeleteAccountInput).password);
+  clearAuthCookies(res);
+  audit("account.delete", { userId, ip: req.ip });
+  res.status(204).end();
 };
 
 /** OAuth відкладено (Google — окрема ітерація). Шов збережено: 501. */
