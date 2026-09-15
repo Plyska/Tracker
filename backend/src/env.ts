@@ -23,6 +23,15 @@ const schema = z.object({
     .default("development"),
   // Кома-розділений список дозволених origin-ів для CORS.
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
+  // Домен для CSRF-cookie, напр. ".tellday.app". Потрібен лише коли фронт і API на РІЗНИХ
+  // піддоменах одного домену (tellday.app ↔ api.tellday.app).
+  //
+  // Без нього cookie, який ставить `api.tellday.app`, стає host-only, і JS на `tellday.app`
+  // не може його прочитати — а він мусить, бо CSRF тут double-submit: фронт читає cookie й
+  // дублює у заголовок. Результат без цієї змінної — 403 на кожній мутації.
+  //
+  // Порожньо (дефолт) — поведінка як була: host-only. Потрібно тільки для такої топології.
+  COOKIE_DOMAIN: z.string().trim().min(1).optional(),
 
   // ── Транзакційна пошта (підтвердження адреси, скидання пароля) ───────────────────────────
   // Провайдер за швом `EmailTransport` (lib/email) — як і в AI. Без ключа працює `console`:
@@ -37,6 +46,14 @@ const schema = z.object({
   // Базовий URL фронтенду для посилань у листах. Не виводимо з CORS_ORIGIN: там може бути список,
   // а в лист треба рівно одну адресу — і помилка тут відправляє людину в чужий застосунок.
   APP_URL: z.string().url().default("http://localhost:5173"),
+
+  // ── Rate limiting: спільні лічильники (Upstash Redis) ────────────────────────────────────
+  // Потрібні на serverless (Vercel Fluid compute), де інстансів кілька: дефолтний MemoryStore
+  // тримає лічильники в пам'яті процесу, тож кожен інстанс веде власний і фактичний ліміт стає
+  // «ліміт × інстанси». Порожньо — MemoryStore, що правильно для локальної розробки.
+  // Імена змінних — ті, що виставляє інтеграція Upstash у Vercel Marketplace.
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
 
   // ── AI-компаньйон (ADR 0012) ─────────────────────────────────────────────────────────────
   // Провайдер — за швом `AiProvider` (modules/ai/ai.client.ts); зміна = env, не код.

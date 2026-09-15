@@ -13,13 +13,30 @@ import { statsRouter } from "./modules/stats/stats.routes.js";
 import { preferencesRouter } from "./modules/preferences/preferences.routes.js";
 import { aiRouter } from "./modules/ai/ai.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
+import { hasSharedRateLimitStore } from "./lib/rateLimitStore.js";
 
 export const createApp = () => {
   const app = express();
 
-  // За reverse-proxy у проді (Render/Railway): довіряємо першому хопу, щоб rate-limit брав
-  // реальний клієнтський IP з X-Forwarded-For (а не IP проксі).
+  // За reverse-proxy у проді (Vercel): довіряємо першому хопу, щоб rate-limit брав реальний
+  // клієнтський IP з X-Forwarded-For (а не IP проксі).
   if (env.isProd) app.set("trust proxy", 1);
+
+  /**
+   * Лічильники rate-limit у проді мають бути спільними.
+   *
+   * На serverless інстансів кілька, і MemoryStore веде окремий лічильник на кожному — захист від
+   * перебору паролів тихо слабшає рівно тоді, коли трафік росте. Це деградація, а не поломка
+   * (лімітер усе ще рахує), тому не фейлимо старт як із поштою, — але мовчати про це не можна:
+   * інакше про межу дізнаються з інциденту.
+   */
+  if (env.isProd && !hasSharedRateLimitStore()) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[rate-limit] No shared store: counters are per-instance, so effective limits scale with " +
+        "the number of instances. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.",
+    );
+  }
 
   // Security headers. CORP=cross-origin, бо API споживається з іншого origin (фронт ≠ API).
   app.use(
@@ -64,3 +81,16 @@ export const createApp = () => {
 
   return app;
 };
+
+/**
+ * Готовий застосунок як default-експорт — точка входу для Vercel.
+ *
+ * Vercel шукає Express у `src/app.ts` / `src/index.ts` / `src/server.ts` і бере або default-експорт,
+ * або файл, що слухає порт. `server.ts` підходив би за другою умовою, але `src/app.ts` сканується
+ * раніше — і без цього рядка Vercel знайшов би тут лише іменовану фабрику й не зрозумів би, що
+ * запускати. Явний експорт знімає залежність від порядку сканування.
+ *
+ * На serverless `listen` не викликається взагалі: платформа сама приймає запити в цей застосунок.
+ * `server.ts` лишається для локального `npm run dev` і будь-якого класичного хостингу.
+ */
+export default createApp();
