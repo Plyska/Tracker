@@ -209,3 +209,33 @@ export const passwordChangedMessage = (to: string, locale: EmailLocale): EmailMe
     html: shell(lines.map(para).join("")),
   };
 };
+
+/**
+ * Повідомлення про видалення акаунта — після факту, без кнопки.
+ *
+ * Той самий принцип, що в листі про зміну пароля: це єдиний сигнал, за яким людина помітить, що
+ * акаунт видалив не вона. Відновлювати нічого — видалення жорстке, каскадне, тож єдина дія тут —
+ * повідомити нам. Адреса — з env, щоб не розповзалась по шаблонах.
+ */
+export const accountDeletedMessage = (
+  to: string,
+  locale: EmailLocale,
+  supportEmail: string,
+): EmailMessage => {
+  const lines =
+    locale === "uk"
+      ? [
+          "Твій акаунт Tellday видалено. Навички, відмітки, щоденник, задачі й усе, що написав помічник, — стерто безповоротно.",
+          `Якщо це зробив не ти — напиши нам на ${supportEmail}. Відновити дані ми не зможемо, але зʼясуємо, як це сталось.`,
+        ]
+      : [
+          "Your Tellday account has been deleted. Habits, entries, diary, tasks and everything the assistant wrote are gone for good.",
+          `If this wasn't you, write to us at ${supportEmail}. We can't restore the data, but we will look into how it happened.`,
+        ];
+  return {
+    to,
+    subject: locale === "uk" ? "Акаунт видалено — Tellday" : "Account deleted — Tellday",
+    text: lines.join("\n\n"),
+    html: shell(lines.map(para).join("")),
+  };
+};

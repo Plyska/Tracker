@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { AccentPicker } from "@/features/accent";
-import { ChangePasswordForm, ProfileForm, VerifyEmailNotice } from "@/features/auth";
+import { ChangePasswordForm, DeleteAccountCard, ProfileForm, VerifyEmailNotice } from "@/features/auth";
 import { LangSwitcher } from "@/features/locale";
 import { HabitTrash } from "@/features/manage-habits";
 import { AiSettingsCard } from "@/features/ai-consent";
@@ -207,6 +207,11 @@ function SettingsPage() {
                       тобто це дія іншої ваги, ніж правка імені. */}
                   <TiltCard maxTilt={0} hoverScale={1.04}>
                     <ChangePasswordForm />
+                  </TiltCard>
+                  {/* Останньою і окремо: видалення — дія іншої ваги навіть за зміну пароля, і
+                      їй не місце поруч із «зберегти ім'я». */}
+                  <TiltCard maxTilt={0} hoverScale={1.04}>
+                    <DeleteAccountCard />
                   </TiltCard>
                 </div>
               ) : (

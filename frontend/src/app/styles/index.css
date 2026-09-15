@@ -22,6 +22,7 @@
 
 /* Design-токени + мапінг у Tailwind — спільні для застосунку й лендінгу (окремий Vite-entry). */
 @import "../../shared/styles/tokens.css";
+@import "../../shared/styles/base.css";
 
 :root {
   font-family:

@@ -10,7 +10,6 @@ import { loginSchema, type LoginValues } from "../model/schema";
 import { useLoginMutation } from "../api/authApi";
 import { useFromPath } from "../lib/useFromPath";
 import { loginSuccess } from "../model/authSlice";
-import { SocialAuth } from "./SocialAuth";
 
 export function LoginForm() {
   const { t } = useTranslation();
@@ -98,8 +97,6 @@ export function LoginForm() {
         {isSubmitting && <Loader2 className="size-4 animate-spin" />}
         {t("auth.loginCta")}
       </Button>
-
-      <SocialAuth />
     </form>
   );
 }

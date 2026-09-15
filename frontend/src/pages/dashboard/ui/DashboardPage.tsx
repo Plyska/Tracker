@@ -4,6 +4,7 @@ import { HabitTable } from "@/widgets/habit-table";
 import { DashboardToolbar } from "@/widgets/dashboard-toolbar";
 import { InsightCard } from "@/widgets/assistant";
 import { paths } from "@/shared/config/paths";
+import { ASSISTANT_CHAT_ENABLED } from "@/shared/config/features";
 
 function DashboardPage() {
   const navigate = useNavigate();
@@ -21,8 +22,11 @@ function DashboardPage() {
           людина приходила б у порожній чат і мусила переказувати щойно прочитане. Якщо згоди ще
           немає, сторінка розмови сама поверне на /assistant, де стоїть інтро й вмикач. */}
       <InsightCard
-        onDiscuss={(seed) =>
-          void navigate(paths.assistantChat, { state: { seed: { type: "insight", key: seed } } })
+        onDiscuss={
+          ASSISTANT_CHAT_ENABLED
+            ? (seed) =>
+                void navigate(paths.assistantChat, { state: { seed: { type: "insight", key: seed } } })
+            : undefined
         }
       />
       {showToolbar && <DashboardToolbar />}

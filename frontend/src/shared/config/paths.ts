@@ -19,4 +19,9 @@ export const paths = {
    *  скролиться, поле вводу закріплене внизу — під стосом карток це не живе. */
   assistantChat: "/assistant/chat",
   settings: "/settings",
+  /**
+   * Юридичні документи — статика лендінгу (окремий Vite-entry), не роути SPA: посилання на них —
+   * звичайний `<a href>`, повна навігація. Мова — з поточної мови застосунку.
+   */
+  legal: (doc: "privacy" | "terms", locale: string) => `${locale.startsWith("uk") ? "/uk" : ""}/${doc}`,
 } as const;

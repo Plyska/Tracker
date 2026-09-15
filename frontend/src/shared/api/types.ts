@@ -329,6 +329,10 @@ export interface VerifyEmailRequest {
    *  авторизувати сам себе. */
   code: string;
 }
+/** DELETE /auth/me — пароль підтверджує намір; сесії для цього недостатньо. */
+export interface DeleteAccountRequest {
+  password: string;
+}
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;

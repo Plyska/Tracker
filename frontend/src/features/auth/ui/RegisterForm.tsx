@@ -10,7 +10,6 @@ import { registerSchema, type RegisterValues } from "../model/schema";
 import { useRegisterMutation } from "../api/authApi";
 import { useFromPath } from "../lib/useFromPath";
 import { loginSuccess } from "../model/authSlice";
-import { SocialAuth } from "./SocialAuth";
 import type { VerifyEmailNavState } from "./VerifyEmailForm";
 
 export function RegisterForm() {
@@ -143,7 +142,20 @@ export function RegisterForm() {
         {t("auth.registerCta")}
       </Button>
 
-      <SocialAuth />
+      {/* Згода одним рядком під кнопкою, без чекбокса: підстава обробки тут — договір, а не
+          згода, тож окремої галочки закон не вимагає. Посилання — на статику лендінгу (повна
+          навігація), у мові застосунку. */}
+      <p className="text-center text-xs leading-5 text-muted-foreground">
+        {t("auth.consent.prefix")}{" "}
+        <a href={paths.legal("terms", i18n.language)} className="underline underline-offset-4 hover:text-foreground">
+          {t("auth.consent.terms")}
+        </a>{" "}
+        {t("auth.consent.and")}{" "}
+        <a href={paths.legal("privacy", i18n.language)} className="underline underline-offset-4 hover:text-foreground">
+          {t("auth.consent.privacy")}
+        </a>
+        .
+      </p>
     </form>
   );
 }

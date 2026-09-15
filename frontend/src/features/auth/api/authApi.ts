@@ -2,6 +2,7 @@ import { baseApi } from "@/shared/api";
 import type {
   AuthResponse,
   ChangePasswordRequest,
+  DeleteAccountRequest,
   ForgotPasswordRequest,
   LoginRequest,
   OAuthProvider,
@@ -87,6 +88,11 @@ export const authApi = baseApi.injectEndpoints({
     changePassword: build.mutation<void, ChangePasswordRequest>({
       query: (body) => ({ url: "/auth/change-password", method: "POST", body }),
     }),
+    // Видалення акаунта: сервер стирає все каскадно й чистить cookie. Виклик-сайт розлогінює
+    // локальний стан і веде на лендінг — у застосунку людині вже нема куди повертатись.
+    deleteAccount: build.mutation<void, DeleteAccountRequest>({
+      query: (body) => ({ url: "/auth/me", method: "DELETE", body }),
+    }),
     updateProfile: build.mutation<User, UpdateProfileRequest>({
       query: (body) => ({ url: "/auth/me", method: "PATCH", body }),
       transformResponse: toUser,
@@ -107,4 +113,5 @@ export const {
   useVerifyEmailMutation,
   useRequestVerificationMutation,
   useChangePasswordMutation,
+  useDeleteAccountMutation,
 } = authApi;

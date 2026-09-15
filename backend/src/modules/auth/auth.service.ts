@@ -14,6 +14,7 @@ import {
 import { revokeAllUserSessions } from "../../lib/refreshTokens.js";
 import { sendEmailSafely } from "../../lib/email/transport.js";
 import {
+  accountDeletedMessage,
   passwordChangedMessage,
   resetPasswordMessage,
   toEmailLocale,
@@ -205,4 +206,31 @@ export const changePassword = async (
   });
   await revokeAllUserSessions(userId);
   await sendEmailSafely(passwordChangedMessage(user.email, await localeOf(userId)));
+};
+
+/**
+ * Видалення акаунта — жорстке й каскадне: `onDelete: Cascade` стоїть на всіх зв'язках User, тож
+ * один `delete` прибирає навички, відмітки, щоденник, задачі, листи помічника, токени й
+ * налаштування. Кошика немає навмисно: це право на стирання (GDPR ст. 17), а не «перемістити в
+ * архів» — людина, яка натиснула «видалити акаунт», має отримати саме це.
+ *
+ * Пароль обов'язковий: див. `deleteAccountSchema`. Акаунт без пароля (OAuth-only) поки не існує;
+ * коли з'явиться — підтвердження має йти через провайдера, а не пропускатись.
+ *
+ * Порядок: спершу видалити, потім лист — на адресу, яку ми вже тримаємо в пам'яті. Навпаки
+ * (лист → видалення) при збої між кроками людина отримала б «акаунт видалено» про живий акаунт.
+ */
+export const deleteAccount = async (userId: string, password: string): Promise<void> => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, passwordHash: true },
+  });
+  if (!user) throw Errors.unauthenticated("User no longer exists");
+  if (!user.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
+    throw Errors.invalidCredentials("Password is incorrect");
+  }
+
+  const locale = await localeOf(userId);
+  await prisma.user.delete({ where: { id: userId } });
+  await sendEmailSafely(accountDeletedMessage(user.email, locale, env.supportEmail));
 };

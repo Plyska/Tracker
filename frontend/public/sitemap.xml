@@ -17,4 +17,36 @@
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
+  <url>
+    <loc>https://tellday.app/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tellday.app/privacy" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://tellday.app/uk/privacy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tellday.app/privacy" />
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://tellday.app/uk/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tellday.app/privacy" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://tellday.app/uk/privacy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tellday.app/privacy" />
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://tellday.app/terms</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tellday.app/terms" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://tellday.app/uk/terms" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tellday.app/terms" />
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://tellday.app/uk/terms</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tellday.app/terms" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://tellday.app/uk/terms" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tellday.app/terms" />
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
 </urlset>

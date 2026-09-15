@@ -4,7 +4,7 @@ import { Moon, Sun } from "lucide-react";
 import { paths } from "@/shared/config/paths";
 import { cn } from "@/shared/lib/cn";
 import { BrandBadge } from "@/shared/ui/BrandMark";
-import { localePath } from "../i18n";
+import { localePath, pagePath } from "../i18n";
 import { useLocale } from "../lib/localeContext";
 import { applyTheme, readTheme, useTheme, type Theme } from "../lib/theme";
 import { Container } from "../ui/Section";
@@ -26,8 +26,11 @@ export function Logo({ className }: { className?: string }) {
  * дзеркальну сторінку (`/` ↔ `/uk`), бо мови — це окремі URL для SEO, а не стан.
  */
 export function Nav() {
-  const { locale, t } = useLocale();
+  const { locale, t, page } = useLocale();
   const other = locale === "en" ? "uk" : "en";
+  // Якорі секцій — з префіксом головної: на юридичних сторінках цих секцій немає, і голий
+  // `#features` нікуди б не вів. На самій головній `/#features` — та ж сторінка, лише скрол.
+  const home = pagePath(locale, "home");
   // На сервері теми немає (null → іконка місяця); на клієнті — з класу на <html>.
   const theme = useTheme();
   // Після скролу навбар «відділяється» від сторінки: рамка + тінь (setState — з колбеку скролу).
@@ -41,10 +44,10 @@ export function Nav() {
   };
 
   const anchors = [
-    ["#features", t.nav.features],
-    ["#companion", t.nav.companion],
-    ["#pricing", t.nav.pricing],
-    ["#faq", t.nav.faq],
+    [`${home}#features`, t.nav.features],
+    [`${home}#companion`, t.nav.companion],
+    [`${home}#pricing`, t.nav.pricing],
+    [`${home}#faq`, t.nav.faq],
   ] as const;
 
   return (
@@ -71,7 +74,7 @@ export function Nav() {
         </nav>
         <div className="flex items-center gap-1.5 sm:gap-2">
           <a
-            href={localePath(other)}
+            href={pagePath(other, page)}
             hrefLang={other}
             lang={other}
             aria-label={t.nav.lang}

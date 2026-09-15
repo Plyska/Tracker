@@ -13,6 +13,7 @@ import {
 import { AiConsentDialog, BetaBadge } from "@/features/ai-consent";
 import { CheckinComposer } from "@/features/ai-checkin";
 import { type ChatSeed } from "@/features/ai-chat";
+import { ASSISTANT_CHAT_ENABLED } from "@/shared/config/features";
 import type { ReflectionDto } from "@/shared/api";
 import { Button, Card, Skeleton } from "@/shared/ui";
 import { paths } from "@/shared/config/paths";
@@ -42,7 +43,11 @@ export function AssistantView() {
   // зачіпкою, а не перемикання стану сторінки. Плюс до повноекранного layout це дає безкоштовно
   // правильне «назад» і посилання, яке можна відкрити напряму.
   const navigate = useNavigate();
-  const openChat = (seed: ChatSeed) => void navigate(paths.assistantChat, { state: { seed } });
+  // `undefined`, коли розмову приховано: пропи `onDiscuss` опційні, тож кнопки «обговорити»
+  // просто не рендеряться — без задізейблених контролів, які нікуди не ведуть.
+  const openChat = ASSISTANT_CHAT_ENABLED
+    ? (seed: ChatSeed) => void navigate(paths.assistantChat, { state: { seed } })
+    : undefined;
 
   const [generate, { isLoading: generating, error }] = useGetReflectionMutation();
   const { data: quota } = useGetAiQuotaQuery({ today }, { skip: !enabled });
@@ -95,8 +100,8 @@ export function AssistantView() {
   return (
     <div className="space-y-6">
       {/* Композер зверху: чек-ін — це дія, а лист і підказки — те, що читають. */}
-      <CheckinComposer onDiscuss={() => openChat({ type: "checkin", key: today })} />
-      <InsightCard onDiscuss={(seed) => openChat({ type: "insight", key: seed })} />
+      <CheckinComposer onDiscuss={openChat && (() => openChat({ type: "checkin", key: today }))} />
+      <InsightCard onDiscuss={openChat && ((seed) => openChat({ type: "insight", key: seed }))} />
 
       {generating && !reflection ? (
         <div className="space-y-3">
@@ -121,7 +126,7 @@ export function AssistantView() {
             periodStart={reflection.periodStart}
             periodEnd={reflection.periodEnd}
             createdAt={reflection.createdAt}
-            onDiscuss={() => openChat({ type: "reflection", key: reflection.periodKey })}
+            onDiscuss={openChat && (() => openChat({ type: "reflection", key: reflection.periodKey }))}
           />
           ) : null}
         </motion.div>

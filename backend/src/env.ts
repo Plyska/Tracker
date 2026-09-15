@@ -43,9 +43,17 @@ const schema = z.object({
   // або впаде в спам. Тримаємо на ПІДДОМЕНІ, щоб репутація відправлення не змішувалась із доменом
   // бренду: "Tellday <no-reply@mail.tellday.app>" (docs/dns-subdomains.md).
   EMAIL_FROM: z.string().min(3).default("Tellday <onboarding@resend.dev>"),
+  // Адреса для звернень людини у листах (напр. «якщо це був не ти — напиши нам»). Скринька на
+  // домені не обов'язкова: Porkbun безкоштовно пересилає на будь-яку пошту.
+  SUPPORT_EMAIL: z.string().email().default("support@tellday.app"),
   // Базовий URL фронтенду для посилань у листах. Не виводимо з CORS_ORIGIN: там може бути список,
   // а в лист треба рівно одну адресу — і помилка тут відправляє людину в чужий застосунок.
   APP_URL: z.string().url().default("http://localhost:5173"),
+
+  // ── Моніторинг помилок (Sentry) ──────────────────────────────────────────────────────────
+  // Порожньо — SDK не вмикається зовсім (як `console`-пошта й MemoryStore для лімітів): у
+  // локальній розробці помилки видно в терміналі, і засмічувати ними прод-проєкт не треба.
+  SENTRY_DSN: z.string().url().optional(),
 
   // ── Rate limiting: спільні лічильники (Upstash Redis) ────────────────────────────────────
   // Потрібні на serverless (Vercel Fluid compute), де інстансів кілька: дефолтний MemoryStore
@@ -75,6 +83,14 @@ const schema = z.object({
   AI_DAILY_MESSAGE_LIMIT: z.coerce.number().int().positive().default(15),
   // Стеля розміру контекст-паку (токени, орієнтовно) — щоб рахунок не ріс із історією.
   AI_CONTEXT_MAX_TOKENS: z.coerce.number().int().positive().default(6000),
+  // Вільна розмова з помічником (`POST /ai/chat`). ВИМКНЕНО за замовчуванням до запуску:
+  // на відміну від чек-іну й підказок, чат приймає довільний текст користувача, тож потребує
+  // окремого захисту від зловживань (prompt injection, вигрібання чужого контексту, накрутка
+  // рахунку). Решта AI-функцій працює як раніше.
+  //
+  // Рядок, а НЕ z.coerce.boolean(): коерція в zod робить `true` з будь-якого непорожнього
+  // рядка, тобто "false" увімкнуло б фічу. Класична пастка, і ціна тут — відкритий ендпоінт.
+  AI_CHAT_ENABLED: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -200,8 +216,10 @@ export const env = {
   aiBaseUrl: raw.AI_BASE_URL ?? AI_DEFAULT_BASE_URL[raw.AI_PROVIDER],
   aiDailyMessageLimit: raw.AI_DAILY_MESSAGE_LIMIT,
   aiContextMaxTokens: raw.AI_CONTEXT_MAX_TOKENS,
+  aiChatEnabled: raw.AI_CHAT_ENABLED === "true",
   // Без ключа — `console`: у розробці це нормальний режим, у проді guard вище не дасть стартувати.
   emailProvider,
   emailFrom: raw.EMAIL_FROM,
   appUrl: raw.APP_URL.replace(/\/+$/, ""),
+  supportEmail: raw.SUPPORT_EMAIL,
 };

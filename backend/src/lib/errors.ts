@@ -42,6 +42,10 @@ export const Errors = {
   // AI-компаньйон (ADR 0012)
   aiDisabled: (message = "AI assistant is not enabled for this account") =>
     new AppError(403, "AI_DISABLED", message),
+  // Чат вимкнено на рівні сервера (AI_CHAT_ENABLED), а не для конкретного акаунта — окремий код,
+  // щоб клієнт не плутав це з «помічник не увімкнений у налаштуваннях».
+  aiChatDisabled: (message = "The assistant chat is temporarily unavailable") =>
+    new AppError(403, "AI_CHAT_DISABLED", message),
   aiQuotaExceeded: (message = "Daily AI quota exceeded, try again tomorrow") =>
     new AppError(429, "AI_QUOTA_EXCEEDED", message),
   aiUnavailable: (message = "AI assistant is temporarily unavailable") =>

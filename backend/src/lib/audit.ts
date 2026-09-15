@@ -13,7 +13,8 @@ export type AuthAuditEvent =
   | "refresh"
   | "refresh.reuse_detected"
   | "logout"
-  | "profile.update";
+  | "profile.update"
+  | "account.delete";
 
 /**
  * AI-компаньйон (ADR 0012): факт виклику + вартість (модель, токени), НІКОЛИ не контент —

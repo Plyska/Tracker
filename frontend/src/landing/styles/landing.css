@@ -13,6 +13,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @import "../../shared/styles/tokens.css";
+@import "../../shared/styles/base.css";
 
 /* Manrope (OFL) — лише для заголовків. Два сабсети, variable weight. `swap`, щоб текст
  * показався системним шрифтом одразу, а не чекав завантаження. */
