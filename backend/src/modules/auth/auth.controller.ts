@@ -132,9 +132,9 @@ export const resetPasswordHandler = async (req: Request, res: Response): Promise
   res.status(204).end();
 };
 
-/** POST /auth/verify-email — підтвердити адресу за токеном із листа. */
+/** POST /auth/verify-email — підтвердити адресу кодом із листа (в межах власної сесії). */
 export const verifyEmailHandler = async (req: Request, res: Response): Promise<void> => {
-  await verifyEmail((req.body as VerifyEmailInput).token);
+  await verifyEmail(req.userId!, (req.body as VerifyEmailInput).code);
   res.status(204).end();
 };
 

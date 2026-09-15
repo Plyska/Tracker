@@ -3,7 +3,7 @@ import { asyncHandler } from "../../lib/asyncHandler.js";
 import { validate } from "../../middleware/validate.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { requireCsrf } from "../../lib/csrf.js";
-import { authLimiter, emailLimiter } from "../../middleware/rateLimit.js";
+import { authLimiter, emailLimiter, verifyCodeLimiter } from "../../middleware/rateLimit.js";
 import {
   changePasswordSchema,
   forgotPasswordSchema,
@@ -38,8 +38,8 @@ authRouter.patch(
 /**
  * Флоу з листами.
  *
- * Без CSRF і без `requireAuth` там, де діє токен із листа: людина відкриває посилання, не маючи
- * сесії — саме тому, що втратила доступ. Авторизація тут — сам одноразовий токен.
+ * Без CSRF і без `requireAuth` там, де діє токен із ПОСИЛАННЯ (скидання пароля): людина відкриває
+ * його, не маючи сесії — саме тому, що втратила доступ. Авторизація там — сам одноразовий токен.
  *
  * `emailLimiter` (не `authLimiter`) рахує ВСІ запити: ці ендпоінти віддають 204 завжди, тож під
  * лімітером, що пропускає успішні, ліміту не було б зовсім.
@@ -56,9 +56,14 @@ authRouter.post(
   validate(resetPasswordSchema),
   asyncHandler(ctrl.resetPasswordHandler),
 );
+// Підтвердження кодом — навпаки, ЛИШЕ для залогіненого: код короткий, і його перевірка мусить
+// бути прив'язана до конкретного акаунта, інакше 6 цифр перебиралися б проти всієї бази.
+// Після реєстрації сесія вже є, тож зайвого кроку це не створює.
 authRouter.post(
   "/verify-email",
-  emailLimiter,
+  requireAuth,
+  requireCsrf,
+  verifyCodeLimiter,
   validate(verifyEmailSchema),
   asyncHandler(ctrl.verifyEmailHandler),
 );

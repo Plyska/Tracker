@@ -8,6 +8,14 @@ export const registerSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(80),
   email,
   password,
+  // Мова інтерфейсу в момент реєстрації. Опційна — клієнт може її не передати (інший клієнт,
+  // curl), тоді лишається дефолт `en`.
+  //
+  // Потрібна саме тут, бо перший лист продукту — код підтвердження — надсилається ДО того, як
+  // з'явиться рядок `UserPreferences`: він створюється лише коли фронт уперше збереже
+  // налаштування. Без цього поля людина, яка щойно заповнила українську форму, отримувала б
+  // англійський лист. Обмеження як у `updatePreferencesSchema`: набір мов визначає фронт.
+  locale: z.string().trim().min(2).max(10).optional(),
 });
 
 export const loginSchema = z.object({
@@ -41,7 +49,14 @@ const emailToken = z.string().trim().min(1, "Token is required").max(512);
 
 export const forgotPasswordSchema = z.object({ email });
 export const resetPasswordSchema = z.object({ token: emailToken, password });
-export const verifyEmailSchema = z.object({ token: emailToken });
+// Код із листа — рівно 6 цифр. На відміну від токена, тут форма ФІКСОВАНА, тож перевіряємо
+// строго: це відсікає перебір рядками довільної довжини ще до звернення до БД.
+export const verifyEmailSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Code must be 6 digits"),
+});
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
   newPassword: password,

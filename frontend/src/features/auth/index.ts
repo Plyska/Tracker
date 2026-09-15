@@ -43,6 +43,7 @@ export { ForgotPasswordForm } from "./ui/ForgotPasswordForm";
 export { ResetPasswordForm } from "./ui/ResetPasswordForm";
 export { ChangePasswordForm } from "./ui/ChangePasswordForm";
 export { VerifyEmailNotice } from "./ui/VerifyEmailNotice";
+export { VerifyEmailForm, type VerifyEmailNavState } from "./ui/VerifyEmailForm";
 export { RegisterForm } from "./ui/RegisterForm";
 export { ProfileForm } from "./ui/ProfileForm";
 export { UserMenu } from "./ui/UserMenu";

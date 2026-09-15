@@ -13,17 +13,37 @@ export type EmailLocale = "uk" | "en";
 export const toEmailLocale = (v: string | null | undefined): EmailLocale =>
   v?.startsWith("uk") ? "uk" : "en";
 
-/** Мінімальний HTML: жодних зовнішніх ресурсів, інлайнові стилі, читабельно навіть без CSS. */
+/**
+ * Мінімальний HTML: жодних зовнішніх ресурсів, інлайнові стилі, читабельно навіть без CSS.
+ *
+ * Лише кнопка, без продубльованого URL під нею. Голий токенізований лінк на пів-екрана робить
+ * службовий лист схожим на фішинг — саме там, де людина має вирішити, чи він справжній. Запасний
+ * шлях при цьому не зникає: **текстова версія листа (`build`) URL зберігає**, і клієнти, які HTML
+ * не показують, отримують саме її.
+ */
 const wrap = (lines: string[], action: { label: string; url: string }): string => {
   const p = (text: string) =>
     `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#111">${text}</p>`;
   return [
     `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:0 auto;padding:24px">`,
     ...lines.map(p),
-    `<p style="margin:0 0 24px"><a href="${action.url}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#111;color:#fff;text-decoration:none;font-size:15px">${action.label}</a></p>`,
-    // Дублюємо посилання текстом: кнопки в частині клієнтів не працюють, а вставити URL руками
-    // людина може завжди.
-    `<p style="margin:0;font-size:13px;line-height:1.6;color:#666;word-break:break-all">${action.url}</p>`,
+    `<p style="margin:0"><a href="${action.url}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#111;color:#fff;text-decoration:none;font-size:15px">${action.label}</a></p>`,
+    `</div>`,
+  ].join("");
+};
+
+/**
+ * Каркас для листа з кодом. `letter-spacing` і моноширинний шрифт — не прикраса: код переписують
+ * очима, і саме вони роблять 0/O та 1/l різними. Виділяється мишею як звичайний текст.
+ */
+const wrapCode = (lines: string[], code: string): string => {
+  const p = (text: string) =>
+    `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#111">${text}</p>`;
+  return [
+    `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:0 auto;padding:24px">`,
+    p(lines[0]!),
+    `<p style="margin:0 0 24px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:8px;color:#111">${code}</p>`,
+    p(lines[1]!),
     `</div>`,
   ].join("");
 };
@@ -40,32 +60,44 @@ const build = (
   html: wrap(lines, action),
 });
 
-/** Підтвердження адреси. TTL згадуємо явно — інакше протухле посилання виглядає як поломка. */
+/**
+ * Підтвердження адреси — **код**, а не кнопка.
+ *
+ * Тому й шаблон інший за формою: код має бути найбільшим у листі й лишатись читабельним у
+ * прев'ю сповіщення, де видно перші кілька слів. Тому він стоїть у першому рядку теми.
+ *
+ * TTL згадуємо явно — інакше протухлий код виглядає як поломка, а не як термін.
+ */
 export const verifyEmailMessage = (
   to: string,
-  url: string,
+  code: string,
   locale: EmailLocale,
-  hours: number,
-): EmailMessage =>
-  locale === "uk"
-    ? build(
-        to,
-        "Підтвердь пошту — Tracker",
-        [
-          "Залишився один крок: підтвердь, що ця адреса твоя.",
-          `Посилання дійсне ${hours} год. Якщо ти не реєструвався в Tracker — просто не відкривай його, більше листів не буде.`,
-        ],
-        { label: "Підтвердити пошту", url },
-      )
-    : build(
-        to,
-        "Confirm your email — Tracker",
-        [
-          "One step left: confirm this address is yours.",
-          `The link works for ${hours} hours. If you didn't sign up for Tracker, just ignore this — there won't be more emails.`,
-        ],
-        { label: "Confirm email", url },
-      );
+  minutes: number,
+): EmailMessage => {
+  const [subject, lines]: [string, [string, string]] =
+    locale === "uk"
+      ? [
+          `${code} — код підтвердження Tellday`,
+          [
+            "Залишився один крок: введи цей код у застосунку, щоб підтвердити пошту.",
+            `Код дійсний ${minutes} хв. Якщо ти не реєструвався в Tellday — просто не вводь його, більше листів не буде.`,
+          ],
+        ]
+      : [
+          `${code} — your Tellday confirmation code`,
+          [
+            "One step left: enter this code in the app to confirm your email.",
+            `The code works for ${minutes} minutes. If you didn't sign up for Tellday, just ignore this — there won't be more emails.`,
+          ],
+        ];
+  return {
+    to,
+    subject,
+    // Текстова версія: код на окремому рядку, щоб його можна було виділити подвійним кліком.
+    text: [lines[0], code, lines[1]].join("\n\n"),
+    html: wrapCode(lines, code),
+  };
+};
 
 /**
  * Скидання пароля.
@@ -82,19 +114,19 @@ export const resetPasswordMessage = (
   locale === "uk"
     ? build(
         to,
-        "Відновлення пароля — Tracker",
+        "Відновлення пароля — Tellday",
         [
           "Хтось попросив скинути пароль до цього акаунта.",
-          `Посилання дійсне ${hours} год і спрацює один раз. Якщо це був не ти — нічого робити не треба: доки посилання не відкрито, пароль лишається тим самим.`,
+          `Посилання дійсне ${hours === 1 ? "годину" : `${hours} год`} і спрацює один раз. Якщо це був не ти — нічого робити не треба: доки посилання не відкрито, пароль лишається тим самим.`,
         ],
         { label: "Задати новий пароль", url },
       )
     : build(
         to,
-        "Reset your password — Tracker",
+        "Reset your password — Tellday",
         [
           "Someone asked to reset the password for this account.",
-          `The link works for ${hours} hours and can be used once. If this wasn't you, there's nothing to do — until the link is opened, your password stays as it is.`,
+          `The link works for ${hours === 1 ? "one hour" : `${hours} hours`} and can be used once. If this wasn't you, there's nothing to do — until the link is opened, your password stays as it is.`,
         ],
         { label: "Set a new password", url },
       );
@@ -109,16 +141,16 @@ export const passwordChangedMessage = (to: string, locale: EmailLocale): EmailMe
   const lines =
     locale === "uk"
       ? [
-          "Пароль до твого акаунта Tracker щойно змінено, і всі сесії завершено — доведеться увійти заново.",
+          "Пароль до твого акаунта Tellday щойно змінено, і всі сесії завершено — доведеться увійти заново.",
           "Якщо це був не ти — відразу віднови пароль через «Забув пароль» на сторінці входу.",
         ]
       : [
-          "The password for your Tracker account was just changed, and all sessions were signed out — you'll need to log in again.",
+          "The password for your Tellday account was just changed, and all sessions were signed out — you'll need to log in again.",
           "If this wasn't you, reset your password right away via \"Forgot password\" on the login page.",
         ];
   return {
     to,
-    subject: locale === "uk" ? "Пароль змінено — Tracker" : "Password changed — Tracker",
+    subject: locale === "uk" ? "Пароль змінено — Tellday" : "Password changed — Tellday",
     text: lines.join("\n\n"),
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:0 auto;padding:24px">${lines
       .map((l) => `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#111">${l}</p>`)

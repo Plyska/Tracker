@@ -181,6 +181,9 @@ export interface RegisterRequest {
   name: string;
   email: string;
   password: string;
+  /** Мова інтерфейсу на момент реєстрації — нею піде лист із кодом підтвердження, який
+   *  надсилається ще до того, як з'являться збережені налаштування. */
+  locale?: string;
 }
 
 /**
@@ -322,7 +325,9 @@ export interface ResetPasswordRequest {
   password: string;
 }
 export interface VerifyEmailRequest {
-  token: string;
+  /** 6 цифр із листа. Акаунт визначає сесія, а не тіло запиту — код надто короткий, щоб
+   *  авторизувати сам себе. */
+  code: string;
 }
 export interface ChangePasswordRequest {
   currentPassword: string;

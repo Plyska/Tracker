@@ -1,10 +1,11 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { MailWarning } from "lucide-react";
 import { useAppSelector } from "@/app/store/hooks";
-import { Button, toast } from "@/shared/ui";
+import { Button } from "@/shared/ui";
+import { paths } from "@/shared/config/paths";
 import { selectCurrentUser } from "../model/authSlice";
-import { useRequestVerificationMutation } from "../api/authApi";
+import type { VerifyEmailNavState } from "./VerifyEmailForm";
 
 /**
  * Нагадування підтвердити пошту.
@@ -14,22 +15,15 @@ import { useRequestVerificationMutation } from "../api/authApi";
  * **без підтвердженої адреси відновлення пароля не має куди слати лист**, тобто друкарська
  * помилка при реєстрації тихо робить акаунт безповоротним. Саме про це тут і йдеться.
  *
- * Показується лише залогіненим із непідтвердженою поштою; після надсилання ховається, щоб не
- * перетворитись на постійний банер, який перестають бачити.
+ * Веде на сторінку введення коду, а не надсилає лист на місці: код усе одно нема куди ввести
+ * в межах цієї смужки, тож лист «у нікуди» лише спалив би спробу й заплутав.
  */
 export function VerifyEmailNotice() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const user = useAppSelector(selectCurrentUser);
-  const [requestVerification, { isLoading }] = useRequestVerificationMutation();
-  const [sent, setSent] = useState(false);
 
-  if (!user || user.emailVerified || sent) return null;
-
-  const onResend = async () => {
-    await requestVerification().unwrap().catch(() => {});
-    setSent(true);
-    toast.success(t("auth.verify.sent", { email: user.email }));
-  };
+  if (!user || user.emailVerified) return null;
 
   return (
     <div
@@ -43,11 +37,15 @@ export function VerifyEmailNotice() {
       <Button
         variant="outline"
         size="sm"
-        disabled={isLoading}
-        onClick={() => void onResend()}
+        onClick={() =>
+          void navigate(paths.verifyEmail, {
+            // Код міг протухнути ще тиждень тому — сторінка надішле свіжий одразу на вході.
+            state: { resend: true } satisfies VerifyEmailNavState,
+          })
+        }
         className="shrink-0"
       >
-        {t("auth.verify.resend")}
+        {t("auth.verify.confirmCta")}
       </Button>
     </div>
   );

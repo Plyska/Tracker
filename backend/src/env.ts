@@ -31,8 +31,9 @@ const schema = z.object({
   EMAIL_PROVIDER: z.enum(["resend", "console"]).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
   // Відправник. Домен мусить бути верифікований у провайдера (SPF/DKIM), інакше лист або не піде,
-  // або впаде в спам. Приклад: "Tracker <no-reply@tracker.app>".
-  EMAIL_FROM: z.string().min(3).default("Tracker <onboarding@resend.dev>"),
+  // або впаде в спам. Тримаємо на ПІДДОМЕНІ, щоб репутація відправлення не змішувалась із доменом
+  // бренду: "Tellday <no-reply@mail.tellday.app>" (docs/dns-subdomains.md).
+  EMAIL_FROM: z.string().min(3).default("Tellday <onboarding@resend.dev>"),
   // Базовий URL фронтенду для посилань у листах. Не виводимо з CORS_ORIGIN: там може бути список,
   // а в лист треба рівно одну адресу — і помилка тут відправляє людину в чужий застосунок.
   APP_URL: z.string().url().default("http://localhost:5173"),
@@ -113,11 +114,38 @@ if (raw.NODE_ENV === "production" && !aiApiKey) {
  * пароль, ніколи не отримає листа, а ми про це не дізнаємось: усі ендпоінти віддають 204 навмисно
  * (щоб не розкривати, чи існує адреса), тож мовчазна відмова виглядає як успіх. Краще не стартувати.
  */
-if (raw.NODE_ENV === "production" && (raw.EMAIL_PROVIDER ?? "console") === "console") {
+// Транспорт виводимо ОДИН раз і звіряємось саме з ним: раніше guard читав `EMAIL_PROVIDER`
+// напряму й не бачив ключа, тож прод із виставленим лише RESEND_API_KEY не стартував — попри те,
+// що повідомлення нижче називає це достатнім.
+const emailProvider = raw.EMAIL_PROVIDER ?? (raw.RESEND_API_KEY ? "resend" : "console");
+
+if (raw.NODE_ENV === "production" && emailProvider === "console") {
   // eslint-disable-next-line no-console
   console.error(
     "Refusing to start: transactional email is not configured " +
       "(set RESEND_API_KEY, or EMAIL_PROVIDER explicitly).",
+  );
+  process.exit(1);
+}
+
+// `EMAIL_PROVIDER=resend` без ключа мовчки падає назад на console — та сама тиха відмова, лише
+// довшим шляхом. Ловимо на старті.
+if (raw.NODE_ENV === "production" && emailProvider === "resend" && !raw.RESEND_API_KEY) {
+  // eslint-disable-next-line no-console
+  console.error("Refusing to start: EMAIL_PROVIDER=resend but RESEND_API_KEY is not set.");
+  process.exit(1);
+}
+
+/**
+ * `APP_URL` за замовчуванням — localhost, і в проді це не «незручний дефолт», а зламане
+ * відновлення пароля: посилання в листі веде людину на її власну машину, де нічого не слухає.
+ * Помітити це можна лише через скаргу користувача, тож ловимо на старті.
+ */
+if (raw.NODE_ENV === "production" && /localhost|127\.0\.0\.1/.test(raw.APP_URL)) {
+  // eslint-disable-next-line no-console
+  console.error(
+    `Refusing to start: APP_URL points at localhost (${raw.APP_URL}). ` +
+      "Password-reset links in emails would be dead. Set it to the public app URL.",
   );
   process.exit(1);
 }
@@ -155,8 +183,8 @@ export const env = {
   aiBaseUrl: raw.AI_BASE_URL ?? AI_DEFAULT_BASE_URL[raw.AI_PROVIDER],
   aiDailyMessageLimit: raw.AI_DAILY_MESSAGE_LIMIT,
   aiContextMaxTokens: raw.AI_CONTEXT_MAX_TOKENS,
-  // Без ключа — `console`: у розробці це нормальний режим, у проді guard нижче не дасть стартувати.
-  emailProvider: raw.EMAIL_PROVIDER ?? (raw.RESEND_API_KEY ? "resend" : "console"),
+  // Без ключа — `console`: у розробці це нормальний режим, у проді guard вище не дасть стартувати.
+  emailProvider,
   emailFrom: raw.EMAIL_FROM,
   appUrl: raw.APP_URL.replace(/\/+$/, ""),
 };

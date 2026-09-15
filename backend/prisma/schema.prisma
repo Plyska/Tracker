@@ -192,13 +192,19 @@ model AiUsage {
  * комусь пароль. Сирий токен існує рівно один раз — у листі.
  */
 model EmailToken {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String // 'verify' | 'reset'
-  tokenHash String    @unique // sha256(opaque token)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type   String // 'verify' | 'reset'
+  // 'verify' — sha256(userId:code) для 6-значного коду, 'reset' — sha256(opaque token) з посилання.
+  // Код солиться userId навмисно: на 10^6 значень голий хеш коду зіштовхнув би двох користувачів
+  // на `@unique` (парадокс днів народження вже на тисячі одночасних реєстрацій).
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime? // одноразовість: спожитий токен не приймається вдруге
+  // Лічильник невдалих спроб — лише для коду: 6 цифр перебираються за хвилини, тож код згорає
+  // після VERIFY_CODE_MAX_ATTEMPTS. Для посилання (32 байти ентропії) поле лишається 0.
+  attempts  Int       @default(0)
   createdAt DateTime  @default(now())
 
   @@index([userId, type])
