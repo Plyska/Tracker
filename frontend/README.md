@@ -1,4 +1,4 @@
-# Tracker — Frontend
+# Tellday — Frontend
 
 React 19 + TypeScript + Vite.
 
@@ -11,5 +11,3 @@ npm run build           # продакшн-збірка (tsc + vite build)
 npm run preview         # переглянути зібране
 npm run lint            # ESLint
 ```
-
-Запуск через Docker — див. кореневий README та `docker-compose.yml`.

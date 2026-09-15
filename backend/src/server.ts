@@ -1,8 +1,9 @@
-import { createApp } from "./app.js";
+import app from "./app.js";
 import { env } from "./env.js";
 import { prisma } from "./prisma.js";
 
-const app = createApp();
+// Беремо той самий екземпляр, що експортує `app.ts`, а не створюємо другий: інакше в пам'яті
+// висіли б два застосунки, з яких слухає лише один.
 
 const server = app.listen(env.PORT, () => {
   // eslint-disable-next-line no-console

@@ -49,13 +49,24 @@ export const setRefreshCookie = (
 /**
  * CSRF-токен — навмисно **не** httpOnly: фронт читає його з cookie й дублює у заголовок
  * `X-CSRF-Token`. `requireCsrf` звіряє cookie==заголовок (double-submit). Живе скільки й access.
+ *
+ * **Єдиний cookie з атрибутом `Domain`** (і лише коли задано `COOKIE_DOMAIN`). Причина вузька:
+ * при топології `tellday.app` ↔ `api.tellday.app` цей cookie ставить API, а читати його мусить
+ * JS на фронті — без `Domain=.tellday.app` він host-only й з фронту невидимий.
+ *
+ * Access і refresh навмисно лишаються host-only: їх ніхто не читає з JS, браузер і так шле їх
+ * на API, що їх поставив. Розширювати їх на всі піддомени означало б віддавати сесійні токени
+ * будь-якому майбутньому піддомену без жодної потреби.
  */
+const csrfCookie = (): CookieOptions => ({
+  ...baseCookie(),
+  httpOnly: false,
+  path: "/",
+  ...(env.COOKIE_DOMAIN && { domain: env.COOKIE_DOMAIN }),
+});
+
 export const setCsrfCookie = (res: Response, token: string): void => {
-  res.cookie(CSRF_COOKIE, token, {
-    ...baseCookie(),
-    httpOnly: false,
-    path: "/",
-  });
+  res.cookie(CSRF_COOKIE, token, csrfCookie());
 };
 
 export const clearAuthCookies = (res: Response): void => {
@@ -65,5 +76,7 @@ export const clearAuthCookies = (res: Response): void => {
     httpOnly: true,
     path: "/auth",
   });
-  res.clearCookie(CSRF_COOKIE, { ...baseCookie(), httpOnly: false, path: "/" });
+  // Атрибути мусять збігатися з тими, з якими cookie ставили (domain включно) — інакше браузер
+  // вважає це іншим cookie й лишає старий на місці.
+  res.clearCookie(CSRF_COOKIE, csrfCookie());
 };

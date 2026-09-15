@@ -1,32 +1,47 @@
-# Tracker
+# Tellday
 
 Платформа для відслідковування власних навичок та звичок.
-Деталі ідеї та покроковий план — у [CLAUDE.md](./CLAUDE.md).
 
 ## Структура (монорепо)
 
 ```
-tracker/
-  frontend/   # React 19 + TypeScript + Vite (UI)
-  backend/    # Node.js + Express (поки порожньо)
-  docker-compose.yml
+tellday/
+  frontend/   # React 19 + TypeScript + Vite (застосунок + маркетинговий лендінг)
+  backend/    # Node.js + Express + Prisma (PostgreSQL на Neon)
 ```
 
-## Запуск frontend через Docker
+## Запуск
+
+Потрібен Node.js 22+.
 
 ```bash
-docker compose up frontend        # підняти (build при першому запуску)
-docker compose up --build frontend # перебудувати образ і підняти
-docker compose down               # зупинити
+# Backend → http://localhost:3000
+cd backend
+npm install
+cp .env.example .env    # заповнити DATABASE_URL і JWT_ACCESS_SECRET
+npm run dev
 ```
 
-Після старту dev-сервер доступний на http://localhost:5173 (з hot-reload — код
-монтується у контейнер).
-
-## Запуск frontend локально (без Docker)
-
 ```bash
+# Frontend → http://localhost:5173
 cd frontend
 npm install
 npm run dev
+```
+
+Бекенд потрібен лише для роботи застосунку — лендінг збирається окремою точкою входу
+(`landing.html`) і працює самостійно.
+
+## Корисні команди
+
+```bash
+# backend
+npm run typecheck        # tsc --noEmit
+npm run prisma:migrate   # dev-міграція
+npm run db:seed:test     # тестовий акаунт із наповненням
+npm run email:status     # стан поштового домену в Resend
+
+# frontend
+npm run build            # tsc -b + vite build (перевіряє типи)
+npm run lint             # ESLint
 ```
