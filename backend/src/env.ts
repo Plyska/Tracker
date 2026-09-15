@@ -75,6 +75,14 @@ const schema = z.object({
   AI_DAILY_MESSAGE_LIMIT: z.coerce.number().int().positive().default(15),
   // Стеля розміру контекст-паку (токени, орієнтовно) — щоб рахунок не ріс із історією.
   AI_CONTEXT_MAX_TOKENS: z.coerce.number().int().positive().default(6000),
+  // Вільна розмова з помічником (`POST /ai/chat`). ВИМКНЕНО за замовчуванням до запуску:
+  // на відміну від чек-іну й підказок, чат приймає довільний текст користувача, тож потребує
+  // окремого захисту від зловживань (prompt injection, вигрібання чужого контексту, накрутка
+  // рахунку). Решта AI-функцій працює як раніше.
+  //
+  // Рядок, а НЕ z.coerce.boolean(): коерція в zod робить `true` з будь-якого непорожнього
+  // рядка, тобто "false" увімкнуло б фічу. Класична пастка, і ціна тут — відкритий ендпоінт.
+  AI_CHAT_ENABLED: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -200,6 +208,7 @@ export const env = {
   aiBaseUrl: raw.AI_BASE_URL ?? AI_DEFAULT_BASE_URL[raw.AI_PROVIDER],
   aiDailyMessageLimit: raw.AI_DAILY_MESSAGE_LIMIT,
   aiContextMaxTokens: raw.AI_CONTEXT_MAX_TOKENS,
+  aiChatEnabled: raw.AI_CHAT_ENABLED === "true",
   // Без ключа — `console`: у розробці це нормальний режим, у проді guard вище не дасть стартувати.
   emailProvider,
   emailFrom: raw.EMAIL_FROM,

@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { env } from "../../env.js";
+import { Errors } from "../../lib/errors.js";
 import { asyncHandler } from "../../lib/asyncHandler.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { requireCsrf } from "../../lib/csrf.js";
@@ -44,8 +46,23 @@ aiRouter.get(
 // /tasks після підтвердження на клієнті (модель не пише в БД, ADR 0012).
 aiRouter.post("/checkin", validate(checkinBodySchema), asyncHandler(ctrl.postCheckin));
 
-// Чат потоком (SSE). Історія не зберігається — приходить у тілі щоразу.
-aiRouter.post("/chat", validate(chatBodySchema), asyncHandler(ctrl.postChat));
+/**
+ * Чат потоком (SSE). Історія не зберігається — приходить у тілі щоразу.
+ *
+ * **Вимкнено до запуску** (`AI_CHAT_ENABLED`). Гейт стоїть саме тут, на сервері, а не лише в UI:
+ * приховати кнопку — не захист, ендпоінт лишався б доступним кожному, хто вміє скласти запит.
+ *
+ * Причина в природі саме цієї ручки: чек-ін і підказки працюють із власними даними користувача
+ * за нашим шаблоном, а чат приймає **довільний текст** і віддає його моделі разом із контекстом
+ * акаунта. Це інший клас ризику — prompt injection, спроби вигребти чужий контекст, накрутка
+ * рахунку за токени. Вмикати, коли для цього буде окремий захист.
+ */
+aiRouter.post(
+  "/chat",
+  (_req, _res, next) => next(env.aiChatEnabled ? undefined : Errors.aiChatDisabled()),
+  validate(chatBodySchema),
+  asyncHandler(ctrl.postChat),
+);
 
 aiRouter.get("/quota", validate(quotaQuerySchema, "query"), asyncHandler(ctrl.getAiQuota));
 

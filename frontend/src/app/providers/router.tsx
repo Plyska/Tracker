@@ -12,6 +12,7 @@ import { DashboardPage } from "@/pages/dashboard";
 import { PlannerPage, DayDetailPage } from "@/pages/planner";
 import { SettingsPage } from "@/pages/settings";
 import { NotFoundPage } from "@/pages/not-found";
+import { ASSISTANT_CHAT_ENABLED } from "@/shared/config/features";
 
 // Корінь `/` навмисно НЕ в роутері: ним володіє маркетинговий лендінг — окрема точка входу Vite
 // (landing.html → src/landing). У dev його віддає плагін у vite.config.ts, у проді — Express.
@@ -107,12 +108,20 @@ export const router = createBrowserRouter([
               {
                 // Розмова — той самий чанк (спільні залежності), але власний роут: назад із неї
                 // веде історія браузера, а не прихований стан сторінки.
+                //
+                // Поки розмову приховано (ASSISTANT_CHAT_ENABLED), роут лишається, але веде на
+                // `/assistant`: у людей можуть бути збережені посилання, і 404 на них виглядав би
+                // поломкою, а не свідомим рішенням. Сторінку помічника вони при цьому побачать.
                 path: "chat",
-                lazy: async () => {
-                  const { AssistantChatPage } = await import("@/pages/assistant");
-                  return { Component: AssistantChatPage };
-                },
-                handle: { titleKey: "ai.chat.title" },
+                ...(ASSISTANT_CHAT_ENABLED
+                  ? {
+                      lazy: async () => {
+                        const { AssistantChatPage } = await import("@/pages/assistant");
+                        return { Component: AssistantChatPage };
+                      },
+                      handle: { titleKey: "ai.chat.title" },
+                    }
+                  : { element: <Navigate to={paths.assistant} replace /> }),
               },
             ],
           },

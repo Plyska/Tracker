@@ -10,7 +10,6 @@ import { registerSchema, type RegisterValues } from "../model/schema";
 import { useRegisterMutation } from "../api/authApi";
 import { useFromPath } from "../lib/useFromPath";
 import { loginSuccess } from "../model/authSlice";
-import { SocialAuth } from "./SocialAuth";
 import type { VerifyEmailNavState } from "./VerifyEmailForm";
 
 export function RegisterForm() {
@@ -142,8 +141,6 @@ export function RegisterForm() {
         {isSubmitting && <Loader2 className="size-4 animate-spin" />}
         {t("auth.registerCta")}
       </Button>
-
-      <SocialAuth />
     </form>
   );
 }
