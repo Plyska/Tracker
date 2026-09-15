@@ -16,7 +16,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:stats": "tsx prisma/seedUserData.ts",
     "db:seed:test": "tsx prisma/seedTestAccount.ts",
-    "db:cleanup": "tsx src/scripts/cleanup.ts"
+    "db:cleanup": "tsx src/scripts/cleanup.ts",
+    "email:status": "tsx src/scripts/emailStatus.ts"
   },
   "dependencies": {
     "@google/genai": "^2.21.0",

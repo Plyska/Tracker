@@ -29,6 +29,10 @@ export const Errors = {
   // Розрізняти причини означало б підказувати, які токени колись існували.
   invalidToken: (message = "This link is invalid or has expired") =>
     new AppError(400, "INVALID_TOKEN", message),
+  // Код підтвердження: не збігся / протух / згорів після невдалих спроб — теж одна помилка на всі
+  // причини. «Залишилось 2 спроби» здається турботою, але це підказка саме тому, хто перебирає.
+  invalidCode: (message = "This code is invalid or has expired") =>
+    new AppError(400, "INVALID_CODE", message),
   habitNotFound: (message = "Habit not found") =>
     new AppError(404, "HABIT_NOT_FOUND", message),
   taskNotFound: (message = "Task not found") =>

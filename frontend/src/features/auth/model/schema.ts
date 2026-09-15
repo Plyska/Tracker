@@ -70,6 +70,13 @@ export const changePasswordSchema = z
     path: ["newPassword"],
   });
 
+// Код із листа — рівно 6 цифр. Нецифрові символи поле зрізає ще в onChange, тож сюди долітає
+// хіба що незакінчений код; повідомлення про довжину показуємо лише на явному сабміті.
+export const verifyEmailSchema = z.object({
+  code: z.string().regex(/^\d{6}$/, "auth.validation.codeInvalid"),
+});
+
+export type VerifyEmailValues = z.infer<typeof verifyEmailSchema>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;

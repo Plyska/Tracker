@@ -3,7 +3,14 @@ import { prisma } from "../../prisma.js";
 import { env } from "../../env.js";
 import { Errors } from "../../lib/errors.js";
 import { hashPassword, verifyPassword } from "../../lib/password.js";
-import { consumeEmailToken, issueEmailToken, TOKEN_TTL_HOURS } from "../../lib/emailTokens.js";
+import {
+  consumeEmailToken,
+  consumeVerificationCode,
+  issueEmailToken,
+  issueVerificationCode,
+  RESET_TTL_HOURS,
+  VERIFY_CODE_TTL_MINUTES,
+} from "../../lib/emailTokens.js";
 import { revokeAllUserSessions } from "../../lib/refreshTokens.js";
 import { sendEmailSafely } from "../../lib/email/transport.js";
 import {
@@ -28,6 +35,13 @@ export const registerUser = async (input: RegisterInput): Promise<User> => {
       email: input.email,
       name: input.name,
       passwordHash: await hashPassword(input.password),
+      // Мову зберігаємо одразу, вкладеним create — не окремим запитом після.
+      //
+      // Річ не лише в акуратності: лист із кодом підтвердження йде фоном (`void` у контролері)
+      // відразу після реєстрації і читає `UserPreferences`. Окремий другий запит створював би
+      // перегони, у яких лист інколи встигав би раніше налаштувань — і мова «плавала» б від
+      // запуску до запуску. Вкладений create робить користувача й налаштування однією транзакцією.
+      ...(input.locale && { preferences: { create: { locale: input.locale } } }),
     },
   });
 };
@@ -72,11 +86,19 @@ const localeOf = async (userId: string): Promise<EmailLocale> => {
   return toEmailLocale(prefs?.locale);
 };
 
+/**
+ * Шлях сторінки скидання пароля **у фронтенді** — дзеркалить `paths.resetPassword`
+ * (frontend/src/shared/config/paths.ts). Тримаємо константою й з цим коментарем, бо розбіжність
+ * тут не ловиться нічим: лист іде, ендпоінт віддає 204, а людина впирається в 404. Саме так і
+ * сталося — тут було "/reset-password" при роуті "/auth/reset-password".
+ */
+const RESET_PASSWORD_PATH = "/auth/reset-password";
+
 const linkTo = (path: string, token: string): string =>
   `${env.appUrl}${path}?token=${encodeURIComponent(token)}`;
 
 /**
- * Надіслати лист із підтвердженням. Викликається при реєстрації і за запитом користувача.
+ * Надіслати код підтвердження. Викликається при реєстрації і за запитом користувача.
  *
  * Уже підтверджену адресу мовчки пропускаємо: повторний лист нічого не додає, а на кнопку
  * «надіслати ще раз» натискають і за звичкою.
@@ -87,15 +109,29 @@ export const sendVerificationEmail = async (
   verifiedAt: Date | null,
 ): Promise<void> => {
   if (verifiedAt) return;
-  const { token } = await issueEmailToken(userId, "verify");
+  const { code } = await issueVerificationCode(userId);
   await sendEmailSafely(
-    verifyEmailMessage(email, linkTo("/verify-email", token), await localeOf(userId), TOKEN_TTL_HOURS.verify),
+    verifyEmailMessage(email, code, await localeOf(userId), VERIFY_CODE_TTL_MINUTES),
   );
 };
 
-/** Підтвердити адресу за токеном. Ідемпотентно на рівні даних: токен одноразовий. */
-export const verifyEmail = async (token: string): Promise<void> => {
-  const userId = await consumeEmailToken(token, "verify");
+/**
+ * Підтвердити адресу кодом із листа.
+ *
+ * `userId` — з **сесії**, не з тіла запиту. Це не деталь реалізації, а умова безпеки: 6-значний
+ * код без прив'язки до конкретного акаунта перебирався б проти всієї бази одразу.
+ *
+ * Уже підтверджену адресу вважаємо успіхом і код не питаємо: людина, яка натиснула «підтвердити»
+ * у двох вкладках, не має бачити помилку на тому, що вже зроблено.
+ */
+export const verifyEmail = async (userId: string, code: string): Promise<void> => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { emailVerifiedAt: true },
+  });
+  if (user?.emailVerifiedAt) return;
+
+  await consumeVerificationCode(userId, code);
   await prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
 };
 
@@ -117,7 +153,7 @@ export const requestPasswordReset = async (email: string): Promise<void> => {
 
   const { token } = await issueEmailToken(user.id, "reset");
   await sendEmailSafely(
-    resetPasswordMessage(user.email, linkTo("/reset-password", token), await localeOf(user.id), TOKEN_TTL_HOURS.reset),
+    resetPasswordMessage(user.email, linkTo(RESET_PASSWORD_PATH, token), await localeOf(user.id), RESET_TTL_HOURS),
   );
 };
 

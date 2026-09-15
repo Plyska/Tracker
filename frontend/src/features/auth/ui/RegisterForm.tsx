@@ -5,14 +5,16 @@ import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAppDispatch } from "@/app/store/hooks";
 import { Button, Field, Input } from "@/shared/ui";
+import { paths } from "@/shared/config/paths";
 import { registerSchema, type RegisterValues } from "../model/schema";
 import { useRegisterMutation } from "../api/authApi";
 import { useFromPath } from "../lib/useFromPath";
 import { loginSuccess } from "../model/authSlice";
 import { SocialAuth } from "./SocialAuth";
+import type { VerifyEmailNavState } from "./VerifyEmailForm";
 
 export function RegisterForm() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const from = useFromPath();
@@ -34,9 +36,22 @@ export function RegisterForm() {
         name,
         email,
         password,
+        // Мова, якою людина щойно заповнила цю форму. Сервер збереже її в налаштування одразу
+        // при створенні акаунта — інакше перший лист (код підтвердження) пішов би англійською
+        // навіть тому, хто весь час бачив український інтерфейс.
+        locale: i18n.language,
       }).unwrap();
       dispatch(loginSuccess({ user }));
-      navigate(from, { replace: true });
+      // Одразу просимо код: лист із ним сервер уже надіслав у відповідь на реєстрацію. Це той
+      // єдиний момент, коли людина точно біля своєї скриньки й розуміє, звідки лист, — далі
+      // підтвердження відкладають назавжди, а непідтверджена адреса тихо робить акаунт
+      // безповоротним (відновлювати пароль нема куди). Крок необов'язковий: на сторінці є «пізніше».
+      navigate(paths.verifyEmail, {
+        replace: true,
+        // `from` несемо далі: якщо людина йшла на конкретну сторінку й лише через це потрапила
+        // на реєстрацію, підтвердження не має з'їсти її початковий намір.
+        state: { justSent: true, from } satisfies VerifyEmailNavState,
+      });
     } catch {
       setError("root", { message: t("auth.error") });
     }

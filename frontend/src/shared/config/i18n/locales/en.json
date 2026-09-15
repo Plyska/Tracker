@@ -617,7 +617,8 @@
       "passwordRequired": "Enter your password",
       "passwordMin": "Password must be at least 8 characters",
       "passwordMismatch": "Passwords don't match",
-      "passwordSame": "The new password is the same as the current one"
+      "passwordSame": "The new password is the same as the current one",
+      "codeInvalid": "The code is 6 digits"
     },
     "forgot": {
       "link": "Forgot password?",
@@ -648,14 +649,21 @@
       "wrongCurrent": "Current password is incorrect"
     },
     "verify": {
-      "noticeBody": "Your email isn't confirmed yet. Without it, password recovery won't reach you.",
-      "resend": "Send the email",
-      "sent": "Email sent to {{email}}",
-      "pending": "Confirming…",
+      "noticeBody": "Your email isn't confirmed yet. Without it you can't reset your password if you forget it.",
+      "confirmCta": "Confirm",
+      "title": "Confirm your email",
+      "sentTo": "We sent a code to {{email}}. Enter it below.",
+      "notSentYet": "We'll send a code to your email — you'll enter it below.",
+      "loginFirst": "Log in first: the code confirms the email on your own account.",
+      "codeLabel": "Code from the email",
+      "cta": "Confirm email",
+      "invalid": "That code is wrong or expired. Check the latest email or send a new one.",
+      "send": "Send the code",
+      "resend": "Send again",
+      "resendIn": "You can send again in {{seconds}}s",
+      "later": "I'll do it later",
       "doneTitle": "Email confirmed",
-      "doneBody": "Password recovery will reach you now, if you ever need it.",
-      "failedTitle": "This link didn't work",
-      "failedBody": "It has been used already or expired. Send a new one from Settings.",
+      "doneBody": "Password recovery will work now, if you ever need it.",
       "toApp": "Go to the app"
     }
   },
