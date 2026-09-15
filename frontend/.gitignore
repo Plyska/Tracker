@@ -30,3 +30,8 @@ dist-ssr
 
 *storybook.log
 storybook-static
+
+# Sentry Config File
+.env.sentry-build-plugin
+# Деякі версії майстра кладуть auth-токен сюди — теж секрет.
+.sentryclirc

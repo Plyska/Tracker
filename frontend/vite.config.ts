@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 // https://vite.dev/config/
 import path from "node:path";
@@ -52,16 +53,57 @@ function landingDevPlugin(): Plugin {
  * замість LazyMotion-підмножини. Дублювання react між бандлами не коштує нічого — вони ніколи не
  * завантажуються разом (перехід лендінг → застосунок — повне перезавантаження сторінки).
  */
+/**
+ * Завантаження source maps у Sentry — лише для збірки ЗАСТОСУНКУ.
+ *
+ * Без map-файлів стектрейси в проді складаються з мініфікованих імен (`t.a is not a function`),
+ * тобто марні. Але й лишати їх у `dist/` не можна — це публікація вихідного коду фронтенду, тож
+ * `filesToDeleteAfterUpload` прибирає їх одразу після вивантаження.
+ *
+ * **Не для лендінгу**: `vite build --mode landing` — окрема збірка в той самий `dist/`, і Sentry
+ * там не підключений (див. `app/sentry.ts`). Вивантажувати нема чого, а плагін інакше спрацював би
+ * двічі й другим заходом затер release першого.
+ *
+ * **`url`** обов'язковий: організація в EU-регіоні, а плагін за замовчуванням говорить із
+ * `sentry.io` (США) — без цього рядка вивантаження пішло б не туди.
+ *
+ * Токен (`SENTRY_AUTH_TOKEN`) плагін підхоплює сам із `.env.sentry-build-plugin` — файл створив
+ * майстер, він у `.gitignore` і в коміт не потрапляє. На Vercel змінну треба задати руками, інакше
+ * білд мовчки пройде без map-файлів.
+ */
+const sourcemapUpload = () =>
+  sentryVitePlugin({
+    org: "tellday",
+    project: "tellday-web",
+    url: "https://de.sentry.io",
+    sourcemaps: {
+      filesToDeleteAfterUpload: ["./dist/assets/**/*.map"],
+    },
+    // Без токена плагін лише попереджає й пропускає вивантаження — локальна збірка не падає.
+    telemetry: false,
+  });
+
 export default defineConfig(({ mode }) => {
   const isLanding = mode === "landing";
   return {
-    plugins: [react(), tailwindcss(), landingDevPlugin()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      landingDevPlugin(),
+      ...(isLanding ? [] : [sourcemapUpload()]),
+    ],
     resolve: {
       alias: {
         "@": path.resolve(dirname, "./src"),
       },
     },
     build: {
+      // `hidden`, а не `true`: map-файли генеруються для вивантаження в Sentry, але **без
+      // коментаря `sourceMappingURL`** у бандлі. Інакше браузер шукав би `.map`, який
+      // `filesToDeleteAfterUpload` уже прибрав, і кожне відкриття devtools давало б 404.
+      // Sentry зіставляє бандл із мапою не через цей коментар, а через вшитий `debugId`.
+      // Для лендінгу не генеруємо взагалі — Sentry там не підключений.
+      sourcemap: isLanding ? false : "hidden",
       // Другий білд не має стерти перший.
       emptyOutDir: !isLanding,
       rollupOptions: {

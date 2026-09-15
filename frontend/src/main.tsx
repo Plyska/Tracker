@@ -1,3 +1,8 @@
+// Sentry — найперший імпорт, до застосунку й провайдерів: інакше помилки, що трапились під час
+// їхньої ініціалізації, не будуть перехоплені. Лендінг (`src/landing/main.tsx`) цього не імпортує
+// навмисно — див. коментар у `app/sentry.ts`.
+import { initSentry, reactErrorHandler } from "@/app/sentry";
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
@@ -13,7 +18,15 @@ import {
 } from "@/app/providers";
 import { Toaster } from "@/shared/ui";
 
-createRoot(document.getElementById("root")!).render(
+initSentry();
+
+createRoot(document.getElementById("root")!, {
+  // Помилки рендеру React обробляє сам і назовні не випускає — без цих хуків вони лишились би
+  // тільки в консолі браузера. `onCaughtError` — те, що перехопив error boundary; `onUncaughtError` —
+  // те, що не перехопив ніхто.
+  onCaughtError: reactErrorHandler(),
+  onUncaughtError: reactErrorHandler(),
+}).render(
   <StrictMode>
     <Provider store={store}>
       <I18nProvider>

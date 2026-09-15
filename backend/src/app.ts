@@ -1,3 +1,9 @@
+// Ініціалізація Sentry — НАЙПЕРШИЙ імпорт, до express і до всіх роутів.
+//
+// Саме `app.ts`, а не `server.ts`: на Vercel `listen` не викликається взагалі, платформа імпортує
+// default-експорт звідси. Якби ініціалізація жила в `server.ts`, у проді Sentry не вмикався б, а
+// локально працював — розбіжність, яку помічають найпізніше.
+import "./instrument.js";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
