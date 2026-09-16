@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/lib/cn";
 import { BrandBadge, IconButton } from "@/shared/ui";
 import { useMediaQuery } from "@/shared/lib/hooks/useMediaQuery";
+import { APP_VERSION, APP_VERSION_SHORT } from "@/shared/config/version";
 import type { NavItem, SidebarProps } from "../model/types";
 
 const NAV_ITEMS: NavItem[] = [
@@ -147,7 +148,9 @@ export function Sidebar({
         <div className="whitespace-nowrap border-t border-border p-4 text-xs text-muted-foreground">
           <AnimatePresence initial={false} mode="wait">
             <motion.span key={isCollapsed ? "short" : "full"} {...LABEL_MOTION}>
-              {isCollapsed ? t("app.versionShort") : t("app.versionFull")}
+              {isCollapsed
+                ? t("app.versionShort", { version: APP_VERSION_SHORT })
+                : t("app.versionFull", { version: APP_VERSION })}
             </motion.span>
           </AnimatePresence>
         </div>

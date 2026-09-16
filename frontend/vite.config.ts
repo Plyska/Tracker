@@ -5,10 +5,22 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 // https://vite.dev/config/
 import path from "node:path";
+import { readFileSync } from "node:fs";
 import { injectLandingHead } from "./src/landing/seo.ts";
 import { localeFromPath, pageFromPath } from "./src/landing/i18n.ts";
 
 const dirname = import.meta.dirname;
+
+/**
+ * Версія продукту — з `package.json`, а не з рядка в перекладах.
+ *
+ * Номер, який лежить у словниках, доводиться правити в кожній мові окремо, і рано чи пізно
+ * українська показує одну версію, англійська — іншу. Тут джерело одне, а в застосунок число
+ * потрапляє на збірці: у бандлі лишається літерал, самого `package.json` туди не тягне.
+ */
+const appVersion = (
+  JSON.parse(readFileSync(path.resolve(dirname, "package.json"), "utf8")) as { version: string }
+).version;
 
 /**
  * Лендінг — окрема точка входу (`landing.html` + `src/landing/main.tsx`), щоб анонімний відвідувач
@@ -86,6 +98,9 @@ const sourcemapUpload = () =>
 export default defineConfig(({ mode }) => {
   const isLanding = mode === "landing";
   return {
+    define: {
+      __APP_VERSION__: JSON.stringify(appVersion),
+    },
     plugins: [
       react(),
       tailwindcss(),
