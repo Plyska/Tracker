@@ -5,10 +5,22 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 // https://vite.dev/config/
 import path from "node:path";
+import { readFileSync } from "node:fs";
 import { injectLandingHead } from "./src/landing/seo.ts";
 import { localeFromPath, pageFromPath } from "./src/landing/i18n.ts";
 
 const dirname = import.meta.dirname;
+
+/**
+ * Версія продукту — з `package.json`, а не з рядка в перекладах.
+ *
+ * Номер, який лежить у словниках, доводиться правити в кожній мові окремо, і рано чи пізно
+ * українська показує одну версію, англійська — іншу. Тут джерело одне, а в застосунок число
+ * потрапляє на збірці: у бандлі лишається літерал, самого `package.json` туди не тягне.
+ */
+const appVersion = (
+  JSON.parse(readFileSync(path.resolve(dirname, "package.json"), "utf8")) as { version: string }
+).version;
 
 /**
  * Лендінг — окрема точка входу (`landing.html` + `src/landing/main.tsx`), щоб анонімний відвідувач
@@ -64,8 +76,11 @@ function landingDevPlugin(): Plugin {
  * там не підключений (див. `app/sentry.ts`). Вивантажувати нема чого, а плагін інакше спрацював би
  * двічі й другим заходом затер release першого.
  *
- * **`url`** обов'язковий: організація в EU-регіоні, а плагін за замовчуванням говорить із
- * `sentry.io` (США) — без цього рядка вивантаження пішло б не туди.
+ * **Регіон нічим не задаємо**: організаційний токен (`sntrys_`) несе обидві адреси всередині —
+ * `sentry.io` для акаунта і `de.sentry.io` (EU) для даних, — і плагін бере їх звідти. Спроба
+ * прописати EU-адресу вручну лише конфліктувала з першою: плагін попереджав, що поважає токен, а
+ * не конфіг. Якщо колись тут опиниться токен іншого типу (`sntryu_`, персональний), регіон
+ * доведеться задати явно — саме він адрес у собі не несе.
  *
  * Токен (`SENTRY_AUTH_TOKEN`) плагін підхоплює сам із `.env.sentry-build-plugin` — файл створив
  * майстер, він у `.gitignore` і в коміт не потрапляє. На Vercel змінну треба задати руками, інакше
@@ -75,7 +90,6 @@ const sourcemapUpload = () =>
   sentryVitePlugin({
     org: "tellday",
     project: "tellday-web",
-    url: "https://de.sentry.io",
     sourcemaps: {
       filesToDeleteAfterUpload: ["./dist/assets/**/*.map"],
     },
@@ -86,6 +100,9 @@ const sourcemapUpload = () =>
 export default defineConfig(({ mode }) => {
   const isLanding = mode === "landing";
   return {
+    define: {
+      __APP_VERSION__: JSON.stringify(appVersion),
+    },
     plugins: [
       react(),
       tailwindcss(),

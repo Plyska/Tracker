@@ -1,8 +1,8 @@
 {
   "app": {
     "name": "Tellday",
-    "versionFull": "Tellday v0.1.0",
-    "versionShort": "v0.1"
+    "versionFull": "Tellday v{{version}}",
+    "versionShort": "v{{version}}"
   },
   "nav": {
     "dashboard": "Dashboard",
