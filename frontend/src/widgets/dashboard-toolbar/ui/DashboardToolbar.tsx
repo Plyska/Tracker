@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { format } from "date-fns";
+import { format, isSameMonth, isSameYear } from "date-fns";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -51,14 +51,28 @@ export function DashboardToolbar() {
           : { opacity: 0, x: d * SHIFT },
   };
 
+  /**
+   * Мітка періоду. Місяць → «Місяць рік»; тиждень → діапазон днів, з якого прибрано все,
+   * що повторюється (як у календарях): «14 – 20 верес. 2026», а не «14 верес. – 20 верес. 2026».
+   *
+   * Тиждень на межі року показує рік з обох боків — інакше «28 груд. – 3 січ. 2027» приписує
+   * грудень до 2027-го. Разом це ще й тримає мітку короткою: українські назви місяців удвічі
+   * довші за англійські, і саме подвоєний місяць виносив її за межі відведеного місця.
+   */
   const periodLabel = useMemo(() => {
     const date = fromISODate(anchor);
     if (scale === "month") {
       return format(date, "LLLL yyyy", { locale: dateLocale });
     }
     const week = getWeekDays(date);
-    return `${format(week[0], "d MMM", { locale: dateLocale })} – ${format(
-      week[6],
+    const [start, end] = [week[0], week[6]];
+    const startFormat = !isSameYear(start, end)
+      ? "d MMM yyyy"
+      : isSameMonth(start, end)
+        ? "d"
+        : "d MMM";
+    return `${format(start, startFormat, { locale: dateLocale })} – ${format(
+      end,
       "d MMM yyyy",
       { locale: dateLocale },
     )}`;
@@ -69,7 +83,7 @@ export function DashboardToolbar() {
       {/* --- Навігація періоду ---
           Мобільний (Google-style): [Today] [‹][›] мітка — через flex `order`.
           Десктоп (sm): order скидається → DOM-порядок ‹ мітка › Today (як було). */}
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1 sm:flex-nowrap">
         <MotionIconButton
           className="order-2 sm:order-0"
           variant="outline"
@@ -83,7 +97,25 @@ export function DashboardToolbar() {
         >
           <ChevronLeft className="h-4 w-4" />
         </MotionIconButton>
-        <span className="order-4 flex min-w-0 flex-1 justify-center overflow-hidden text-sm font-medium sm:order-0 sm:w-44 sm:flex-none">
+        {/* Місце під мітку резервуємо, а не підганяємо під текст: інакше «Сьогодні» й перемикач
+            масштабу смикалися б щоразу, коли діапазон стає коротшим чи довшим. Але резерв —
+            через `min-width`, а не фіксовану ширину: якщо мітка колись усе-таки переросте його
+            (довша мова, збільшений шрифт у браузері), вона розсуне місце, а не обріжеться —
+            саме так і губилися краї українського діапазону.
+
+            `overflow-hidden` лишається заради анімації: мітка виїжджає вбік на 16px, і без
+            обрізання цей кадр налазив би на стрілки.
+
+            Розмір резерву — за виміряними мітками, а не на око: найширша («26 жовт. – 1 листоп.
+            2026», а на межі року «28 груд. 2026 – 3 січ. 2027») просить ~187px, тож 12rem лишає
+            невеликий запас на інші платформи й не роздуває відступ до стрілок у решти тижнів,
+            яким вистачає ~130px.
+
+            На вузькому екрані резерв більший (14rem) і працює інакше: там це flex-basis, тож щойно
+            після стрілок і «Сьогодні» лишається менше — мітка переходить на власний рядок. Поріг
+            саме на ширині рядка, а не на довжині тексту: інакше розкладка стрибала б з одного
+            рядка на два під час гортання тижнів. */}
+        <span className="order-4 flex min-w-0 flex-[1_1_14rem] justify-center overflow-hidden text-center text-sm font-medium sm:order-0 sm:min-w-44 sm:flex-none sm:basis-auto">
           <AnimatePresence mode="wait" initial={false} custom={dir}>
             <motion.span
               key={periodLabel}
