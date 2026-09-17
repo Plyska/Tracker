@@ -9,7 +9,8 @@
     "build:landing": "vite build --mode landing && node scripts/prerender-landing.mjs",
     "build:prerender": "node scripts/prerender-landing.mjs",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "gen:favicon": "node scripts/generate-favicon.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
