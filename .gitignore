@@ -12,12 +12,13 @@ dist
 dist-ssr
 *.local
 
-# Claude Code local settings & context
+# Agent local settings & context (Claude Code / Codex)
 .claude/settings.json
 **/.claude/settings.json
 .claude/settings.local.json
 **/.claude/settings.local.json
 CLAUDE.md
+AGENTS.md
 
 # Project documentation (локально, поки не версіонуємо)
 /docs/

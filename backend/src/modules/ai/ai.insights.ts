@@ -17,7 +17,7 @@ import { computeStats, mondayISO } from "../stats/stats.service.js";
 export type InsightKey =
   | "lowMoodStreak" // ≥3 дні поспіль настрій ≤2 — м'який чек-ін, не діагноз
   | "comeback" // повернення після паузи ≥7 днів — без осуду
-  | "streakBroken" // довга серія (≥7) обірвалась — нормалізувати
+  | "streakBroken" // змістовна серія обірвалась (поріг — STREAK_BROKEN_MIN_RUN) — нормалізувати
   | "weeklyTargetAtRisk" // тижнева ціль недосяжна/на межі до неділі
   | "synergyFound" // «коли робиш A — частіше робиш B» (з computeStats)
   | "perfectWeek"; // 7 ідеальних днів поспіль

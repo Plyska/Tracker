@@ -80,7 +80,7 @@ export interface PreferencesDto {
   aiEnabled: boolean | null;
   aiDiaryOptIn: boolean | null;
   aiConsentAt: string | null;
-  /** Граматичний рід звертання: 'neutral' | 'masculine' | 'feminine'; null = не задано. */
+  /** Граматичний рід ЗВЕРТАННЯ до користувача: 'masculine' | 'feminine'; null = не питали. */
   aiAddressForm: string | null;
 }
 

@@ -76,7 +76,8 @@ export const rotateRefreshToken = async (
   }
 
   const now = Date.now();
-  // Відкликаємо поточний і видаємо наступний у транзакції (атомарна ротація).
+  // Відкликаємо поточний і видаємо наступний. NB: це ДВА окремі запити, не `$transaction` —
+  // збій між ними розлогінює людину (зайвого доступу не дає), тож атомарність тут не критична.
   await prisma.refreshToken.update({
     where: { id: existing.id },
     data: { revokedAt: new Date(now) },
