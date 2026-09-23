@@ -7,7 +7,7 @@ import { env } from "../env.js";
  *
  * SameSite/Secure залежать від середовища:
  *  - dev: фронт і бекенд на `localhost` (різні порти) — це *same-site*, тож `Lax` + `secure:false` (http).
- *  - prod: різні домени (Vercel ↔ Render тощо) — *cross-site*, тож `None` + `Secure` (інакше браузер
+ *  - prod: різні піддомени (tellday.app ↔ api.tellday.app) — *cross-site*, тож `None` + `Secure` (інакше браузер
  *    не пошле cookie). За `SameSite=None` захист від CSRF дає саме double-submit-токен (нижче).
  */
 export const ACCESS_COOKIE = "access_token";

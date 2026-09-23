@@ -6,7 +6,7 @@ import { createRateLimitStore } from "../lib/rateLimitStore.js";
  * Rate limiting (Security-фаза). Захист від брутфорсу паролів і загального флуду.
  * При перевищенні віддаємо `429 RATE_LIMITED` у форматі `ApiError` (через error-handler).
  *
- * IP-адресу за reverse-proxy (прод: Render/Railway) бере з `X-Forwarded-For` — потребує
+ * IP-адресу за reverse-proxy (прод: Vercel) бере з `X-Forwarded-For` — потребує
  * `app.set("trust proxy", …)` (виставляється в app.ts у проді).
  */
 const handler: Options["handler"] = (_req, _res, next) => {

@@ -175,7 +175,7 @@ export async function getOrCreateReflection(
   // (само вилікувалось би наступного тижня), але симптом гірший: перемикач у Налаштуваннях не
   // давав би жодного видимого ефекту саме там, де його вмикають.
   // Рід звіряємо лише для української — в англійському листі він не має роботи, і регенерація
-  // через нього була б витраченим викликом. `null` у старих рядках = `neutral`.
+  // через нього була б витраченим викликом. `null` (і старі рядки) → `unspecified`: без роду.
   const sameLocale = cachedRow?.locale === locale;
   const sameAddress = locale !== "uk" || toAddressForm(cachedRow?.addressForm) === address;
   if (cachedRow && sameLocale && sameAddress) {

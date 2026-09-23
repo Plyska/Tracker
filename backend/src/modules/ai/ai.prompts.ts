@@ -78,7 +78,9 @@ export const CRISIS_RESOURCES: Record<AiLocale, string> = {
  * «ти впоралась». Українське тепло тримається саме на цих формах, тож це не обхід, а зняття
  * стелі з якості тексту.
  *
- * `neutral` — дефолт для тих, хто не відповів: рівно поточна поведінка, без здогадок.
+ * Третього значення немає свідомо: `neutral` існував і був прибраний міграцією
+ * `20260910120000_drop_neutral_address_form` — заборонна інструкція для нього провалилась
+ * 3 рази з 3 саме в кризовій відповіді. Хто не відповів — `null` → `unspecified` (нижче).
  */
 export const ADDRESS_FORMS = ["masculine", "feminine"] as const;
 export type AddressForm = (typeof ADDRESS_FORMS)[number];
