@@ -72,15 +72,6 @@ export function isPastDay(date: Date): boolean {
   return isBefore(startOfDay(date), startOfDay(new Date()));
 }
 
-/** День належить поточному тижню (Пн–Нд, що містить сьогодні). Редагувати відмітки
- *  дозволено лише в межах поточного тижня (майбутні дні тижня все одно заблоковані). */
-export function isCurrentWeek(date: Date): boolean {
-  return isSameDay(
-    startOfWeek(date, { weekStartsOn: 1 }),
-    startOfWeek(new Date(), { weekStartsOn: 1 }),
-  );
-}
-
 /** ISO 'YYYY-MM-DD' → Date (локальна, опівночі). Зворотне до `toISODate`. */
 export function fromISODate(iso: string): Date {
   return parseISO(iso);

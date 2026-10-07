@@ -7,7 +7,6 @@ import { HabitRowMenu } from "@/features/manage-habits";
 import {
   cn,
   entryKey,
-  isCurrentWeek,
   isFutureDay,
   isToday,
   isWeekend,
@@ -117,8 +116,6 @@ export function RowsGrid({
         {days.map((day) => {
           const today = isToday(day);
           const future = isFutureDay(day);
-          // Редаговний лише поточний тиждень; майбутні дні заблоковані.
-          const outsideWeek = !isCurrentWeek(day);
           const weekend = isWeekend(day);
           const date = toISODate(day);
           return (
@@ -138,8 +135,6 @@ export function RowsGrid({
               {habits.map((habit) => {
                 const entry = byKey[entryKey(habit.id, date)];
                 const isTimed = habit.weeklyMinutesTarget != null;
-                // Заблоковано: майбутнє та будь-який день поза поточним тижнем. Див. HabitTable.
-                const cellDisabled = future || outsideWeek;
                 const cellLabel = `${habit.name} — ${format(day, "PP", { locale: dateLocale })}`;
                 return (
                   <div
@@ -157,7 +152,7 @@ export function RowsGrid({
                         date={date}
                         minutes={entry?.minutes ?? 0}
                         color={habit.color}
-                        disabled={cellDisabled}
+                        disabled={future}
                         label={cellLabel}
                       />
                     ) : (
@@ -166,7 +161,7 @@ export function RowsGrid({
                         date={date}
                         done={entry?.done ?? false}
                         color={habit.color}
-                        disabled={cellDisabled}
+                        disabled={future}
                         label={cellLabel}
                       />
                     )}

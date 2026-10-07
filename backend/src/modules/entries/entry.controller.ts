@@ -40,7 +40,7 @@ export const toggleEntry = async (req: Request, res: Response): Promise<void> =>
   if (effDone) {
     // Бекфіл дозволено: можна відмічати й дні до створення звички (користувач фіксує те, що вже
     // робив). Статистика все одно стартує з першого треку, а межу «які дні редаговні» тримає
-    // фронт (лише поточний Пн–Нд-тиждень). Майбутні дні гейтить UI.
+    // фронт: сьогодні й усі минулі дні доступні для редагування, майбутні заблоковані.
     await prisma.habitEntry.upsert({
       where: { habitId_date: { habitId, date } },
       create: { habitId, date, done: true, minutes: effMinutes },

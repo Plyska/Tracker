@@ -22,6 +22,7 @@ AGENTS.md
 
 # Project documentation (локально, поки не версіонуємо)
 /docs/
+/artifacts/
 
 # Editor directories and files
 .vscode/*
