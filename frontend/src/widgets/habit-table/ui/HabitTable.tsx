@@ -19,7 +19,6 @@ import {
   getDateFnsLocale,
   getMonthDays,
   getWeekDays,
-  isCurrentWeek,
   isFutureDay,
   isToday,
   isWeekend,
@@ -341,9 +340,8 @@ export function HabitTable() {
               const date = toISODate(day);
               const entry = byKey[entryKey(habit.id, date)];
               const isTimed = habit.weeklyMinutesTarget != null;
-              // Редагувати можна лише поточний тиждень: майбутні дні заблоковані,
-              // як і будь-який день поза поточним Пн–Нд-тижнем.
-              const cellDisabled = isFutureDay(day) || !isCurrentWeek(day);
+              // Минулі дні й сьогодні редаговні; майбутні дні заблоковані.
+              const cellDisabled = isFutureDay(day);
               const cellLabel = `${habit.name} — ${format(day, "PP", { locale: dateLocale })}`;
               return (
                 <div
